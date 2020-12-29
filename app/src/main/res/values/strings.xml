@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">Journal</string>
+    <string name="title_activity_start_page">StartPage</string>
+    <string name="title_activity_login_page">LoginPage</string>
+    <!-- Strings used for fragments for navigation -->
+
+    <string name="login_field_hint">Username</string>
+    <string name="password_field_hint">Password</string>
+    <string name="login_button_text">Log In</string>
+    <string name="remember_checkbox_text">Remember Me</string>
+
+    <string name="logo_image_description">Logo</string>
+</resources>
