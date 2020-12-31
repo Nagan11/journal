@@ -23,6 +23,9 @@ public class StartPage extends AppCompatActivity {
     Intent nextActivity;
 
     @Override
+    public void onBackPressed() {}
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_start_page);
@@ -31,7 +34,7 @@ public class StartPage extends AppCompatActivity {
         checkAndFix();
         if (checkStatus()) {
             Toast.makeText(this, "sessionid saved", Toast.LENGTH_SHORT).show();
-            nextActivity = new Intent(this, NewUserLoginPage.class);
+            nextActivity = new Intent(this, MainMenu.class);
             Timer switchTimer = new Timer();
             SwitchTimerTask timerTask = new SwitchTimerTask();
             switchTimer.schedule(timerTask, 1000);

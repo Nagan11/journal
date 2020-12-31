@@ -14,7 +14,7 @@
         android:contentDescription="@string/logo_image_description"
         app:layout_anchor="@+id/MainLayout"
         app:layout_anchorGravity="center"
-        app:srcCompat="@drawable/journal_icon_blue" />
+        app:srcCompat="@drawable/journal_icon_blue_centered" />
 
     <LinearLayout
         android:id="@+id/MainLayout"

@@ -128,6 +128,7 @@ public class LogInManager {
         if (responseCode == 200) {
             return false;
         }
+        System.out.println(responseCode);
 
         // get sessionid and new csrftoken
         CookieStore cookieJar = cookieManager.getCookieStore();
