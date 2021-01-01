@@ -1,31 +1,25 @@
 package com.example.journal;
 
+import android.util.Log;
+
 import java.io.DataOutputStream;
-import java.io.File;
 import java.io.FileWriter;
 import java.net.*;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorCompletionService;
-
-import android.view.View;
-import android.widget.Toast;
-
-import javax.security.auth.login.LoginException;
 
 public class LogInManager {
     // constants
-    private static String USER_AGENT = "Mozilla/5.0";
+    private String USER_AGENT = "Mozilla/5.0";
 
     // login data
-    private static String sessionid = new String("");
-    private static String csrftoken = new String("");
+    private String sessionid = new String("");
+    private String csrftoken = new String("");
 
     // assistant variables
-    private static CookieManager cookieManager = new CookieManager();
+    private CookieManager cookieManager = new CookieManager();
     // URL data
-    private static String pupilUrl;
-    private static String postParameters;
+    private String pupilUrl;
+    private String postParameters;
 
     private String ROOT_DIRECTORY;
 
@@ -45,10 +39,6 @@ public class LogInManager {
         postParameters += un;
         postParameters += "&password=";
         postParameters += pw;
-    }
-
-    private void getLoginDataFromFiles() {
-
     }
 
     public void writeLoginDataToFiles(String username) {
@@ -89,46 +79,77 @@ public class LogInManager {
         }
     }
 
-    public boolean loggedIn(String username, String password) throws Exception {
-        takeCsrftoken();
+    public LoginState loggedIn(String username, String password) {
+        try {
+            takeCsrftoken();
+        } catch (Exception e1) {
+            try {
+                takeCsrftoken();
+            } catch (Exception e2) {
+                return LoginState.ERROR_OCCURED;
+            }
+        }
+
         setPostParameters(username, password);
 
-        // open connection
-        URL connectionUrl = new URL("https://schools.by/login");
-        HttpURLConnection con = (HttpURLConnection)connectionUrl.openConnection();
+        URL connectionUrl;
+        HttpURLConnection con;
+        try {
+            // open connection
+            connectionUrl = new URL("https://schools.by/login");
+            con = (HttpURLConnection) connectionUrl.openConnection();
 
-        // configure connection
-        con.setInstanceFollowRedirects(false);
-        con.setUseCaches(false);
+            // configure connection
+            con.setInstanceFollowRedirects(false);
+            con.setUseCaches(false);
 
-        con.setRequestMethod("POST");
-        con.setRequestProperty("accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
-        con.setRequestProperty("accept-encoding", "gzip, deflate, br");
-        con.setRequestProperty("accept-language", "en-US,en;q=0.9");
-        con.setRequestProperty("content-length", Integer.toString(postParameters.length()));
-        con.setRequestProperty("content-type", "application/x-www-form-urlencoded");
-        con.setRequestProperty("cookie", "csrftoken=" + csrftoken + ";"); //cookie
-        con.setRequestProperty("origin", "https://schools.by");
-        con.setRequestProperty("referer", "https://schools.by/login");
-        con.setRequestProperty("user-agent", USER_AGENT);
+            con.setRequestMethod("POST");
+            con.setRequestProperty("accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
+            con.setRequestProperty("accept-encoding", "gzip, deflate, br");
+            con.setRequestProperty("accept-language", "en-US,en;q=0.9");
+            con.setRequestProperty("content-length", Integer.toString(postParameters.length()));
+            con.setRequestProperty("content-type", "application/x-www-form-urlencoded");
+            con.setRequestProperty("cookie", "csrftoken=" + csrftoken + ";"); //cookie
+            con.setRequestProperty("origin", "https://schools.by");
+            con.setRequestProperty("referer", "https://schools.by/login");
+            con.setRequestProperty("user-agent", USER_AGENT);
 
-        con.setDoOutput(true);
-        con.setDoInput(true);
+            con.setDoOutput(true);
+            con.setDoInput(true);
+        } catch (Exception e) {
+            return LoginState.ERROR_OCCURED;
+        }
 
         // send data
-        DataOutputStream stream = new DataOutputStream(con.getOutputStream());
-        stream.writeBytes(postParameters);
-        stream.flush();
-        stream.close();
+        try {
+            DataOutputStream stream = new DataOutputStream(con.getOutputStream());
+            stream.writeBytes(postParameters);
+            stream.flush();
+            stream.close();
+        } catch (Exception e) {
+            return LoginState.ERROR_OCCURED;
+        }
 
-        con.getContent();
+        try {
+            con.getContent();
+        } catch (Exception e) {
+            return LoginState.ERROR_OCCURED;
+        }
+
 
         // login check
-        int responseCode = con.getResponseCode();
-        if (responseCode == 200) {
-            return false;
+        int responseCode = -1;
+        try {
+            responseCode = con.getResponseCode();
+        } catch (Exception e) {
+            return LoginState.ERROR_OCCURED;
         }
-        System.out.println(responseCode);
+        while (responseCode == -1) {}
+        System.out.println("responseCode -> " + responseCode);
+        if (responseCode == 200) {
+            System.out.println("WRONG_PASSWORD returned with responseCode " + responseCode);
+            return LoginState.WRONG_PASSWORD;
+        }
 
         // get sessionid and new csrftoken
         CookieStore cookieJar = cookieManager.getCookieStore();
@@ -145,10 +166,10 @@ public class LogInManager {
         pupilUrl = con.getHeaderField("location");
         pupilUrl += "/dnevnik/";
 
-        return true;
+        return LoginState.LOGGED_IN;
     }
 
-    public static void takeCsrftoken() throws Exception {
+    public void takeCsrftoken() throws Exception {
         // open connection
         URL connectionUrl = new URL("https://schools.by/login");
         HttpURLConnection con = (HttpURLConnection)connectionUrl.openConnection();

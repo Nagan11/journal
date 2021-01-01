@@ -20,9 +20,9 @@ public class NewUserLoginPage extends AppCompatActivity {
     private TextInputEditText passwordField;
     private LogInManager logInManager;
     private Intent mainMenuActivity;
-    private boolean loggedIn;
+
     private boolean breakLoginAttempt;
-    private boolean wrongLoginData;
+    private LoginState loginState;
 
 
     @Override
@@ -31,16 +31,14 @@ public class NewUserLoginPage extends AppCompatActivity {
         setContentView(R.layout.activity_new_user_login);
 
         ROOT_DIRECTORY = String.valueOf(getFilesDir());
-        usernameField = (TextInputEditText) findViewById(R.id.UsernameInput);
-        passwordField = (TextInputEditText) findViewById((R.id.PasswordInput));
+        usernameField = findViewById(R.id.UsernameInput);
+        passwordField = findViewById((R.id.PasswordInput));
 
         logInManager = new LogInManager(ROOT_DIRECTORY);
 
         mainMenuActivity = new Intent(this, MainMenu.class);
 
-        loggedIn = false;
         breakLoginAttempt = false;
-        wrongLoginData = false;
     }
 
     @Override
@@ -52,13 +50,12 @@ public class NewUserLoginPage extends AppCompatActivity {
                 @Override
                 public void run() {
                     try {
-                        if (logInManager.loggedIn(usernameField.getText().toString(), passwordField.getText().toString())) {
-                            System.out.println(logInManager.getSessionid());
-                            logInManager.writeLoginDataToFiles(usernameField.getText().toString());
-                            loggedIn = true;
-                        } else {
-                            wrongLoginData = true;
-                        }
+                        breakLoginAttempt = false;
+                        loginState = LoginState.DEFAULT;
+
+                        loginState = logInManager.loggedIn(usernameField.getText().toString(), passwordField.getText().toString());
+                        while (loginState == LoginState.DEFAULT) {}
+
                         breakLoginAttempt = true;
                     } catch (Exception e) {
                         System.out.println(e);
@@ -69,23 +66,29 @@ public class NewUserLoginPage extends AppCompatActivity {
             loginThread.start();
             Timer breakTimer = new Timer();
             LoginBreakTimerTask task = new LoginBreakTimerTask();
-            breakTimer.schedule(task, 5000); // break while-cycle with 5s timeout
+            breakTimer.schedule(task, 10000); // break while-cycle with 5s timeout
             while (true) {
                 Thread.sleep(250);
                 if (breakLoginAttempt) {
-                    if (wrongLoginData) {
-                        Toast.makeText(this, "Wrong login or password", Toast.LENGTH_SHORT).show();
-                    } else {
-                        if (!loggedIn) {
-                            Toast.makeText(this, "Login Error", Toast.LENGTH_SHORT).show();
-                        }
-                    }
                     break;
                 }
 
             }
-            if (loggedIn) {
-                startActivity(mainMenuActivity);
+            switch (loginState) {
+                case LOGGED_IN:
+                    System.out.println(logInManager.getSessionid());
+                    logInManager.writeLoginDataToFiles(usernameField.getText().toString());
+                    startActivity(mainMenuActivity);
+                    break;
+                case WRONG_PASSWORD:
+                    Toast.makeText(this, "Wrong login or password", Toast.LENGTH_SHORT).show();
+                    break;
+                case ERROR_OCCURED:
+                    Toast.makeText(this, "Login Error", Toast.LENGTH_SHORT).show();
+                    break;
+                case DEFAULT:
+                    Toast.makeText(this, "WTF", Toast.LENGTH_SHORT).show();
+                    break;
             }
 
 
