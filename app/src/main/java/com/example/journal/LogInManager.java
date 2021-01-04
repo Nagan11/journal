@@ -1,7 +1,5 @@
 package com.example.journal;
 
-import android.util.Log;
-
 import java.io.DataOutputStream;
 import java.io.FileWriter;
 import java.net.*;
@@ -12,8 +10,8 @@ public class LogInManager {
     private String USER_AGENT = "Mozilla/5.0";
 
     // login data
-    private String sessionid = new String("");
-    private String csrftoken = new String("");
+    private String sessionid = "";
+    private String csrftoken = "";
 
     // assistant variables
     private CookieManager cookieManager = new CookieManager();
@@ -54,6 +52,7 @@ public class LogInManager {
         try {
             FileWriter foutSessionid = new FileWriter(ROOT_DIRECTORY + "/UserData/sessionid.txt", false);
             foutSessionid.write(sessionid);
+//            System.out.println(sessionid);
             foutSessionid.flush();
             foutSessionid.close();
         } catch (Exception e) {
@@ -76,6 +75,29 @@ public class LogInManager {
             foutStatus.close();
         } catch (Exception e) {
             System.out.println("foutStatus error");
+        }
+    }
+
+    public void takeCsrftoken() throws Exception {
+        // open connection
+        URL connectionUrl = new URL("https://schools.by/login");
+        HttpURLConnection con = (HttpURLConnection)connectionUrl.openConnection();
+
+        // set connection args
+        con.setRequestMethod("GET");
+        con.setRequestProperty("User-Agent", USER_AGENT);
+
+        // get cookies
+        con.getContent();
+        CookieStore cookieJar = cookieManager.getCookieStore();
+        List<HttpCookie> cookies = cookieJar.getCookies();
+
+        // find csrftoken in cookies and set it
+        for (HttpCookie cookie : cookies) {
+            if (cookie.getName().equals("csrftoken")) {
+                csrftoken = cookie.getValue();
+                break;
+            }
         }
     }
 
@@ -147,7 +169,6 @@ public class LogInManager {
         while (responseCode == -1) {}
         System.out.println("responseCode -> " + responseCode);
         if (responseCode == 200) {
-            System.out.println("WRONG_PASSWORD returned with responseCode " + responseCode);
             return LoginState.WRONG_PASSWORD;
         }
 
@@ -169,31 +190,16 @@ public class LogInManager {
         return LoginState.LOGGED_IN;
     }
 
-    public void takeCsrftoken() throws Exception {
-        // open connection
-        URL connectionUrl = new URL("https://schools.by/login");
-        HttpURLConnection con = (HttpURLConnection)connectionUrl.openConnection();
-
-        // set connection args
-        con.setRequestMethod("GET");
-        con.setRequestProperty("User-Agent", USER_AGENT);
-
-        // get cookies
-        con.getContent();
-        CookieStore cookieJar = cookieManager.getCookieStore();
-        List<HttpCookie> cookies = cookieJar.getCookies();
-
-        // find csrftoken in cookies and set it
-        for (HttpCookie cookie : cookies) {
-            if (cookie.getName().equals("csrftoken")) {
-                csrftoken = cookie.getValue();
-                break;
-            }
-        }
+    public String getCsrftoken() {
+        return csrftoken;
     }
 
     public String getSessionid() {
         return sessionid;
+    }
+
+    public String getPupilUrl() {
+        return pupilUrl;
     }
 
 }

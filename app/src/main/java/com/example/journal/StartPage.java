@@ -76,13 +76,8 @@ public class StartPage extends AppCompatActivity {
     }
 
     public void checkAndFix() {
-        File pagesFolder = new File(ROOT_DIRECTORY, "HtmlPages");
         File userDataFolder = new File(ROOT_DIRECTORY, "UserData");
         File statusText = new File(ROOT_DIRECTORY + "/UserData/status.txt");
-
-        if (!pagesFolder.exists()) {
-            pagesFolder.mkdir();
-        }
 
         if (userDataFolder.exists()) {
             if (!statusText.exists()) {

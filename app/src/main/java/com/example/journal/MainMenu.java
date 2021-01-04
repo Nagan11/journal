@@ -14,6 +14,9 @@ import java.io.FileWriter;
 public class MainMenu extends AppCompatActivity {
     private String ROOT_DIRECTORY;
 
+    private DownloadManager downloadManager_;
+    private Thread downloadThread_;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -21,6 +24,7 @@ public class MainMenu extends AppCompatActivity {
         ROOT_DIRECTORY = String.valueOf(getFilesDir());
 
         setUserName();
+        downloadManager_ = new DownloadManager(ROOT_DIRECTORY, getIntent().getStringExtra("csrftoken"));
     }
 
     private void setUserName() {
@@ -64,4 +68,23 @@ public class MainMenu extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {}
+
+    public void downloadAllOnClick(View view) throws Exception {
+        downloadThread_ = new Thread(new DownloadAllRunnable());
+        downloadThread_.start();
+    }
+
+    class DownloadAllRunnable implements Runnable {
+        @Override
+        public void run() {
+            try {
+                downloadManager_.updateQuarter(0);
+                downloadManager_.updateQuarter(1);
+                downloadManager_.updateQuarter(2);
+                downloadManager_.updateQuarter(3);
+            } catch (Exception e) {
+                System.out.println("Download failed (" + e + ")");
+            }
+        }
+    }
 }
