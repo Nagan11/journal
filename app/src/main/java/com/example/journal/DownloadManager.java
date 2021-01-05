@@ -5,13 +5,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.InputStreamReader;
-import java.net.CookieHandler;
-import java.net.CookieManager;
-import java.net.CookiePolicy;
-import java.net.CookieStore;
-import java.net.HttpCookie;
-import java.net.HttpURLConnection;
-import java.net.URL;
+import java.net.*;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -45,6 +39,7 @@ public class DownloadManager {
         } catch (Exception e) {
             System.out.println(e);
         }
+        pupilUrl_ += "/dnevnik/";
 
         cookieManager.setCookiePolicy(CookiePolicy.ACCEPT_ALL);
         CookieHandler.setDefault(cookieManager);
@@ -170,15 +165,20 @@ public class DownloadManager {
     private String getPageCode(String url) throws Exception {
         if (csrftoken_ == null) {
             takeCsrftoken();
-            while (csrftoken_ == null) {}
+            while (csrftoken_ == null) { Thread.sleep(25); }
             System.out.println("CSRF -> " + csrftoken_);
         }
         URL obj = new URL(url);
         HttpURLConnection con = (HttpURLConnection) obj.openConnection();
 
+        con.setInstanceFollowRedirects(false);
+        con.setUseCaches(false);
+
         con.setRequestMethod("GET");
         con.setRequestProperty("User-Agent", USER_AGENT);
-        con.setRequestProperty("cookie", "csrftoken=" + csrftoken_ + "; sessionid=" + sessionid_);
+        String cookies = "csrftoken=" + csrftoken_ + "; sessionid=" + sessionid_;
+        System.out.println("cookies -> " + cookies);
+        con.setRequestProperty("cookie", cookies);
 
         BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
 
@@ -191,12 +191,14 @@ public class DownloadManager {
 
         in.close();
 
+        System.out.println(con.getResponseCode());
+        System.out.println(response.toString());
         return response.toString();
     }
 
     public void takeCsrftoken() throws Exception {
         // open connection
-        URL connectionUrl = new URL("https://schools.by/login");
+        URL connectionUrl = new URL(pupilUrl_);
         HttpURLConnection con = (HttpURLConnection)connectionUrl.openConnection();
 
         // set connection args
@@ -212,6 +214,8 @@ public class DownloadManager {
         for (HttpCookie cookie : cookies) {
             if (cookie.getName().equals("csrftoken")) {
                 csrftoken_ = cookie.getValue();
+                con.disconnect();
+                cookieJar.removeAll();
                 break;
             }
         }

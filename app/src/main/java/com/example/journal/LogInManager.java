@@ -39,7 +39,7 @@ public class LogInManager {
         postParameters += pw;
     }
 
-    public void writeLoginDataToFiles(String username) {
+    public void writeLoginDataToFiles(String username, String realName) {
         try {
             FileWriter foutUsername = new FileWriter(ROOT_DIRECTORY + "/UserData/username.txt", false);
             foutUsername.write(username);
@@ -66,6 +66,15 @@ public class LogInManager {
             foutUrl.close();
         } catch (Exception e) {
             System.out.println("foutUrl error");
+        }
+
+        try {
+            FileWriter foutRealName = new FileWriter(ROOT_DIRECTORY + "/UserData/realName.txt", false);
+            foutRealName.write(realName);
+            foutRealName.flush();
+            foutRealName.close();
+        } catch (Exception e) {
+            System.out.println("foutRealName error");
         }
 
         try {
@@ -96,6 +105,8 @@ public class LogInManager {
         for (HttpCookie cookie : cookies) {
             if (cookie.getName().equals("csrftoken")) {
                 csrftoken = cookie.getValue();
+                con.disconnect();
+                cookieJar.removeAll();
                 break;
             }
         }
@@ -166,7 +177,13 @@ public class LogInManager {
         } catch (Exception e) {
             return LoginState.ERROR_OCCURED;
         }
-        while (responseCode == -1) {}
+        while (responseCode == -1) {
+            try {
+                Thread.sleep(25);
+            } catch (Exception e) {
+                return LoginState.ERROR_OCCURED;
+            }
+        }
         System.out.println("responseCode -> " + responseCode);
         if (responseCode == 200) {
             return LoginState.WRONG_PASSWORD;
@@ -183,9 +200,9 @@ public class LogInManager {
                 sessionid = cookie.getValue();
             }
         }
+        cookieJar.removeAll();
 
         pupilUrl = con.getHeaderField("location");
-        pupilUrl += "/dnevnik/";
 
         return LoginState.LOGGED_IN;
     }

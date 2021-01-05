@@ -4,8 +4,10 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.provider.DocumentsContract;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.File;
 import java.io.FileReader;
@@ -17,20 +19,39 @@ public class MainMenu extends AppCompatActivity {
     private DownloadManager downloadManager_;
     private Thread downloadThread_;
 
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main_menu);
         ROOT_DIRECTORY = String.valueOf(getFilesDir());
 
-        setUserName();
         downloadManager_ = new DownloadManager(ROOT_DIRECTORY, getIntent().getStringExtra("csrftoken"));
+
+        setRealName();
     }
 
     private void setUserName() {
         String buffer = new String("");
         try {
             FileReader fin = new FileReader(ROOT_DIRECTORY + "/UserData/username.txt");
+
+            int c;
+            while ((c = fin.read()) != -1) {
+                buffer += (char)c;
+            }
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+        TextView userNameTextView = (TextView)findViewById(R.id.UserNameTextView);
+        userNameTextView.setText(buffer);
+    }
+
+    private void setRealName() {
+        String buffer = new String("");
+        try {
+            FileReader fin = new FileReader(ROOT_DIRECTORY + "/UserData/realName.txt");
 
             int c;
             while ((c = fin.read()) != -1) {

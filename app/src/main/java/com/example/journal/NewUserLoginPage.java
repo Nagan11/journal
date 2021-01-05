@@ -27,8 +27,11 @@ public class NewUserLoginPage extends AppCompatActivity {
     private boolean breakLoginAttempt;
     private LoginState loginState;
 
-    Thread loginThread;
-    Thread loginAwaitThread;
+    private Thread loginThread;
+    private Thread loginAwaitThread;
+
+    private RealNameParser realNameParser_;
+    private String realName_;
 
 
     @Override
@@ -72,7 +75,7 @@ public class NewUserLoginPage extends AppCompatActivity {
                 loginState = LoginState.DEFAULT;
                 loginAwaitThread.start();
                 loginState = logInManager.loggedIn(usernameField.getText().toString(), passwordField.getText().toString());
-                while (loginState == LoginState.DEFAULT) {}
+                while (loginState == LoginState.DEFAULT) { Thread.sleep(25); }
             } catch (Exception e) {
                 System.out.println(e);
             }
@@ -83,7 +86,6 @@ public class NewUserLoginPage extends AppCompatActivity {
     class LoginAwaitRunnable implements Runnable {
         @Override
         public void run() {
-//            Looper.prepare();
             Timer breakTimer = new Timer();
             LoginBreakTimerTask task = new LoginBreakTimerTask();
             breakTimer.schedule(task, 10000); // break while-cycle with 10s timeout
@@ -99,12 +101,18 @@ public class NewUserLoginPage extends AppCompatActivity {
             }
             switch (loginState) {
                 case LOGGED_IN:
-                    logInManager.writeLoginDataToFiles(usernameField.getText().toString());
+                    realNameParser_ = new RealNameParser(ROOT_DIRECTORY, logInManager.getSessionid(), logInManager.getPupilUrl());
+                    realName_ = realNameParser_.getRealName();
+                    while (realName_ == "*") {
+                        try {
+                            Thread.sleep(25);
+                        } catch (Exception e) {
+                            System.out.println(e);
+                        }
+                    }
+                    logInManager.writeLoginDataToFiles(usernameField.getText().toString(), realName_);
 
-//                    logInManager.takeCsrftoken();
                     mainMenuActivity.putExtra("csrftoken", logInManager.getCsrftoken());
-//                    mainMenuActivity.putExtra("sessionid", logInManager.getSessionid());
-//                    mainMenuActivity.putExtra("pupilUrl", logInManager.getPupilUrl());
                     startActivity(mainMenuActivity);
                     break;
                 case WRONG_PASSWORD:

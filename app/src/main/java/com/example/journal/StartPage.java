@@ -33,13 +33,13 @@ public class StartPage extends AppCompatActivity {
 
         checkAndFix();
         if (checkStatus()) {
-            Toast.makeText(this, "sessionid saved", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Already logged in", Toast.LENGTH_SHORT).show();
             nextActivity = new Intent(this, MainMenu.class);
             Timer switchTimer = new Timer();
             SwitchTimerTask timerTask = new SwitchTimerTask();
             switchTimer.schedule(timerTask, 1000);
         } else {
-            Toast.makeText(this, "no sessionid found", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Not logged in", Toast.LENGTH_SHORT).show();
             nextActivity = new Intent(this, NewUserLoginPage.class);
             Timer switchTimer = new Timer();
             SwitchTimerTask timerTask = new SwitchTimerTask();
