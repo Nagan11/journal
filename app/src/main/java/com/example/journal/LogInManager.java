@@ -1,8 +1,11 @@
 package com.example.journal;
 
+import android.os.Build;
+
 import java.io.DataOutputStream;
 import java.io.FileWriter;
 import java.net.*;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 public class LogInManager {
@@ -33,10 +36,27 @@ public class LogInManager {
         postParameters = new String("");
         postParameters += "csrfmiddlewaretoken=";
         postParameters += csrftoken;
-        postParameters += "&username=";
-        postParameters += un;
-        postParameters += "&password=";
-        postParameters += pw;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            postParameters += "&username=";
+            try {
+                postParameters += URLEncoder.encode(un, StandardCharsets.UTF_8.toString());
+            } catch (Exception e) {
+                postParameters += URLEncoder.encode(un);
+            }
+
+            postParameters += "&password=";
+            try {
+                postParameters += URLEncoder.encode(pw, StandardCharsets.UTF_8.toString());
+            } catch (Exception e) {
+                postParameters += URLEncoder.encode(pw);
+            }
+        }
+        else {
+            postParameters += "&username=";
+            postParameters += URLEncoder.encode(un);
+            postParameters += "&password=";
+            postParameters += URLEncoder.encode(pw);
+        }
     }
 
     public void writeLoginDataToFiles(String username, String realName) {
@@ -139,7 +159,8 @@ public class LogInManager {
             con.setRequestMethod("POST");
             con.setRequestProperty("accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
             con.setRequestProperty("accept-encoding", "gzip, deflate, br");
-            con.setRequestProperty("accept-language", "en-US,en;q=0.9");
+            con.setRequestProperty("accept-language", "en-gb");
+            con.setRequestProperty("Connection", "keep-alive");
             con.setRequestProperty("content-length", Integer.toString(postParameters.length()));
             con.setRequestProperty("content-type", "application/x-www-form-urlencoded");
             con.setRequestProperty("cookie", "csrftoken=" + csrftoken + ";"); //cookie

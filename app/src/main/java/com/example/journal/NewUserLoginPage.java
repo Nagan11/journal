@@ -10,6 +10,7 @@ import com.google.android.material.textfield.TextInputEditText;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.view.View;
+import android.widget.Button;
 import android.widget.Toast;
 
 import java.util.Timer;
@@ -24,7 +25,7 @@ public class NewUserLoginPage extends AppCompatActivity {
 
     private LogInManager logInManager;
 
-    private boolean breakLoginAttempt;
+    private boolean breakLoginAttempt = false;
     private LoginState loginState;
 
     private Thread loginThread;
@@ -32,6 +33,8 @@ public class NewUserLoginPage extends AppCompatActivity {
 
     private RealNameParser realNameParser_;
     private String realName_;
+
+    private Button loginButton;
 
 
     @Override
@@ -49,6 +52,8 @@ public class NewUserLoginPage extends AppCompatActivity {
         mainMenuActivity = new Intent(this, MainMenu.class);
 
         breakLoginAttempt = false;
+
+        loginButton = findViewById(R.id.LoginButton);
     }
 
     @Override
@@ -56,12 +61,14 @@ public class NewUserLoginPage extends AppCompatActivity {
 
     public void loginButtonOnClick(View view) {
         try {
+            disableLoginButton();
             loginThread = new Thread(new LoginRunnable());
             loginAwaitThread = new Thread(new LoginAwaitRunnable());
             loginThread.start();
 
 
         } catch (Exception e) {
+            enableLoginButton();
             System.out.println(e);
         }
 
@@ -99,6 +106,8 @@ public class NewUserLoginPage extends AppCompatActivity {
                     break;
                 }
             }
+            breakLoginAttempt = false;
+
             switch (loginState) {
                 case LOGGED_IN:
                     realNameParser_ = new RealNameParser(ROOT_DIRECTORY, logInManager.getSessionid(), logInManager.getPupilUrl());
@@ -112,6 +121,8 @@ public class NewUserLoginPage extends AppCompatActivity {
                     }
                     logInManager.writeLoginDataToFiles(usernameField.getText().toString(), realName_);
 
+                    enableLoginButton();
+
                     mainMenuActivity.putExtra("csrftoken", logInManager.getCsrftoken());
                     startActivity(mainMenuActivity);
                     break;
@@ -121,6 +132,7 @@ public class NewUserLoginPage extends AppCompatActivity {
                             Toast.makeText(THIS_CONTEXT, "Wrong login or password", Toast.LENGTH_SHORT).show();
                         }
                     });
+                    enableLoginButton();
                     break;
                 case ERROR_OCCURED:
                     runOnUiThread(new Runnable() {
@@ -128,6 +140,7 @@ public class NewUserLoginPage extends AppCompatActivity {
                             Toast.makeText(THIS_CONTEXT, "Error occured", Toast.LENGTH_SHORT).show();
                         }
                     });
+                    enableLoginButton();
                     break;
                 case DEFAULT:
                     runOnUiThread(new Runnable() {
@@ -135,6 +148,7 @@ public class NewUserLoginPage extends AppCompatActivity {
                             Toast.makeText(THIS_CONTEXT, "WTF", Toast.LENGTH_SHORT).show();
                         }
                     });
+                    enableLoginButton();
                     break;
             }
         }
@@ -143,9 +157,30 @@ public class NewUserLoginPage extends AppCompatActivity {
     class LoginBreakTimerTask extends TimerTask {
         @Override
         public void run() {
+            loginState = LoginState.ERROR_OCCURED;
             breakLoginAttempt = true;
         }
 
+    }
+
+    private void enableLoginButton() {
+        runOnUiThread(new Runnable() {
+            public void run() {
+                loginButton.setEnabled(true);
+            }
+        });
+
+        // graphics
+    }
+
+    private void disableLoginButton() {
+        runOnUiThread(new Runnable() {
+            public void run() {
+                loginButton.setEnabled(false);
+            }
+        });
+
+        // graphics
     }
 
 }
