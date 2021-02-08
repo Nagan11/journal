@@ -9,4 +9,10 @@
     <color name="colorPrimary">#00509D</color>
     <color name="colorPrimaryDark">#00296B</color>
     <color name="colorAccent">#00509D</color>
+
+    <color name="journalBackground">#EAEAEA</color>
+    <color name="journalLessonMarkBackground">#FCFCFC</color>
+    <color name="journalHometaskBackground">#F4F4F4</color>
+    <color name="journalTitleText">#252525</color>
+    <color name="journalMainText">#252525</color>
 </resources>

@@ -1,3 +1,4 @@
 <resources>
     <dimen name="fab_margin">16dp</dimen>
+    <dimen name="JOURNAL_HOMETASK_BORDER">1.5dp</dimen>
 </resources>
