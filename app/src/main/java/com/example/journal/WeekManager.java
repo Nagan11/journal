@@ -23,15 +23,37 @@ public class WeekManager {
     private ArrayList<String> links_ = new ArrayList<>();
     private int[] quarterIds_ = new int[] {40, 42, 43, 44};
     private int[] amountsOfWeeks_ = new int[] {9, 7, 11, 9};
-    private int[][] firstMondays_ = new int[][] {{2020, 8, 31}, {2020, 11, 9}, {2021, 1, 11}, {2021, 4, 5}};
+    private int[][] firstMondays_ = new int[][] {
+            {2020, 8, 31},
+            {2020, 11, 9},
+            {2021, 1, 11},
+            {2021, 4, 5}
+    };
+
+    private ArrayList< ArrayList< ArrayList<String> > > lessonNames_ = new ArrayList<>(4);
+    private ArrayList< ArrayList< ArrayList<String> > > marks_ = new ArrayList<>(4);
+    private ArrayList< ArrayList< ArrayList<String> > > hometasks_ = new ArrayList<>(4);
+    private Integer[][] maxLessons_ = new Integer[][] {
+            new Integer[amountsOfWeeks_[0]],
+            new Integer[amountsOfWeeks_[1]],
+            new Integer[amountsOfWeeks_[2]],
+            new Integer[amountsOfWeeks_[3]]
+    };
 
     private int[] daysInMonth_ = new int[13];
 
-    private PageParser pageParser_;
+    public PageParser pageParser;
+    private enum ReadStage {
+        LESSON,
+        MARK,
+        HOMETASK
+    }
 
     WeekManager(String rtDir, String csrftoken) {
         ROOT_DIRECTORY = rtDir;
+
         fillDaysInMonth();
+        initializeArrayLists();
         checkFolders();
 
         csrftoken_ = csrftoken;
@@ -46,72 +68,203 @@ public class WeekManager {
         cookieManager.setCookiePolicy(CookiePolicy.ACCEPT_ALL);
         CookieHandler.setDefault(cookieManager);
 
-        pageParser_ = new PageParser(ROOT_DIRECTORY);
-
-//        System.out.println("URL -> " + pupilUrl_);
-//        System.out.println("Sessionid -> " + sessionid_);
-//        System.out.println("csrftoken -> " + csrftoken_);
+        pageParser = new PageParser(ROOT_DIRECTORY);
     }
 
-    class UpdatePage implements Runnable {
-        private int quarterNumber_;
-        private int weekInQuarter_;
-        private int weekInYear_;
+    private String getPageCode(String url) {
+        try {
+            if (csrftoken_ == null) {
+                takeCsrftoken();
+                while (csrftoken_ == null) {
+                    Thread.sleep(25);
+                }
+                System.out.println("CSRF -> " + csrftoken_);
+            }
+            URL obj = new URL(url);
+            HttpURLConnection con = (HttpURLConnection) obj.openConnection();
 
-        private String pagePath_;
-        private String dataPath_;
+            con.setInstanceFollowRedirects(false);
+            con.setUseCaches(false);
 
-        UpdatePage(int quarterNumber, int weekInQuarter) {
-            quarterNumber_ = quarterNumber;
-            weekInQuarter_ = weekInQuarter;
+            con.setRequestMethod("GET");
+            con.setRequestProperty("User-Agent", USER_AGENT);
+            String cookies = "csrftoken=" + csrftoken_ + "; sessionid=" + sessionid_;
+            System.out.println("cookies -> " + cookies);
+            con.setRequestProperty("cookie", cookies);
 
-            setWeekInYear();
-            setPaths();
-        }
+            BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
 
-        UpdatePage(int quarterNumber, int weekInQuarter, int weekInYear) {
-            quarterNumber_ = quarterNumber;
-            weekInQuarter_ = weekInQuarter;
-            weekInYear_ = weekInYear;
+            String inputLine;
+            StringBuffer response = new StringBuffer();
 
-            setPaths();
-        }
-
-        @Override
-        public void run() {
-            try {
-                FileWriter fout = new FileWriter(pagePath_, false);
-                fout.write(getPageCode(links_.get(weekInYear_)));
-                fout.flush();
-                fout.close();
-            } catch (Exception e) {
-                // I'll definitely handle it later
+            while ((inputLine = in.readLine()) != null) {
+                response.append(inputLine);
+                response.append("\n");
             }
 
-            pageParser_.parsePage(pagePath_, dataPath_);
-        }
+            in.close();
 
-        private void setWeekInYear() {
-            weekInYear_ = 0;
-            for (int i = 0; i <= quarterNumber_; i++) {
-                weekInYear_ += amountsOfWeeks_[i];
-            }
-            weekInYear_ += weekInQuarter_;
-        }
-
-        private void setPaths() {
-            pagePath_ = ROOT_DIRECTORY;
-            pagePath_ += "/p" + Integer.toString(quarterNumber_ + 1) + "q/w";
-            pagePath_ += Integer.toString(weekInQuarter_ + 1);
-            pagePath_ += ".html";
-
-            dataPath_ = ROOT_DIRECTORY;
-            dataPath_ += "/d" + Integer.toString(quarterNumber_ + 1) + "q/w";
-            dataPath_ += Integer.toString(weekInQuarter_ + 1);
-            dataPath_ += ".txt";
+            return response.toString();
+        } catch (Exception e) {
+            return "-";
         }
     }
 
+    public boolean downloadPage(int quarterNumber, int weekNumber) { // from one
+        int linkIndex = weekNumber - 1;
+        for (int i = 1; i < quarterNumber; i++) {
+            linkIndex += amountsOfWeeks_[i];
+        }
+
+        try {
+            String pageCode = "-";
+            int counter = 5;
+            while (counter > 0 && pageCode.equals("-")) {
+                pageCode = getPageCode(links_.get(linkIndex));
+                counter--;
+                System.out.println("NETWORK ERROR");
+            }
+            if (pageCode.equals("-")) {
+                System.out.println("NETWORK ERROR (FINAL)");
+                return false;
+            }
+            FileWriter fout = new FileWriter(
+                    ROOT_DIRECTORY + "/p" + Integer.toString(quarterNumber) +
+                    "q/w" + Integer.toString(weekNumber) + ".html"
+            );
+            fout.write(pageCode);
+            fout.flush();
+            fout.close();
+        } catch (Exception e) {
+            System.out.print("EXCEPTION -> ");
+            System.out.println(e);
+            return false;
+        }
+        return true;
+    }
+
+    public void readWeek(String weekPath, int quarterNumber, int weekNumber) throws Exception { // from one
+        ReadStage stage = ReadStage.LESSON;
+        FileReader fin = new FileReader(weekPath);
+        int currentChar;
+        String buf = "";
+
+        if (maxLessons_[quarterNumber - 1][weekNumber - 1] == null) {
+            int stagesCounter = 0;
+            while ((currentChar = fin.read()) != -1) {
+                if (currentChar == '>') {
+                    stagesCounter++;
+                    switch (stage) {
+                        case LESSON:
+                            stage = ReadStage.MARK;
+                            lessonNames_.get(quarterNumber - 1).get(weekNumber - 1).add(buf);
+                            break;
+                        case MARK:
+                            stage = ReadStage.HOMETASK;
+                            marks_.get(quarterNumber - 1).get(weekNumber - 1).add(buf);
+                            break;
+                        case HOMETASK:
+                            stage = ReadStage.LESSON;
+                            hometasks_.get(quarterNumber - 1).get(weekNumber - 1).add(buf);
+                            break;
+                    }
+                    buf = "";
+                } else {
+                    buf += (char)currentChar;
+                }
+            }
+            maxLessons_[quarterNumber - 1][weekNumber - 1] = stagesCounter / 18;
+        } else {
+            while ((currentChar = fin.read()) != -1) {
+                if (currentChar == '>') {
+                    switch (stage) {
+                        case LESSON:
+                            stage = ReadStage.MARK;
+                            lessonNames_.get(quarterNumber - 1).get(weekNumber - 1).add(buf);
+                            break;
+                        case MARK:
+                            stage = ReadStage.HOMETASK;
+                            marks_.get(quarterNumber - 1).get(weekNumber - 1).add(buf);
+                            break;
+                        case HOMETASK:
+                            stage = ReadStage.LESSON;
+                            hometasks_.get(quarterNumber - 1).get(weekNumber - 1).add(buf);
+                            break;
+                    }
+                    buf = "";
+                } else {
+                    buf += (char)currentChar;
+                }
+            }
+        }
+    }
+
+    public ArrayList<String> getLessonNames(int quarterNumber, int weekNumber) {
+        return lessonNames_.get(quarterNumber - 1).get(weekNumber - 1);
+    }
+    public ArrayList<String> getMarks(int quarterNumber, int weekNumber) {
+        return marks_.get(quarterNumber - 1).get(weekNumber - 1);
+    }
+    public ArrayList<String> getHometasks(int quarterNumber, int weekNumber) {
+        return hometasks_.get(quarterNumber - 1).get(weekNumber - 1);
+    }
+    public int               getMaxLessons(int quarterNumber, int weekNumber) {
+        if (maxLessons_[quarterNumber - 1][weekNumber - 1] != null) {
+            return maxLessons_[quarterNumber - 1][weekNumber - 1];
+        }
+        return -1;
+    }
+
+    private void fillDaysInMonth() {
+        int secondYear = Calendar.getInstance().get(Calendar.YEAR);
+        if (Calendar.getInstance().get(Calendar.MONTH) > 7) {
+            secondYear++;
+        }
+
+        daysInMonth_[1] = 31;
+        if (isLeap(secondYear)) {
+            daysInMonth_[2] = 29;
+        }
+        else {
+            daysInMonth_[2] = 28;
+        }
+        daysInMonth_[3] = 31;
+        daysInMonth_[4] = 30;
+        daysInMonth_[5] = 31;
+        daysInMonth_[6] = 30;
+        daysInMonth_[7] = 31;
+        daysInMonth_[8] = 31;
+        daysInMonth_[9] = 30;
+        daysInMonth_[10] = 31;
+        daysInMonth_[11] = 30;
+        daysInMonth_[12] = 31;
+    }
+    private static boolean isLeap(int a) {
+        if (a % 400 == 0) {
+            return true;
+        }
+        else if (a % 400 != 0 && a % 100 == 0) {
+            return false;
+        }
+        else if (a % 400 != 0 && a % 100 != 0 && a % 4 == 0) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+    private void initializeArrayLists() {
+        for (int i = 0; i < 4; i++) {
+            lessonNames_.add(new ArrayList< ArrayList<String> >());
+            marks_.add(new ArrayList< ArrayList<String> >());
+            hometasks_.add(new ArrayList< ArrayList<String> >());
+            for (int j = 0; j < amountsOfWeeks_[i]; j++) {
+                lessonNames_.get(i).add(new ArrayList<String>());
+                marks_.get(i).add(new ArrayList<String>());
+                hometasks_.get(i).add(new ArrayList<String>());
+            }
+        }
+    }
     private void checkFolders() {
         File p1qFolder = new File(ROOT_DIRECTORY, "p1q");
         File p2qFolder = new File(ROOT_DIRECTORY, "p2q");
@@ -131,9 +284,8 @@ public class WeekManager {
             p4qFolder.mkdir();
         }
     }
-
     private void readData() throws Exception {
-        String buffer = new String("");
+        String buffer = "";
         int c;
 
         FileReader inputSessionid = new FileReader(ROOT_DIRECTORY + "/UserData/sessionid.txt");
@@ -141,7 +293,7 @@ public class WeekManager {
             buffer += (char)c;
         }
         inputSessionid.close();
-        sessionid_ = new String(buffer);
+        sessionid_ = buffer;
         buffer = "";
 
         FileReader inputPupilUrl = new FileReader(ROOT_DIRECTORY + "/UserData/pupilUrl.txt");
@@ -149,91 +301,13 @@ public class WeekManager {
             buffer += (char)c;
         }
         inputPupilUrl.close();
-        pupilUrl_ = new String(buffer);
-        buffer = "";
+        pupilUrl_ = buffer;
     }
-
-    public void updateQuarter(int quarterNumber) throws Exception { // from zero
-        System.out.println(quarterNumber);
-        cleanPagesFolder(quarterNumber);
-        int linkSum = 0;
-        linkSum = 0;
-        for (int i = 0; i <= quarterNumber; i++) {
-            linkSum += amountsOfWeeks_[i];
-        }
-
-        for (int i = 0; i < amountsOfWeeks_[quarterNumber]; i++) {
-            String fileName = ROOT_DIRECTORY;
-            fileName += "/p" + Integer.toString(quarterNumber + 1) + "q/w";
-            fileName += Integer.toString(i + 1);
-            fileName += ".html";
-
-            FileWriter fout = new FileWriter(fileName, false);
-            fout.write(getPageCode(links_.get(linkSum + i)));
-            fout.flush();
-            fout.close();
-            System.out.println(fileName);
-        }
-    }
-
-    private void cleanPagesFolder(int quarterNumber) {
-        File quarterFolder = new File(ROOT_DIRECTORY + "p" + Integer.toString(quarterNumber + 1) + "q");
-        if (quarterFolder.exists()) {
-            File[] pages = quarterFolder.listFiles();
-            for (File f : pages) {
-                f.delete();
-            }
-        } else {
-            quarterFolder.mkdir();
-        }
-    }
-
-    private ArrayList<String> getQuarterLinks(int quarterNumber) {
-        ArrayList<String> links = new ArrayList<>();
-        String currentLink = new String("");
-        int[] currentDate = new int[3];
-
-        currentDate[0] = firstMondays_[quarterNumber][0];
-        currentDate[1] = firstMondays_[quarterNumber][1];
-        currentDate[2] = firstMondays_[quarterNumber][2];
-
-        for (int week = 0; week < amountsOfWeeks_[quarterNumber]; week++) {
-            currentLink = pupilUrl_;
-
-            currentLink += "quarter/";
-            currentLink += Integer.toString(quarterIds_[quarterNumber]);
-
-            currentLink += "/week/";
-            currentLink += Integer.toString(currentDate[0]);
-            currentLink += "-";
-            if (currentDate[1] < 10) {
-                currentLink += "0";
-            }
-            currentLink += Integer.toString(currentDate[1]);
-            currentLink += "-";
-            if(currentDate[2] < 10) {
-                currentLink += "0";
-            }
-            currentLink += Integer.toString(currentDate[2]);
-
-            System.out.println(currentLink);
-            links.add(week, currentLink);
-
-            currentDate[2] += 7;
-            if (currentDate[2] > daysInMonth_[currentDate[1]]) {
-                currentDate[2] -= daysInMonth_[currentDate[1]];
-                currentDate[1]++;
-            }
-        }
-
-        return links;
-    }
-
-    public void setLinks() {
+    private void setLinks() {
         links_.clear();
         int counter = 0;
         int quarterIdCounter = 0;
-        String currentLink = new String("");
+        String currentLink;
         int[] currentDate = new int[3];
 
         for (int i = 0; i < 4; i++) {
@@ -270,7 +344,7 @@ public class WeekManager {
             quarterIdCounter++;
         }
 
-        String lp = new String(pupilUrl_);
+        String lp = pupilUrl_;
         lp += "last-page";
         links_.add(counter, lp);
 
@@ -283,41 +357,6 @@ public class WeekManager {
             System.out.print("\n");
             temp += amountsOfWeeks_[i];
         }
-    }
-
-    private String getPageCode(String url) throws Exception {
-        if (csrftoken_ == null) {
-            takeCsrftoken();
-            while (csrftoken_ == null) { Thread.sleep(25); }
-            System.out.println("CSRF -> " + csrftoken_);
-        }
-        URL obj = new URL(url);
-        HttpURLConnection con = (HttpURLConnection) obj.openConnection();
-
-        con.setInstanceFollowRedirects(false);
-        con.setUseCaches(false);
-
-        con.setRequestMethod("GET");
-        con.setRequestProperty("User-Agent", USER_AGENT);
-        String cookies = "csrftoken=" + csrftoken_ + "; sessionid=" + sessionid_;
-        System.out.println("cookies -> " + cookies);
-        con.setRequestProperty("cookie", cookies);
-
-        BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
-
-        String inputLine = new String("");
-        StringBuffer response = new StringBuffer();
-
-        while ((inputLine = in.readLine()) != null) {
-            response.append(inputLine);
-            response.append("\n");
-        }
-
-        in.close();
-
-        System.out.println(con.getResponseCode());
-        System.out.println(response.toString());
-        return response.toString();
     }
 
     public void takeCsrftoken() throws Exception {
@@ -345,43 +384,15 @@ public class WeekManager {
         }
     }
 
-    private static boolean isLeap(int a) {
-        if (a % 400 == 0) {
-            return true;
+    private void cleanPagesFolder(int quarterNumber) { // from one
+        File quarterFolder = new File(ROOT_DIRECTORY + "p" + Integer.toString(quarterNumber) + "q");
+        if (quarterFolder.exists()) {
+            File[] pages = quarterFolder.listFiles();
+            for (File f : pages) {
+                f.delete();
+            }
+        } else {
+            quarterFolder.mkdir();
         }
-        else if (a % 400 != 0 && a % 100 == 0) {
-            return false;
-        }
-        else if (a % 400 != 0 && a % 100 != 0 && a % 4 == 0) {
-            return true;
-        }
-        else {
-            return false;
-        }
-    }
-
-    private void fillDaysInMonth() {
-        int secondYear = Calendar.getInstance().get(Calendar.YEAR);
-        if (Calendar.getInstance().get(Calendar.MONTH) > 7) {
-            secondYear++;
-        }
-
-        daysInMonth_[1] = 31;
-        if (isLeap(secondYear)) {
-            daysInMonth_[2] = 29;
-        }
-        else {
-            daysInMonth_[2] = 28;
-        }
-        daysInMonth_[3] = 31;
-        daysInMonth_[4] = 30;
-        daysInMonth_[5] = 31;
-        daysInMonth_[6] = 30;
-        daysInMonth_[7] = 31;
-        daysInMonth_[8] = 31;
-        daysInMonth_[9] = 30;
-        daysInMonth_[10] = 31;
-        daysInMonth_[11] = 30;
-        daysInMonth_[12] = 31;
     }
 }

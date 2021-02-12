@@ -3,13 +3,8 @@ package com.example.journal;
 import android.content.Intent;
 import android.os.Bundle;
 
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.android.material.snackbar.Snackbar;
-
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
 
-import android.view.View;
 import android.widget.Toast;
 
 import java.io.File;
@@ -34,16 +29,16 @@ public class StartPage extends AppCompatActivity {
         checkAndFix();
         if (checkStatus()) {
             Toast.makeText(this, "Already logged in", Toast.LENGTH_SHORT).show();
-            nextActivity = new Intent(this, MainMenu.class);
+            nextActivity = new Intent(this, MainMenuActivity.class);
             Timer switchTimer = new Timer();
             SwitchTimerTask timerTask = new SwitchTimerTask();
-            switchTimer.schedule(timerTask, 750);
+            switchTimer.schedule(timerTask, 0);
         } else {
             Toast.makeText(this, "Not logged in", Toast.LENGTH_SHORT).show();
-            nextActivity = new Intent(this, NewUserLoginPage.class);
+            nextActivity = new Intent(this, LogInActivity.class);
             Timer switchTimer = new Timer();
             SwitchTimerTask timerTask = new SwitchTimerTask();
-            switchTimer.schedule(timerTask, 750);
+            switchTimer.schedule(timerTask, 0);
         }
     }
 

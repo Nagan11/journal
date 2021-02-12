@@ -1,6 +1,5 @@
 package com.example.journal;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -16,7 +15,7 @@ import android.widget.Toast;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class NewUserLoginPage extends AppCompatActivity {
+public class LogInActivity extends AppCompatActivity {
     private String ROOT_DIRECTORY;
     private Context THIS_CONTEXT;
     private TextInputEditText usernameField;
@@ -49,7 +48,7 @@ public class NewUserLoginPage extends AppCompatActivity {
 
         logInManager = new LogInManager(ROOT_DIRECTORY);
 
-        mainMenuActivity = new Intent(this, MainMenu.class);
+        mainMenuActivity = new Intent(this, MainMenuActivity.class);
 
         breakLoginAttempt = false;
 
