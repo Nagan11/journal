@@ -331,23 +331,23 @@ public class MainMenuActivity extends AppCompatActivity {
 
             int startIndex = 0;
             week_.add(new DayUI(context_, startIndex, startIndex + weekManager_.getMaxLessons(quarterNumber_, weekNumber_) - 1,
-                    "1", weekManager_.getLessonNames(quarterNumber_, weekNumber_),
+                    weekManager_.getDates(quarterNumber_, weekNumber_).get(0), weekManager_.getLessonNames(quarterNumber_, weekNumber_),
                     weekManager_.getMarks(quarterNumber_, weekNumber_), weekManager_.getHometasks(quarterNumber_, weekNumber_)));
             startIndex += weekManager_.getMaxLessons(quarterNumber_, weekNumber_);
             week_.add(new DayUI(context_, startIndex, startIndex + weekManager_.getMaxLessons(quarterNumber_, weekNumber_) - 1,
-                    "2", weekManager_.getLessonNames(quarterNumber_, weekNumber_),
+                    weekManager_.getDates(quarterNumber_, weekNumber_).get(1), weekManager_.getLessonNames(quarterNumber_, weekNumber_),
                     weekManager_.getMarks(quarterNumber_, weekNumber_), weekManager_.getHometasks(quarterNumber_, weekNumber_)));
             startIndex += weekManager_.getMaxLessons(quarterNumber_, weekNumber_);
             week_.add(new DayUI(context_, startIndex, startIndex + weekManager_.getMaxLessons(quarterNumber_, weekNumber_) - 1,
-                    "3", weekManager_.getLessonNames(quarterNumber_, weekNumber_),
+                    weekManager_.getDates(quarterNumber_, weekNumber_).get(2), weekManager_.getLessonNames(quarterNumber_, weekNumber_),
                     weekManager_.getMarks(quarterNumber_, weekNumber_), weekManager_.getHometasks(quarterNumber_, weekNumber_)));
             startIndex += weekManager_.getMaxLessons(quarterNumber_, weekNumber_);
             week_.add(new DayUI(context_, startIndex, startIndex + weekManager_.getMaxLessons(quarterNumber_, weekNumber_) - 1,
-                    "4", weekManager_.getLessonNames(quarterNumber_, weekNumber_),
+                    weekManager_.getDates(quarterNumber_, weekNumber_).get(3), weekManager_.getLessonNames(quarterNumber_, weekNumber_),
                     weekManager_.getMarks(quarterNumber_, weekNumber_), weekManager_.getHometasks(quarterNumber_, weekNumber_)));
             startIndex += weekManager_.getMaxLessons(quarterNumber_, weekNumber_);
             week_.add(new DayUI(context_, startIndex, startIndex + weekManager_.getMaxLessons(quarterNumber_, weekNumber_) - 1,
-                    "5", weekManager_.getLessonNames(quarterNumber_, weekNumber_),
+                    weekManager_.getDates(quarterNumber_, weekNumber_).get(4), weekManager_.getLessonNames(quarterNumber_, weekNumber_),
                     weekManager_.getMarks(quarterNumber_, weekNumber_), weekManager_.getHometasks(quarterNumber_, weekNumber_)));
 
             runOnUiThread(new BuildWeekRunnable());
@@ -385,7 +385,7 @@ public class MainMenuActivity extends AppCompatActivity {
 
         SCROLL_LAYOUT = findViewById(R.id.ScrollLayout);
 
-        Thread downloadThread = new Thread(new UpdatePageThreadRunnable(this, 3, 1, false));
+        Thread downloadThread = new Thread(new UpdatePageThreadRunnable(this, weekManager_.getCurrentQuarter(), weekManager_.getCurrentWeek(), false));
         downloadThread.start();
     }
 

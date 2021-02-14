@@ -8,6 +8,7 @@ import java.io.InputStreamReader;
 import java.net.*;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.List;
 
 public class WeekManager {
@@ -23,13 +24,41 @@ public class WeekManager {
     private ArrayList<String> links_ = new ArrayList<>();
     private int[] quarterIds_ = new int[] {40, 42, 43, 44};
     private int[] amountsOfWeeks_ = new int[] {9, 7, 11, 9};
-    private int[][] firstMondays_ = new int[][] {
+    private int[][] firstMondays_ = new int[][] { // year, month, date
             {2020, 8, 31},
             {2020, 11, 9},
             {2021, 1, 11},
             {2021, 4, 5}
     };
 
+    private GregorianCalendar calendar_ = new GregorianCalendar();
+    private int currentQuarter_ = -1;
+    private int currentWeek_ = -1;
+
+    private ArrayList< ArrayList< ArrayList<String> > > dates_ = new ArrayList<>(4);
+    private String[] monthNames_ = new String[] {
+            "января",
+            "февраля",
+            "марта",
+            "апреля",
+            "мая",
+            "июня",
+            "июля",
+            "августа",
+            "сентября",
+            "октября",
+            "ноября",
+            "декабря"
+    };
+    private String[] weekDayNames_ = new String[] {
+            "Вс",
+            "Пн",
+            "Вт",
+            "Ср",
+            "Чт",
+            "Пт",
+            "Сб"
+    };
     private ArrayList< ArrayList< ArrayList<String> > > lessonNames_ = new ArrayList<>(4);
     private ArrayList< ArrayList< ArrayList<String> > > marks_ = new ArrayList<>(4);
     private ArrayList< ArrayList< ArrayList<String> > > hometasks_ = new ArrayList<>(4);
@@ -51,9 +80,12 @@ public class WeekManager {
 
     WeekManager(String rtDir, String csrftoken) {
         ROOT_DIRECTORY = rtDir;
+        calendar_.set(calendar_.get(Calendar.YEAR), calendar_.get(Calendar.MONTH), calendar_.get(Calendar.DAY_OF_MONTH), 0, 0, 0);
 
+        defineQuarterAndWeek();
         fillDaysInMonth();
         initializeArrayLists();
+        fillDates();
         checkFolders();
 
         csrftoken_ = csrftoken;
@@ -113,7 +145,7 @@ public class WeekManager {
     public boolean downloadPage(int quarterNumber, int weekNumber) { // from one
         int linkIndex = weekNumber - 1;
         for (int i = 1; i < quarterNumber; i++) {
-            linkIndex += amountsOfWeeks_[i];
+            linkIndex += amountsOfWeeks_[i - 1];
         }
 
         try {
@@ -199,6 +231,9 @@ public class WeekManager {
         }
     }
 
+    public ArrayList<String> getDates(int quarterNumber, int weekNumber) {
+        return dates_.get(quarterNumber - 1).get(weekNumber - 1);
+    }
     public ArrayList<String> getLessonNames(int quarterNumber, int weekNumber) {
         return lessonNames_.get(quarterNumber - 1).get(weekNumber - 1);
     }
@@ -215,6 +250,174 @@ public class WeekManager {
         return -1;
     }
 
+    public int getCurrentQuarter() {
+        return currentQuarter_;
+    }
+    public int getCurrentWeek() {
+        return currentWeek_;
+    }
+
+    private void defineQuarterAndWeek() {
+        GregorianCalendar tempCalendar = new GregorianCalendar();
+        tempCalendar.set(tempCalendar.get(Calendar.YEAR), tempCalendar.get(Calendar.MONTH), tempCalendar.get(Calendar.DAY_OF_MONTH), 0, 0, 0);
+        tempCalendar.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
+        if (tempCalendar.get(Calendar.YEAR) < firstMondays_[0][0] || tempCalendar.get(Calendar.YEAR) > firstMondays_[3][0]) {
+            currentQuarter_ = -1;
+            currentWeek_ = -1;
+        } else if (tempCalendar.get(Calendar.YEAR) == firstMondays_[0][0]) {
+            if (tempCalendar.get(Calendar.MONTH) < firstMondays_[0][1] - 1) {
+                currentQuarter_ = 1;
+                currentWeek_ = 1;
+            } else if (tempCalendar.get(Calendar.MONTH) == firstMondays_[0][1] - 1) {
+                currentQuarter_ = 1;
+                currentWeek_ = 1;
+                if (tempCalendar.get(Calendar.DAY_OF_MONTH) > firstMondays_[0][2] - 1) {
+                    while (tempCalendar.get(Calendar.DAY_OF_MONTH) != firstMondays_[0][2] - 1) {
+                        tempCalendar.roll(Calendar.WEEK_OF_YEAR, false);
+                        currentWeek_++;
+                        if (currentWeek_ > 100) {
+                            currentWeek_ = 1;
+                            return;
+                        }
+                    }
+                }
+            } else if (tempCalendar.get(Calendar.MONTH) > firstMondays_[0][1] - 1 && tempCalendar.get(Calendar.MONTH) < firstMondays_[1][1] - 1 ) {
+                currentQuarter_ = 1;
+                currentWeek_ = 1;
+                while (tempCalendar.get(Calendar.MONTH) != firstMondays_[0][1] - 1 || tempCalendar.get(Calendar.DAY_OF_MONTH) != firstMondays_[0][2]) {
+                    tempCalendar.roll(Calendar.WEEK_OF_YEAR, false);
+                    currentWeek_++;
+                    if (currentWeek_ > 100) {
+                        currentWeek_ = 1;
+                        return;
+                    }
+                }
+                if (currentWeek_ > amountsOfWeeks_[0]) {
+                    currentQuarter_ = 2;
+                    currentWeek_ = 1;
+                }
+            } else if (tempCalendar.get(Calendar.MONTH) == firstMondays_[1][1] - 1) {
+                if (tempCalendar.get(Calendar.DAY_OF_MONTH) < firstMondays_[1][2] - 1) {
+                    currentQuarter_ = 1;
+                    currentWeek_ = 1;
+                    while (tempCalendar.get(Calendar.MONTH) != firstMondays_[0][1] - 1 || tempCalendar.get(Calendar.DAY_OF_MONTH) != firstMondays_[0][2]) {
+                        tempCalendar.roll(Calendar.WEEK_OF_YEAR, false);
+                        currentWeek_++;
+                        if (currentWeek_ > 100) {
+                            currentWeek_ = 1;
+                            return;
+                        }
+                    }
+                    if (currentWeek_ > amountsOfWeeks_[0]) {
+                        currentQuarter_ = 2;
+                        currentWeek_ = 1;
+                    }
+                } else {
+                    currentQuarter_ = 2;
+                    currentWeek_ = 1;
+                    while (tempCalendar.get(Calendar.MONTH) != firstMondays_[1][1] - 1 || tempCalendar.get(Calendar.DAY_OF_MONTH) != firstMondays_[1][2]) {
+                        tempCalendar.roll(Calendar.WEEK_OF_YEAR, false);
+                        currentWeek_++;
+                        if (currentWeek_ > 100) {
+                            currentWeek_ = 1;
+                            return;
+                        }
+                    }
+                }
+            } else if (tempCalendar.get(Calendar.MONTH) > firstMondays_[1][1] - 1) {
+                currentQuarter_ = 2;
+                currentWeek_ = 1;
+                while (tempCalendar.get(Calendar.MONTH) != firstMondays_[1][1] - 1 || tempCalendar.get(Calendar.DAY_OF_MONTH) != firstMondays_[1][2]) {
+                    tempCalendar.roll(Calendar.WEEK_OF_YEAR, false);
+                    currentWeek_++;
+                    if (currentWeek_ > 100) {
+                        currentWeek_ = 1;
+                        return;
+                    }
+                }
+                if (currentWeek_ > amountsOfWeeks_[1]) {
+                    currentQuarter_ = 3;
+                    currentWeek_ = 1;
+                }
+            }
+        } else {
+            if (tempCalendar.get(Calendar.MONTH) < firstMondays_[2][1] - 1) {
+                currentQuarter_ = 3;
+                currentWeek_ = 1;
+            } else if (tempCalendar.get(Calendar.MONTH) == firstMondays_[2][1] - 1) {
+                currentQuarter_ = 3;
+                currentWeek_ = 1;
+                if (tempCalendar.get(Calendar.DAY_OF_MONTH) > firstMondays_[2][2] - 1) {
+                    while (tempCalendar.get(Calendar.DAY_OF_MONTH) != firstMondays_[2][2] - 1) {
+                        tempCalendar.roll(Calendar.WEEK_OF_YEAR, false);
+                        currentWeek_++;
+                        if (currentWeek_ > 100) {
+                            currentWeek_ = 1;
+                            return;
+                        }
+                    }
+                }
+            } else if (tempCalendar.get(Calendar.MONTH) > firstMondays_[2][1] - 1 && tempCalendar.get(Calendar.MONTH) < firstMondays_[3][1] - 1 ) {
+                currentQuarter_ = 3;
+                currentWeek_ = 1;
+                while (tempCalendar.get(Calendar.MONTH) != firstMondays_[2][1] - 1 || tempCalendar.get(Calendar.DAY_OF_MONTH) != firstMondays_[2][2]) {
+                    tempCalendar.roll(Calendar.WEEK_OF_YEAR, false);
+                    currentWeek_++;
+                    if (currentWeek_ > 100) {
+                        currentWeek_ = 1;
+                        return;
+                    }
+                }
+                if (currentWeek_ > amountsOfWeeks_[2]) {
+                    currentQuarter_ = 4;
+                    currentWeek_ = 1;
+                }
+            } else if (tempCalendar.get(Calendar.MONTH) == firstMondays_[3][1] - 1) {
+                if (tempCalendar.get(Calendar.DAY_OF_MONTH) < firstMondays_[3][2] - 1) {
+                    currentQuarter_ = 1;
+                    currentWeek_ = 1;
+                    while (tempCalendar.get(Calendar.MONTH) != firstMondays_[2][1] - 1 || tempCalendar.get(Calendar.DAY_OF_MONTH) != firstMondays_[2][2]) {
+                        tempCalendar.roll(Calendar.WEEK_OF_YEAR, false);
+                        currentWeek_++;
+                        if (currentWeek_ > 100) {
+                            currentWeek_ = 1;
+                            return;
+                        }
+                    }
+                    if (currentWeek_ > amountsOfWeeks_[2]) {
+                        currentQuarter_ = 4;
+                        currentWeek_ = 1;
+                    }
+                } else {
+                    currentQuarter_ = 4;
+                    currentWeek_ = 1;
+                    while (tempCalendar.get(Calendar.MONTH) != firstMondays_[3][1] - 1 || tempCalendar.get(Calendar.DAY_OF_MONTH) != firstMondays_[3][2]) {
+                        tempCalendar.roll(Calendar.WEEK_OF_YEAR, false);
+                        currentWeek_++;
+                        if (currentWeek_ > 100) {
+                            currentWeek_ = 1;
+                            return;
+                        }
+                    }
+                }
+            } else if (tempCalendar.get(Calendar.MONTH) > firstMondays_[3][1] - 1) {
+                currentQuarter_ = 4;
+                currentWeek_ = 1;
+                while (tempCalendar.get(Calendar.MONTH) != firstMondays_[3][1] - 1 || tempCalendar.get(Calendar.DAY_OF_MONTH) != firstMondays_[3][2]) {
+                    tempCalendar.roll(Calendar.WEEK_OF_YEAR, false);
+                    currentWeek_++;
+                    if (currentWeek_ > 100) {
+                        currentWeek_ = 1;
+                        return;
+                    }
+                }
+                if (currentWeek_ > amountsOfWeeks_[3]) {
+                    currentQuarter_ = 4;
+                    currentWeek_ = 1;
+                }
+            }
+        }
+    }
     private void fillDaysInMonth() {
         int secondYear = Calendar.getInstance().get(Calendar.YEAR);
         if (Calendar.getInstance().get(Calendar.MONTH) > 7) {
@@ -265,6 +468,30 @@ public class WeekManager {
             }
         }
     }
+    private void fillDates() {
+        GregorianCalendar cal;
+        for (int i = 0; i < 4; i++) {
+            cal = new GregorianCalendar(firstMondays_[i][0], firstMondays_[i][1] - 1, firstMondays_[i][2]);
+            cal.setFirstDayOfWeek(Calendar.MONDAY);
+            dates_.add(new ArrayList<ArrayList<String>>());
+            for (int j = 0; j < amountsOfWeeks_[i]; j++) {
+                dates_.get(i).add(new ArrayList<String>());
+                for (int k = 0; k < 7; k++) {
+                    String currentDate = Integer.toString(cal.get(Calendar.DAY_OF_MONTH));
+                    currentDate += " ";
+                    currentDate += monthNames_[cal.get(Calendar.MONTH)];
+                    currentDate += ", ";
+                    currentDate += Integer.toString(cal.get(Calendar.YEAR));
+                    currentDate += " (";
+                    currentDate += weekDayNames_[cal.get(Calendar.DAY_OF_WEEK) - 1];
+                    currentDate += ")";
+                    dates_.get(i).get(j).add(currentDate);
+                    cal.roll(Calendar.DAY_OF_WEEK, true);
+                }
+                cal.roll(Calendar.WEEK_OF_YEAR, true);
+            }
+        }
+    }
     private void checkFolders() {
         File p1qFolder = new File(ROOT_DIRECTORY, "p1q");
         File p2qFolder = new File(ROOT_DIRECTORY, "p2q");
@@ -305,7 +532,6 @@ public class WeekManager {
     }
     private void setLinks() {
         links_.clear();
-        int counter = 0;
         int quarterIdCounter = 0;
         String currentLink;
         int[] currentDate = new int[3];
@@ -314,7 +540,7 @@ public class WeekManager {
             currentDate[0] = firstMondays_[i][0];
             currentDate[1] = firstMondays_[i][1];
             currentDate[2] = firstMondays_[i][2];
-            for (int week = 0; week < amountsOfWeeks_[i]; week++, counter++) {
+            for (int week = 0; week < amountsOfWeeks_[i]; week++) {
                 currentLink = pupilUrl_;
 
                 currentLink += "quarter/";
@@ -333,7 +559,7 @@ public class WeekManager {
                 }
                 currentLink += Integer.toString(currentDate[2]);
 
-                links_.add(counter, currentLink);
+                links_.add(currentLink);
 
                 currentDate[2] += 7;
                 if (currentDate[2] > daysInMonth_[currentDate[1]]) {
@@ -346,17 +572,7 @@ public class WeekManager {
 
         String lp = pupilUrl_;
         lp += "last-page";
-        links_.add(counter, lp);
-
-        int temp = 0;
-        for (int i = 0; i < 4; i++) {
-            System.out.println(Integer.toString(i + 1) + " quarter");
-            for (int j = 0; j < amountsOfWeeks_[i]; j++) {
-                System.out.println(links_.get(temp + j));
-            }
-            System.out.print("\n");
-            temp += amountsOfWeeks_[i];
-        }
+        links_.add(lp);
     }
 
     public void takeCsrftoken() throws Exception {
