@@ -14,12 +14,12 @@
         android:layout_height="match_parent"
         android:background="@color/journalBackground">
 
-        <androidx.constraintlayout.widget.ConstraintLayout
+        <LinearLayout
             android:id="@+id/ScrollLayout"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-
-        </androidx.constraintlayout.widget.ConstraintLayout>
+            android:layout_height="wrap_content"
+            android:layout_margin="16dp"
+            android:orientation="vertical"/>
     </ScrollView>
 
     <TextView
