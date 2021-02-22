@@ -3,18 +3,13 @@ package com.example.journal;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.ConstraintSet;
-import androidx.core.content.res.ResourcesCompat;
-import androidx.core.view.ViewCompat;
+import androidx.fragment.app.Fragment;
 
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Color;
 import android.os.Bundle;
-import android.view.Gravity;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.LinearLayout;
-import android.widget.TableLayout;
 import android.widget.TextView;
 
 import java.io.File;
@@ -22,257 +17,103 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.util.ArrayList;
 
-enum LessonType {
-    FIRST_LESSON,
-    MIDDLE_LESSON,
-    LAST_LESSON,
-    THE_ONLY_LESSON
-}
 
-class LessonUI {
-    private LinearLayout lessonMarkContainer_;
-    private TextView lessonName_;
-    private TextView mark_;
-
-    private TextView hometask_;
-
-    public LessonUI(Context context, String lessonName, String mark, String hometask, LessonType lessonType, boolean lastDay) {
-        // initialization
-        lessonMarkContainer_ = new LinearLayout(context);
-        lessonName_ = new TextView(context);
-        mark_ = new TextView(context);
-        hometask_ = new TextView(context);
-
-        lessonMarkContainer_.setId(View.generateViewId());
-        lessonName_.setId(View.generateViewId());
-        mark_.setId(View.generateViewId());
-        hometask_.setId(View.generateViewId());
-
-        // configure lessonName
-        lessonName_.setText(lessonName);
-        lessonName_.setTextSize(30f);
-        lessonName_.setTextColor(Color.BLACK);
-        lessonName_.setPadding(Calculation.dpToPx(12, context), Calculation.dpToPx(12, context), 0, Calculation.dpToPx(12, context));
-        lessonName_.setGravity(Gravity.LEFT | Gravity.CENTER_VERTICAL);
-
-        // configure mark
-        if (mark.equals("N/A")) {
-            mark_.setText("");
-        } else {
-            mark_.setText(mark);
-        }
-        mark_.setTextSize(30f);
-        mark_.setTextColor(Color.BLACK);
-        mark_.setPadding(0, Calculation.dpToPx(12, context), Calculation.dpToPx(12, context), Calculation.dpToPx(12, context));
-        mark_.setGravity(Gravity.CENTER);
-
-        // configure lessonMarkContainer
-        lessonMarkContainer_.addView(lessonName_);
-        lessonMarkContainer_.addView(mark_);
-
-        LinearLayout.LayoutParams lessonMarkParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        lessonMarkParams.setLayoutDirection(LinearLayout.HORIZONTAL);
-        LinearLayout.LayoutParams lessonNameParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
-        LinearLayout.LayoutParams markParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, 0f);
-
-        // configure hometask
-        TableLayout.LayoutParams hometaskParams = new TableLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        hometask_.setPadding(Calculation.dpToPx(12, context), Calculation.dpToPx(12, context), Calculation.dpToPx(12, context), Calculation.dpToPx(12, context));
-        if (hometask.equals("")) {
-            hometask_.setText("-");
-        } else {
-            hometask_.setText(hometask);
-        }
-        hometask_.setTextSize(18f);
-        hometask_.setTextColor(Color.BLACK);
-        hometask_.setGravity(Gravity.LEFT | Gravity.CENTER_VERTICAL);
-
-        // fill lessons array
-        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-        params.setMargins(0, 0, 0, Calculation.dpToPx(6, context));
-        switch (lessonType) {
-            case FIRST_LESSON:
-                lessonMarkContainer_.setBackground(ResourcesCompat.getDrawable(context.getResources(), R.drawable.first_lesson_mark_background, null));
-                hometask_.setBackground(ResourcesCompat.getDrawable(context.getResources(), R.drawable.middle_hometask_background, null));
-                hometaskParams.setMargins(0, 0, 0, Calculation.dpToPx(6, context));
-                break;
-            case MIDDLE_LESSON:
-                lessonMarkContainer_.setBackground(ResourcesCompat.getDrawable(context.getResources(), R.drawable.middle_lesson_mark_background, null));
-                hometask_.setBackground(ResourcesCompat.getDrawable(context.getResources(), R.drawable.middle_hometask_background, null));
-                hometaskParams.setMargins(0, 0, 0, Calculation.dpToPx(6, context));
-                break;
-            case LAST_LESSON:
-                lessonMarkContainer_.setBackground(ResourcesCompat.getDrawable(context.getResources(), R.drawable.middle_lesson_mark_background, null));
-                hometask_.setBackground(ResourcesCompat.getDrawable(context.getResources(), R.drawable.last_hometask_background, null));
-                if (lastDay) {
-                    hometaskParams.setMargins(0, 0, 0, Calculation.dpToPx(32, context));
-                } else {
-                    hometaskParams.setMargins(0, 0, 0, Calculation.dpToPx(80, context));
-                }
-                break;
-            case THE_ONLY_LESSON:
-                lessonMarkContainer_.setBackground(ResourcesCompat.getDrawable(context.getResources(), R.drawable.first_lesson_mark_background, null));
-                hometask_.setBackground(ResourcesCompat.getDrawable(context.getResources(), R.drawable.last_hometask_background, null));
-                if (lastDay) {
-                    hometaskParams.setMargins(0, 0, 0, Calculation.dpToPx(32, context));
-                } else {
-                    hometaskParams.setMargins(0, 0, 0, Calculation.dpToPx(80, context));
-                }
-                break;
-        }
-
-        // apply layout params
-        lessonMarkContainer_.setLayoutParams(lessonMarkParams);
-        lessonName_.setLayoutParams(lessonNameParams);
-        mark_.setLayoutParams(markParams);
-        hometask_.setLayoutParams(hometaskParams);
-    }
-
-    public LinearLayout getLessonMarkContainer() {
-        return lessonMarkContainer_;
-    }
-    public TextView getHometask() {
-        return hometask_;
-    }
-}
-
-class DayUI {
-    private TextView date_;
-    private ArrayList<LessonUI> lessons_ = new ArrayList<>();
-
-    public boolean dayIsEmpty = false;
-
-
-    public DayUI(Context context, int firstIndex, int lastIndex, String date, ArrayList<String> lessons, ArrayList<String> marks, ArrayList<String> hometasks, boolean lastDay) {
-        // initialization
-        date_ = new TextView(context);
-        date_.setId(View.generateViewId());
-
-        // configure date
-        date_.setText(date);
-        date_.setTextSize(16f);
-        date_.setGravity(Gravity.RIGHT);
-        date_.setPadding(0, 0, Calculation.dpToPx(16, context), Calculation.dpToPx(1, context));
-        date_.setTextColor(Color.BLACK);
-
-        TableLayout.LayoutParams dateParams = new TableLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        date_.setLayoutParams(dateParams);
-
-        // define empty day (in progress)
-        boolean triggered = false;
-        for (int i = lastIndex; i >= firstIndex; i--) {
-            if (!lessons.get(i).equals("-")) {
-                lastIndex = i;
-                triggered = true;
-                break;
-            }
-        }
-
-        if (!triggered) {
-            dayIsEmpty = true;
-            return;
-        }
-
-        // fill lessons array
-        if (firstIndex == lastIndex) {
-            lessons_.add(new LessonUI(context, lessons.get(lastIndex), marks.get(lastIndex), hometasks.get(lastIndex), LessonType.THE_ONLY_LESSON, lastDay));
-        } else {
-            lessons_.add(new LessonUI(context, lessons.get(firstIndex), marks.get(firstIndex), hometasks.get(firstIndex), LessonType.FIRST_LESSON, false));
-            for (int i = firstIndex + 1; i < lastIndex; i++) {
-                lessons_.add(new LessonUI(context, lessons.get(i), marks.get(i), hometasks.get(i), LessonType.MIDDLE_LESSON, false));
-            }
-            lessons_.add(new LessonUI(context, lessons.get(lastIndex), marks.get(lastIndex), hometasks.get(lastIndex), LessonType.LAST_LESSON, lastDay));
-        }
-    }
-
-    public TextView getDate() {
-        return date_;
-    }
-    public ArrayList<LessonUI> getLessons() {
-        return lessons_;
-    }
-}
 
 public class MainMenuActivity extends AppCompatActivity {
     private String ROOT_DIRECTORY;
+    private int SCREEN_WIDTH = 1080;
+    private int SCREEN_HEIGHT = 1920;
+    private int STATUS_BAR_HEIGHT = 0;
+    private int fragmentHeight_;
+    private int buttonHeight_;
 
-    private LinearLayout SCROLL_LAYOUT;
+    private ArrayList<Fragment> FRAGMENTS = new ArrayList<>();
+    private ArrayList<LinearLayout> SCROLL_LAYOUTS = new ArrayList<>();
+    private ArrayList<TextView> STATUS_TEXTS = new ArrayList<>();
     private ConstraintLayout ROOT_LAYOUT;
-    private ConstraintSet rootLayoutSet = new ConstraintSet();
 
-    private TextView statusText_;
-
-    private ArrayList<DayUI> week_ = new ArrayList<>();
+    private ConstraintSet rootLayoutSet_ = new ConstraintSet();
+    private int[] currentOrder_ = new int[] {0, 1, 2};
 
     private WeekManager weekManager_;
+    private PageParser parser_;
+
+    private int middleQuarter_, middleWeek_;
 
     private boolean isOne_ = true;
 
-    int statusBarHeight_ = 0;
-
-    private void buildWeek() {
-        for (int i = 0; i < week_.size(); i++) {
-            SCROLL_LAYOUT.addView(week_.get(i).getDate());
-            for (LessonUI l : week_.get(i).getLessons()) {
-                SCROLL_LAYOUT.addView(l.getLessonMarkContainer());
-                SCROLL_LAYOUT.addView(l.getHometask());
-            }
-        }
-    }
-
     class UpdatePageThreadRunnable implements Runnable {
         private Context context_;
+
+        private PageDownloader downloader_;
+
+
+        private ArrayList<ViewSets.Day> week_ = new ArrayList<>();
         private int quarterNumber_, weekNumber_;
         private boolean weekIsReady_;
         private String pagePath_ = "";
         private String dataPath_ = "";
-        long start_;
+        private int index_;
 
-        UpdatePageThreadRunnable(Context context, int quarter, int week, boolean weekState) {
+        UpdatePageThreadRunnable(Context context, int index, int quarter, int week, boolean weekState) {
             context_ = context;
+            index_ = index;
             quarterNumber_ = quarter;
             weekNumber_ = week;
             weekIsReady_ = weekState;
+
+            downloader_ = new PageDownloader(ROOT_DIRECTORY, weekManager_.getSessionid(), weekManager_.getPupilUrl());
 
             pagePath_ = (ROOT_DIRECTORY + "/p" + Integer.toString(quarterNumber_) + "q/w" + Integer.toString(weekNumber_) + ".html");
             dataPath_ = (ROOT_DIRECTORY + "/d" + Integer.toString(quarterNumber_) + "q/w" + Integer.toString(weekNumber_) + ".txt");
         }
 
+        private void buildWeek(int index) {
+//            SCROLL_LAYOUTS.get(index).removeAllViews();
+            for (int i = 0; i < week_.size(); i++) {
+                SCROLL_LAYOUTS.get(index).addView(week_.get(i).getDate());
+                for (ViewSets.Lesson l : week_.get(i).getLessons()) {
+                    SCROLL_LAYOUTS.get(index).addView(l.getLessonMarkContainer());
+                    SCROLL_LAYOUTS.get(index).addView(l.getHometask());
+                }
+            }
+        }
+
         class SetDownloadingStatusRunnable implements Runnable {
             @Override
             public void run() {
-                statusText_.setText("Downloading...");
+                STATUS_TEXTS.get(index_).setText("Downloading...");
             }
         }
         class SetGatheringInfoStatusRunnable implements Runnable {
             @Override
             public void run() {
-                statusText_.setText("Gathering info...");
+                STATUS_TEXTS.get(index_).setText("Gathering info...");
             }
         }
         class SetDownloadingErrorStatusRunnable implements Runnable {
             @Override
             public void run() {
-                statusText_.setText("Downloading\nerror");
+                STATUS_TEXTS.get(index_).setText("Downloading\nerror");
             }
         }
         class SetGatheringInfoErrorStatusRunnable implements Runnable {
             @Override
             public void run() {
-                statusText_.setText("Gathering info\nerror");
+                STATUS_TEXTS.get(index_).setText("Gathering info\nerror");
             }
         }
         class SetLoadingStatusRunnable implements Runnable {
             @Override
             public void run() {
-                statusText_.setText("Loading...");
+                STATUS_TEXTS.get(index_).setText("Loading...");
             }
         }
         class BuildWeekRunnable implements Runnable {
             @Override
             public void run() {
-                buildWeek();
-                statusText_.setVisibility(View.INVISIBLE);
+                buildWeek(index_);
+                STATUS_TEXTS.get(index_).setVisibility(View.INVISIBLE);
             }
         }
 
@@ -280,16 +121,21 @@ public class MainMenuActivity extends AppCompatActivity {
         public void run() {
             if (!weekIsReady_) {
                 runOnUiThread(new SetDownloadingStatusRunnable());
-                if (weekManager_.downloadPage(quarterNumber_, weekNumber_)) {
+                if (downloader_.downloadPage(quarterNumber_, weekNumber_, weekManager_.getLink(quarterNumber_, weekNumber_))) {
                     runOnUiThread(new SetGatheringInfoStatusRunnable());
                 } else {
                     runOnUiThread(new SetDownloadingErrorStatusRunnable());
                     return;
                 }
 
-                weekManager_.pageParser.parsePage(pagePath_, dataPath_);
+                synchronized (parser_) {
+                    parser_.parsePage(pagePath_, dataPath_);
+                }
+
                 try {
-                    weekManager_.readWeek(dataPath_, quarterNumber_, weekNumber_);
+                    synchronized (weekManager_) {
+                        weekManager_.readWeek(dataPath_, quarterNumber_, weekNumber_);
+                    }
                 } catch (Exception e) {
                     runOnUiThread(new SetGatheringInfoErrorStatusRunnable());
                     return;
@@ -298,7 +144,9 @@ public class MainMenuActivity extends AppCompatActivity {
             } else {
                 runOnUiThread(new SetGatheringInfoStatusRunnable());
                 try {
-                    weekManager_.readWeek(dataPath_, quarterNumber_, weekNumber_);
+                    synchronized (weekManager_) {
+                        weekManager_.readWeek(dataPath_, quarterNumber_, weekNumber_);
+                    }
                 } catch (Exception e) {
                     runOnUiThread(new SetGatheringInfoErrorStatusRunnable());
                     return;
@@ -307,23 +155,23 @@ public class MainMenuActivity extends AppCompatActivity {
             }
 
             int startIndex = 0;
-            week_.add(new DayUI(context_, startIndex, startIndex + weekManager_.getMaxLessons(quarterNumber_, weekNumber_) - 1,
+            week_.add(new ViewSets.Day(context_, startIndex, startIndex + weekManager_.getMaxLessons(quarterNumber_, weekNumber_) - 1,
                     weekManager_.getDates(quarterNumber_, weekNumber_).get(0), weekManager_.getLessonNames(quarterNumber_, weekNumber_),
                     weekManager_.getMarks(quarterNumber_, weekNumber_), weekManager_.getHometasks(quarterNumber_, weekNumber_), false));
             startIndex += weekManager_.getMaxLessons(quarterNumber_, weekNumber_);
-            week_.add(new DayUI(context_, startIndex, startIndex + weekManager_.getMaxLessons(quarterNumber_, weekNumber_) - 1,
+            week_.add(new ViewSets.Day(context_, startIndex, startIndex + weekManager_.getMaxLessons(quarterNumber_, weekNumber_) - 1,
                     weekManager_.getDates(quarterNumber_, weekNumber_).get(1), weekManager_.getLessonNames(quarterNumber_, weekNumber_),
                     weekManager_.getMarks(quarterNumber_, weekNumber_), weekManager_.getHometasks(quarterNumber_, weekNumber_), false));
             startIndex += weekManager_.getMaxLessons(quarterNumber_, weekNumber_);
-            week_.add(new DayUI(context_, startIndex, startIndex + weekManager_.getMaxLessons(quarterNumber_, weekNumber_) - 1,
+            week_.add(new ViewSets.Day(context_, startIndex, startIndex + weekManager_.getMaxLessons(quarterNumber_, weekNumber_) - 1,
                     weekManager_.getDates(quarterNumber_, weekNumber_).get(2), weekManager_.getLessonNames(quarterNumber_, weekNumber_),
                     weekManager_.getMarks(quarterNumber_, weekNumber_), weekManager_.getHometasks(quarterNumber_, weekNumber_), false));
             startIndex += weekManager_.getMaxLessons(quarterNumber_, weekNumber_);
-            week_.add(new DayUI(context_, startIndex, startIndex + weekManager_.getMaxLessons(quarterNumber_, weekNumber_) - 1,
+            week_.add(new ViewSets.Day(context_, startIndex, startIndex + weekManager_.getMaxLessons(quarterNumber_, weekNumber_) - 1,
                     weekManager_.getDates(quarterNumber_, weekNumber_).get(3), weekManager_.getLessonNames(quarterNumber_, weekNumber_),
                     weekManager_.getMarks(quarterNumber_, weekNumber_), weekManager_.getHometasks(quarterNumber_, weekNumber_), false));
             startIndex += weekManager_.getMaxLessons(quarterNumber_, weekNumber_);
-            week_.add(new DayUI(context_, startIndex, startIndex + weekManager_.getMaxLessons(quarterNumber_, weekNumber_) - 1,
+            week_.add(new ViewSets.Day(context_, startIndex, startIndex + weekManager_.getMaxLessons(quarterNumber_, weekNumber_) - 1,
                     weekManager_.getDates(quarterNumber_, weekNumber_).get(4), weekManager_.getLessonNames(quarterNumber_, weekNumber_),
                     weekManager_.getMarks(quarterNumber_, weekNumber_), weekManager_.getHometasks(quarterNumber_, weekNumber_), true));
 
@@ -335,37 +183,38 @@ public class MainMenuActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main_menu);
+
         ROOT_DIRECTORY = String.valueOf(getFilesDir());
         ROOT_LAYOUT = findViewById(R.id.RootLayout);
-        statusText_ = findViewById(R.id.StatusText);
         weekManager_ = new WeekManager(ROOT_DIRECTORY, getIntent().getStringExtra("csrftoken"));
+        parser_ = new PageParser(ROOT_DIRECTORY);
+        fillFragmentArrays();
 
-        setStatusBarHeight();
-        int screenHeight = this.getResources().getDisplayMetrics().heightPixels;
-        int buttonHeight = (int)(screenHeight / 10);
-        int fragmentHeight = screenHeight - buttonHeight - statusBarHeight_;
+        setScreenInfo();
+        buttonHeight_ = (int)(SCREEN_HEIGHT * 0.085f);
+        fragmentHeight_ = SCREEN_HEIGHT - buttonHeight_ - buttonHeight_ - STATUS_BAR_HEIGHT;
 
-        ViewCompat.setTranslationZ(findViewById(R.id.JournalButton), 100f);
-        ViewCompat.setTranslationZ(findViewById(R.id.JournalFragment), 100f);
-
-        rootLayoutSet.clone(ROOT_LAYOUT);
-        rootLayoutSet.constrainHeight(R.id.JournalButton, buttonHeight);
-        rootLayoutSet.constrainHeight(R.id.JournalFragment, fragmentHeight);
-        rootLayoutSet.applyTo(ROOT_LAYOUT);
+        setRootLayoutStartState();
 
         setRealName();
 
-        SCROLL_LAYOUT = findViewById(R.id.ScrollLayout);
+        middleQuarter_ = weekManager_.getCurrentQuarter();
+        middleWeek_ = weekManager_.getCurrentWeek();
+        System.out.println(middleQuarter_ + " " + middleWeek_);
 
-        Thread downloadThread = new Thread(new UpdatePageThreadRunnable(this, weekManager_.getCurrentQuarter(), weekManager_.getCurrentWeek(), false));
-        downloadThread.start();
+        Thread downloadThread0 = new Thread(new UpdatePageThreadRunnable(this, 0, weekManager_.getCurrentQuarter(), weekManager_.getCurrentWeek() - 1, false));
+        Thread downloadThread1 = new Thread(new UpdatePageThreadRunnable(this, 1, weekManager_.getCurrentQuarter(), weekManager_.getCurrentWeek(), false));
+        Thread downloadThread2 = new Thread(new UpdatePageThreadRunnable(this, 2, weekManager_.getCurrentQuarter(), weekManager_.getCurrentWeek() + 1, false));
+        downloadThread0.start();
+        downloadThread1.start();
+        downloadThread2.start();
     }
 
     @Override
     public void onBackPressed() {
         if (!isOne_) {
-            rootLayoutSet.setVerticalBias(R.id.JournalButton, 1f);
-            rootLayoutSet.applyTo(ROOT_LAYOUT);
+            rootLayoutSet_.setVerticalBias(R.id.JournalButton, 1f);
+            rootLayoutSet_.applyTo(ROOT_LAYOUT);
             isOne_ = !isOne_;
         }
     }
@@ -376,12 +225,18 @@ public class MainMenuActivity extends AppCompatActivity {
     }
     public void journalButtonOnClick(View view) {
         if (isOne_) {
-            rootLayoutSet.setVerticalBias(R.id.JournalButton, 0f);
+            rootLayoutSet_.setVerticalBias(R.id.JournalButton, 0f);
         } else {
-            rootLayoutSet.setVerticalBias(R.id.JournalButton, 1f);
+            rootLayoutSet_.setVerticalBias(R.id.JournalButton, 1f);
         }
-        rootLayoutSet.applyTo(ROOT_LAYOUT);
+        rootLayoutSet_.applyTo(ROOT_LAYOUT);
         isOne_ = !isOne_;
+    }
+    public void leftArrowOnClick(View view) {
+        scrollLeft();
+    }
+    public void rightArrowOnClick(View view) {
+        scrollRight();
     }
 
     private void setUserName() {
@@ -431,10 +286,155 @@ public class MainMenuActivity extends AppCompatActivity {
             System.out.println(e);
         }
     }
-    private void setStatusBarHeight() {
+    private void setScreenInfo() {
+        SCREEN_WIDTH = this.getResources().getDisplayMetrics().widthPixels;
+        SCREEN_HEIGHT = this.getResources().getDisplayMetrics().heightPixels;
         int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
         if (resourceId > 0) {
-            statusBarHeight_ = getResources().getDimensionPixelSize(resourceId);
+            STATUS_BAR_HEIGHT = getResources().getDimensionPixelSize(resourceId);
         }
+    }
+    private void fillFragmentArrays() {
+        FRAGMENTS.add(getSupportFragmentManager().findFragmentById(R.id.JournalFragment0));
+        FRAGMENTS.add(getSupportFragmentManager().findFragmentById(R.id.JournalFragment1));
+        FRAGMENTS.add(getSupportFragmentManager().findFragmentById(R.id.JournalFragment2));
+
+        SCROLL_LAYOUTS.add((LinearLayout)findViewById(R.id.ScrollLayout0));
+        SCROLL_LAYOUTS.add((LinearLayout)findViewById(R.id.ScrollLayout1));
+        SCROLL_LAYOUTS.add((LinearLayout)findViewById(R.id.ScrollLayout2));
+
+        STATUS_TEXTS.add((TextView)findViewById(R.id.StatusText0));
+        STATUS_TEXTS.add((TextView)findViewById(R.id.StatusText1));
+        STATUS_TEXTS.add((TextView)findViewById(R.id.StatusText2));
+    }
+
+    private void alignFragments() {
+        rootLayoutSet_.clear(FRAGMENTS.get(currentOrder_[0]).getId(), ConstraintSet.LEFT);
+        rootLayoutSet_.clear(FRAGMENTS.get(currentOrder_[0]).getId(), ConstraintSet.RIGHT);
+        rootLayoutSet_.clear(FRAGMENTS.get(currentOrder_[1]).getId(), ConstraintSet.LEFT);
+        rootLayoutSet_.clear(FRAGMENTS.get(currentOrder_[1]).getId(), ConstraintSet.RIGHT);
+        rootLayoutSet_.clear(FRAGMENTS.get(currentOrder_[2]).getId(), ConstraintSet.LEFT);
+        rootLayoutSet_.clear(FRAGMENTS.get(currentOrder_[2]).getId(), ConstraintSet.RIGHT);
+
+        rootLayoutSet_.connect(FRAGMENTS.get(currentOrder_[1]).getId(), ConstraintSet.LEFT, ROOT_LAYOUT.getId(), ConstraintSet.LEFT, 0);
+        rootLayoutSet_.connect(FRAGMENTS.get(currentOrder_[1]).getId(), ConstraintSet.RIGHT, ROOT_LAYOUT.getId(), ConstraintSet.RIGHT, 0);
+        rootLayoutSet_.setHorizontalBias(FRAGMENTS.get(currentOrder_[1]).getId(), 0.5f);
+        rootLayoutSet_.connect(FRAGMENTS.get(currentOrder_[0]).getId(), ConstraintSet.RIGHT, FRAGMENTS.get(currentOrder_[1]).getId(), ConstraintSet.LEFT, 0);
+        rootLayoutSet_.connect(FRAGMENTS.get(currentOrder_[0]).getId(), ConstraintSet.LEFT, ROOT_LAYOUT.getId(), ConstraintSet.LEFT, 0);
+        rootLayoutSet_.setHorizontalBias(FRAGMENTS.get(currentOrder_[0]).getId(), 1f);
+        rootLayoutSet_.connect(FRAGMENTS.get(currentOrder_[2]).getId(), ConstraintSet.LEFT, FRAGMENTS.get(currentOrder_[1]).getId(), ConstraintSet.RIGHT, 0);
+        rootLayoutSet_.connect(FRAGMENTS.get(currentOrder_[2]).getId(), ConstraintSet.RIGHT, ROOT_LAYOUT.getId(), ConstraintSet.RIGHT, 0);
+        rootLayoutSet_.setHorizontalBias(FRAGMENTS.get(currentOrder_[2]).getId(), 0f);
+
+        rootLayoutSet_.applyTo(ROOT_LAYOUT);
+    }
+    private void scrollLeft() {
+        middleWeek_--;
+        if (middleWeek_ < 1) {
+            middleQuarter_--;
+            if (middleQuarter_ < 1) {
+                middleQuarter_ = 1;
+                middleWeek_ = 1;
+                return;
+            } else {
+                middleWeek_ = weekManager_.getAmountOfWeeks(middleQuarter_);
+            }
+        }
+
+        boolean download = true;
+        int quarterToDownload  = middleQuarter_, weekToDownload = middleWeek_;
+        weekToDownload--;
+        if (weekToDownload < 1) {
+            quarterToDownload--;
+            if (quarterToDownload < 1) {
+                download = false;
+            } else {
+                weekToDownload = weekManager_.getAmountOfWeeks(quarterToDownload);
+            }
+        }
+
+        int[] tempAr = new int[] {currentOrder_[2], currentOrder_[0], currentOrder_[1]};
+        currentOrder_ = tempAr;
+
+        System.out.println("middle index -> " + currentOrder_[1]);
+        System.out.println("qw: " + quarterToDownload + " " + weekToDownload);
+
+        if (download) {
+            SCROLL_LAYOUTS.get(currentOrder_[0]).removeAllViews();
+            STATUS_TEXTS.get(currentOrder_[0]).setVisibility(View.VISIBLE);
+            Thread dt = new Thread(new UpdatePageThreadRunnable(this, currentOrder_[0], quarterToDownload, weekToDownload, false));
+            dt.start();
+        }
+
+        alignFragments();
+    }
+    private void scrollRight() {
+        middleWeek_++;
+        if (middleWeek_ > weekManager_.getAmountOfWeeks(middleQuarter_)) {
+            middleQuarter_++;
+            if (middleQuarter_ > 4) {
+                middleQuarter_ = 4;
+                middleWeek_ = weekManager_.getAmountOfWeeks(middleQuarter_);
+                return;
+            } else {
+                middleWeek_ = 1;
+            }
+        }
+
+        boolean download = true;
+        int quarterToDownload  = middleQuarter_, weekToDownload = middleWeek_;
+        weekToDownload++;
+        if (weekToDownload > weekManager_.getAmountOfWeeks(middleQuarter_)) {
+            quarterToDownload++;
+            if (quarterToDownload > 4) {
+                download = false;
+            } else {
+                weekToDownload = 1;
+            }
+        }
+
+        int[] tempAr = new int[] {currentOrder_[1], currentOrder_[2], currentOrder_[0]};
+        currentOrder_ = tempAr;
+
+        if (download) {
+            SCROLL_LAYOUTS.get(currentOrder_[2]).removeAllViews();
+            STATUS_TEXTS.get(currentOrder_[2]).setVisibility(View.VISIBLE);
+            Thread dt = new Thread(new UpdatePageThreadRunnable(this, currentOrder_[2], quarterToDownload, weekToDownload, false));
+            dt.start();
+        }
+
+        alignFragments();
+    }
+    private void setRootLayoutStartState() {
+        rootLayoutSet_.clone(ROOT_LAYOUT);
+        rootLayoutSet_.clear(R.id.JournalFragment0);
+        rootLayoutSet_.clear(R.id.JournalFragment1);
+        rootLayoutSet_.clear(R.id.JournalFragment2);
+
+        rootLayoutSet_.setTranslationZ(ROOT_LAYOUT.getId(), 0f);
+        rootLayoutSet_.setTranslationZ(R.id.JournalButton, 100f);
+        rootLayoutSet_.setTranslationZ(R.id.ControlPanel, 100f);
+        rootLayoutSet_.setTranslationZ(R.id.JournalFragment0, 100f);
+        rootLayoutSet_.setTranslationZ(R.id.JournalFragment1, 100f);
+        rootLayoutSet_.setTranslationZ(R.id.JournalFragment2, 100f);
+
+        rootLayoutSet_.constrainHeight(R.id.JournalFragment0, fragmentHeight_);
+        rootLayoutSet_.constrainWidth(R.id.JournalFragment0, SCREEN_WIDTH);
+        rootLayoutSet_.constrainHeight(R.id.JournalFragment1, fragmentHeight_);
+        rootLayoutSet_.constrainWidth(R.id.JournalFragment1, SCREEN_WIDTH);
+        rootLayoutSet_.constrainHeight(R.id.JournalFragment2, fragmentHeight_);
+        rootLayoutSet_.constrainWidth(R.id.JournalFragment2, SCREEN_WIDTH);
+
+        rootLayoutSet_.connect(FRAGMENTS.get(currentOrder_[0]).getId(), ConstraintSet.TOP, R.id.JournalButton, ConstraintSet.BOTTOM, 0);
+        rootLayoutSet_.connect(FRAGMENTS.get(currentOrder_[1]).getId(), ConstraintSet.TOP, R.id.JournalButton, ConstraintSet.BOTTOM, 0);
+        rootLayoutSet_.connect(FRAGMENTS.get(currentOrder_[2]).getId(), ConstraintSet.TOP, R.id.JournalButton, ConstraintSet.BOTTOM, 0);
+
+        rootLayoutSet_.constrainHeight(R.id.JournalButton, buttonHeight_);
+        rootLayoutSet_.constrainHeight(R.id.ControlPanel, buttonHeight_);
+        rootLayoutSet_.connect(R.id.ControlPanel, ConstraintSet.TOP, R.id.JournalButton, ConstraintSet.BOTTOM, fragmentHeight_);
+        rootLayoutSet_.connect(R.id.ControlPanel, ConstraintSet.LEFT, ROOT_LAYOUT.getId(), ConstraintSet.LEFT, 0);
+        rootLayoutSet_.connect(R.id.ControlPanel, ConstraintSet.RIGHT, ROOT_LAYOUT.getId(), ConstraintSet.RIGHT, 0);
+
+        alignFragments();
     }
 }

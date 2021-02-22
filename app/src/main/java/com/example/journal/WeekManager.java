@@ -9,17 +9,12 @@ import java.net.*;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
-import java.util.List;
 
 public class WeekManager {
-    private String USER_AGENT = "Mozilla/5.0";
     private String ROOT_DIRECTORY;
 
-    private String csrftoken_;
     private String sessionid_;
     private String pupilUrl_;
-
-    private CookieManager cookieManager = new CookieManager();
 
     private ArrayList<String> links_ = new ArrayList<>();
     private int[] quarterIds_ = new int[] {40, 42, 43, 44};
@@ -71,7 +66,6 @@ public class WeekManager {
 
     private int[] daysInMonth_ = new int[13];
 
-    public PageParser pageParser;
     private enum ReadStage {
         LESSON,
         MARK,
@@ -88,7 +82,6 @@ public class WeekManager {
         fillDates();
         checkFolders();
 
-        csrftoken_ = csrftoken;
         try {
             readData();
         } catch (Exception e) {
@@ -96,85 +89,15 @@ public class WeekManager {
         }
         pupilUrl_ += "/dnevnik/";
         setLinks();
-
-        cookieManager.setCookiePolicy(CookiePolicy.ACCEPT_ALL);
-        CookieHandler.setDefault(cookieManager);
-
-        pageParser = new PageParser(ROOT_DIRECTORY);
     }
 
-    private String getPageCode(String url) {
-        try {
-            if (csrftoken_ == null) {
-                takeCsrftoken();
-                while (csrftoken_ == null) {
-                    Thread.sleep(25);
-                }
-                System.out.println("CSRF -> " + csrftoken_);
-            }
-            URL obj = new URL(url);
-            HttpURLConnection con = (HttpURLConnection) obj.openConnection();
-
-            con.setInstanceFollowRedirects(false);
-            con.setUseCaches(false);
-
-            con.setRequestMethod("GET");
-            con.setRequestProperty("User-Agent", USER_AGENT);
-            String cookies = "csrftoken=" + csrftoken_ + "; sessionid=" + sessionid_;
-            System.out.println("cookies -> " + cookies);
-            con.setRequestProperty("cookie", cookies);
-
-            BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
-
-            String inputLine;
-            StringBuffer response = new StringBuffer();
-
-            while ((inputLine = in.readLine()) != null) {
-                response.append(inputLine);
-                response.append("\n");
-            }
-
-            in.close();
-
-            return response.toString();
-        } catch (Exception e) {
-            return "-";
-        }
-    }
-
-    public boolean downloadPage(int quarterNumber, int weekNumber) { // from one
+    public String getLink(int quarterNumber, int weekNumber) {
         int linkIndex = weekNumber - 1;
         for (int i = 1; i < quarterNumber; i++) {
             linkIndex += amountsOfWeeks_[i - 1];
         }
-
-        try {
-            String pageCode = "-";
-            int counter = 5;
-            while (counter > 0 && pageCode.equals("-")) {
-                pageCode = getPageCode(links_.get(linkIndex));
-                counter--;
-                System.out.println("NETWORK ERROR");
-            }
-            if (pageCode.equals("-")) {
-                System.out.println("NETWORK ERROR (FINAL)");
-                return false;
-            }
-            FileWriter fout = new FileWriter(
-                    ROOT_DIRECTORY + "/p" + Integer.toString(quarterNumber) +
-                    "q/w" + Integer.toString(weekNumber) + ".html"
-            );
-            fout.write(pageCode);
-            fout.flush();
-            fout.close();
-        } catch (Exception e) {
-            System.out.print("EXCEPTION -> ");
-            System.out.println(e);
-            return false;
-        }
-        return true;
+        return links_.get(linkIndex);
     }
-
     public void readWeek(String weekPath, int quarterNumber, int weekNumber) throws Exception { // from one
         ReadStage stage = ReadStage.LESSON;
         FileReader fin = new FileReader(weekPath);
@@ -225,12 +148,19 @@ public class WeekManager {
                     }
                     buf = "";
                 } else {
-                    buf += (char)currentChar;
+                    buf += (char) currentChar;
                 }
             }
         }
+        fin.close();
     }
 
+    public String            getSessionid() {
+        return sessionid_;
+    }
+    public String            getPupilUrl() {
+        return pupilUrl_;
+    }
     public ArrayList<String> getDates(int quarterNumber, int weekNumber) {
         return dates_.get(quarterNumber - 1).get(weekNumber - 1);
     }
@@ -248,6 +178,9 @@ public class WeekManager {
             return maxLessons_[quarterNumber - 1][weekNumber - 1];
         }
         return -1;
+    }
+    public int               getAmountOfWeeks(int quarterNumber) {
+        return amountsOfWeeks_[quarterNumber - 1];
     }
 
     public int getCurrentQuarter() {
@@ -511,25 +444,6 @@ public class WeekManager {
             p4qFolder.mkdir();
         }
     }
-    private void readData() throws Exception {
-        String buffer = "";
-        int c;
-
-        FileReader inputSessionid = new FileReader(ROOT_DIRECTORY + "/UserData/sessionid.txt");
-        while ((c = inputSessionid.read()) != -1) {
-            buffer += (char)c;
-        }
-        inputSessionid.close();
-        sessionid_ = buffer;
-        buffer = "";
-
-        FileReader inputPupilUrl = new FileReader(ROOT_DIRECTORY + "/UserData/pupilUrl.txt");
-        while ((c = inputPupilUrl.read()) != -1) {
-            buffer += (char)c;
-        }
-        inputPupilUrl.close();
-        pupilUrl_ = buffer;
-    }
     private void setLinks() {
         links_.clear();
         int quarterIdCounter = 0;
@@ -575,31 +489,6 @@ public class WeekManager {
         links_.add(lp);
     }
 
-    public void takeCsrftoken() throws Exception {
-        // open connection
-        URL connectionUrl = new URL(pupilUrl_);
-        HttpURLConnection con = (HttpURLConnection)connectionUrl.openConnection();
-
-        // set connection args
-        con.setRequestMethod("GET");
-        con.setRequestProperty("User-Agent", USER_AGENT);
-
-        // get cookies
-        con.getContent();
-        CookieStore cookieJar = cookieManager.getCookieStore();
-        List<HttpCookie> cookies = cookieJar.getCookies();
-
-        // find csrftoken in cookies and set it
-        for (HttpCookie cookie : cookies) {
-            if (cookie.getName().equals("csrftoken")) {
-                csrftoken_ = cookie.getValue();
-                con.disconnect();
-                cookieJar.removeAll();
-                break;
-            }
-        }
-    }
-
     private void cleanPagesFolder(int quarterNumber) { // from one
         File quarterFolder = new File(ROOT_DIRECTORY + "p" + Integer.toString(quarterNumber) + "q");
         if (quarterFolder.exists()) {
@@ -610,5 +499,24 @@ public class WeekManager {
         } else {
             quarterFolder.mkdir();
         }
+    }
+    private void readData() throws Exception {
+        int c;
+        String buffer = "";
+
+        FileReader inputSessionid = new FileReader(ROOT_DIRECTORY + "/UserData/sessionid.txt");
+        while ((c = inputSessionid.read()) != -1) {
+            buffer += (char)c;
+        }
+        inputSessionid.close();
+        sessionid_ = buffer;
+        buffer = "";
+
+        FileReader inputPupilUrl = new FileReader(ROOT_DIRECTORY + "/UserData/pupilUrl.txt");
+        while ((c = inputPupilUrl.read()) != -1) {
+            buffer += (char)c;
+        }
+        inputPupilUrl.close();
+        pupilUrl_ = buffer;
     }
 }

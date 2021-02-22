@@ -3,11 +3,11 @@ package com.example.journal;
 import java.io.File;
 
 public class PageParser {
-    private final String ROOT_DIRECTORY;
-
     static {
         System.loadLibrary("JniParser");
     }
+
+    private final String ROOT_DIRECTORY;
 
     PageParser(String rt_dir) {
         ROOT_DIRECTORY = rt_dir;

@@ -33,15 +33,29 @@
         app:layout_constraintVertical_bias="0.32999998" />
 
     <fragment
-        android:id="@+id/JournalFragment"
-        android:name="com.example.journal.JournalFragment"
+        android:id="@+id/JournalFragment0"
+        android:name="com.example.journal.JournalFragment0"
+        android:layout_width="500px"
+        android:layout_height="1920px"
+        app:layout_constraintEnd_toStartOf="@+id/JournalFragment1"
+        app:layout_constraintTop_toBottomOf="@+id/JournalButton" />
+
+    <fragment
+        android:id="@+id/JournalFragment1"
+        android:name="com.example.journal.JournalFragment1"
         android:layout_width="match_parent"
-        android:layout_height="2000px"
+        android:layout_height="1000px"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/JournalButton"
         app:layout_constraintVertical_bias="0.0" />
+
+    <fragment
+        android:id="@+id/JournalFragment2"
+        android:name="com.example.journal.JournalFragment2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
 
     <Button
         android:id="@+id/JournalButton"
@@ -49,6 +63,7 @@
         android:layout_height="220px"
         android:background="@color/journalBackground"
         android:onClick="journalButtonOnClick"
+        android:stateListAnimator="@null"
         android:text="@string/journal_button_text"
         android:textColorLink="@color/journalBackground"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -56,5 +71,48 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="1.0" />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/ControlPanel"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/journalBackground"
+        tools:layout_editor_absoluteX="90dp"
+        tools:layout_editor_absoluteY="-233dp">
+
+        <Button
+            android:id="@+id/button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="leftArrowOnClick"
+            android:text="LEFT"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <Button
+            android:id="@+id/button2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="UPDATE"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <Button
+            android:id="@+id/button3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="rightArrowOnClick"
+            android:text="RIGHT"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="1.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -24,10 +24,7 @@ void parse_page()
 	while (true)
 	{
 		file_input.get(current_char);
-		if (file_input.eof())
-		{
-			return;
-		}
+		if (file_input.eof()) return;
 
 		if (current_char == '<')
 		{
@@ -37,6 +34,7 @@ void parse_page()
 			{
 				tag += current_char;
 				file_input.get(current_char);
+				if (file_input.eof()) return;
 			}
 			tag += current_char;
 
@@ -49,12 +47,14 @@ void parse_page()
 				while (true)
 				{
 					file_input.get(current_char);
+					if (file_input.eof()) return;
 
 					if (temp == "")
 					{
 						while (current_char == ' ' || current_char == '\n')
 						{
 							file_input.get(current_char);
+							if (file_input.eof()) return;
 						}
 					}
 
@@ -65,6 +65,7 @@ void parse_page()
 							while (current_char == ' ' || current_char == '\n')
 							{
 								file_input.get(current_char);
+								if (file_input.eof()) return;
 							}
 							previous_is_space = false;
 						}
@@ -89,8 +90,10 @@ void parse_page()
 							while (current_char != '>')
 							{
 								file_input.get(current_char);
+								if (file_input.eof()) return;
 							}
 							file_input.get(current_char);
+							if (file_input.eof()) return;
 						}
 					}
 
@@ -109,29 +112,35 @@ void parse_page()
 				while (true)
 				{
 					file_input.get(current_char);
+					if (file_input.eof()) return;
 
 					if (temp == "")
 					{
 						while (current_char == ' ')
 						{
 							file_input.get(current_char);
+							if (file_input.eof()) return;
 						}
 					}
 
 					if (current_char == '<')
 					{
 						file_input.get(current_char);
+						if (file_input.eof()) return;
 						if (current_char == 's')
 						{
 							while (current_char != '>')
 							{
 								file_input.get(current_char);
+								if (file_input.eof()) return;
 							}
 							file_input.get(current_char);
+							if (file_input.eof()) return;
 							while (current_char != '<')
 							{
 								temp += current_char;
 								file_input.get(current_char);
+								if (file_input.eof()) return;
 							}
 							if (temp == "")
 							{
@@ -158,6 +167,7 @@ void parse_page()
 				while (true)
 				{
 					file_input.get(current_char);
+					if (file_input.eof()) return;
 					if (current_char == '<')
 					{
 						// read tag
@@ -166,9 +176,11 @@ void parse_page()
 						{
 							tag += current_char;
 							file_input.get(current_char);
+							if (file_input.eof()) return;
 						}
 						tag += current_char;
 						file_input.get(current_char);
+						if (file_input.eof()) return;
 					}
 
 					if (tag == "<div class=\"ht-text\">")
@@ -176,6 +188,7 @@ void parse_page()
 						while (current_char == ' ' || current_char == '\n')
 						{
 							file_input.get(current_char);
+							if (file_input.eof()) return;
 						}
 
 						std::string ht_text = "";
@@ -189,6 +202,7 @@ void parse_page()
 								{
 									tag += current_char;
 									file_input.get(current_char);
+									if (file_input.eof()) return;
 								}
 								tag += current_char;
 
@@ -203,6 +217,7 @@ void parse_page()
 								ht_text += current_char;
 							}
 							file_input.get(current_char);
+							if (file_input.eof()) return;
 						}
 					}
 					else if (tag == "</td>")
@@ -279,26 +294,6 @@ void format_lessons()
 		}
 	}
 }
-
-// void fout_to_file()
-// {
-// 	int max_lessons = _lessons.size() / 6;
-// 	file_output << ">";
-// 	for (int i = 0; i < 6; i++)
-// 	{
-// 		for (int j = 0; j < max_lessons; j++)
-// 		{
-// 			int temp = i * max_lessons + j;
-// 			file_output << _lessons[temp] << ">";
-// 			file_output << _marks[temp] << ">";
-// 			if (_hometasks.size() > 0)
-// 			{
-// 				file_output << _hometasks[temp];
-// 			}
-// 			file_output << ">";
-// 		}
-// 	}
-// }
 
 void fout_to_file()
 {
