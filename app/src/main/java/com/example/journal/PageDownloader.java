@@ -10,34 +10,32 @@ import java.util.List;
 import java.util.Map;
 
 public class PageDownloader {
-    private final String ROOT_DIRECTORY;
-    private final String USER_AGENT = "Mozilla/5.0";
+    private String ROOT_DIRECTORY;
+    private String USER_AGENT = "Mozilla/5.0";
 
     private String csrftoken_;
-    private String sessionid_;
-    private String pupilUrl_;
 
-    public PageDownloader(String rootDirectory, String sessionid, String pupilUrl) {
+    public PageDownloader(String rootDirectory) {
         ROOT_DIRECTORY = rootDirectory;
-        sessionid_ = sessionid;
-        pupilUrl_ = pupilUrl;
     }
 
     private String getPageCode(String url) {
         try {
             if (csrftoken_ == null) {
                 takeCsrftoken();
+                if (csrftoken_ == null) {
+                    return "-";
+                }
             }
+            System.out.println("URL -> " + url);
             URL obj = new URL(url);
             HttpURLConnection con = (HttpURLConnection) obj.openConnection();
 
             con.setInstanceFollowRedirects(false);
             con.setUseCaches(false);
-
             con.setRequestMethod("GET");
             con.setRequestProperty("User-Agent", USER_AGENT);
-            String cookies = "csrftoken=" + csrftoken_ + "; sessionid=" + sessionid_;
-            con.setRequestProperty("cookie", cookies);
+            con.setRequestProperty("cookie", ("csrftoken=" + csrftoken_ + "; sessionid=" + YearData.getSessionid())); // check
 
             BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
 
@@ -86,7 +84,7 @@ public class PageDownloader {
     private void takeCsrftoken() {
         try {
             // open connection
-            URL connectionUrl = new URL(pupilUrl_);
+            URL connectionUrl = new URL(YearData.getPupilUrl());
             HttpURLConnection con = (HttpURLConnection)connectionUrl.openConnection();
 
             // set connection args
@@ -118,6 +116,7 @@ public class PageDownloader {
             System.out.println("csrftoken not found");
         } catch (Exception e) {
             System.out.println("csrftoken getting error, " + e);
+            csrftoken_ = null;
             return;
         }
     }
