@@ -28,13 +28,11 @@ public class StartPage extends AppCompatActivity {
 
         checkAndFix();
         if (checkStatus()) {
-            Toast.makeText(this, "Already logged in", Toast.LENGTH_SHORT).show();
             nextActivity = new Intent(this, MainMenuActivity.class);
             Timer switchTimer = new Timer();
             SwitchTimerTask timerTask = new SwitchTimerTask();
             switchTimer.schedule(timerTask, 0);
         } else {
-            Toast.makeText(this, "Not logged in", Toast.LENGTH_SHORT).show();
             nextActivity = new Intent(this, LogInActivity.class);
             Timer switchTimer = new Timer();
             SwitchTimerTask timerTask = new SwitchTimerTask();

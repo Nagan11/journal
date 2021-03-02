@@ -107,7 +107,7 @@ public class WeekManager {
 
     public PageLoadState getWeekState(int quarterNumber, int weekNumber) {
         return weekStates_.get(quarterNumber - 1).get(weekNumber - 1);
-    }
+    }             // 1
     public void setWeekState(int quarterNumber, int weekNumber, PageLoadState state) {
         weekStates_.get(quarterNumber - 1).set(weekNumber - 1, state);
     } // 1
