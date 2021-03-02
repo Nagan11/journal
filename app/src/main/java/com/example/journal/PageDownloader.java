@@ -24,10 +24,12 @@ public class PageDownloader {
             if (csrftoken_ == null) {
                 takeCsrftoken();
                 if (csrftoken_ == null) {
-                    return "-";
+                    takeCsrftoken();
+                    if (csrftoken_ == null) {
+                        return "FE";
+                    }
                 }
             }
-            System.out.println("URL -> " + url);
             URL obj = new URL(url);
             HttpURLConnection con = (HttpURLConnection) obj.openConnection();
 
@@ -61,8 +63,13 @@ public class PageDownloader {
             int counter = 5;
             while (counter > 0 && pageCode.equals("-")) {
                 pageCode = getPageCode(link);
-                counter--;
-                System.out.println("NETWORK ERROR");
+                if (pageCode.equals("FE")) {
+                    System.out.println("FATAL ERROR");
+                    return false;
+                } else {
+                    System.out.println("NETWORK ERROR");
+                    counter--;
+                }
             }
             if (pageCode.equals("-")) {
                 System.out.println("NETWORK ERROR (FINAL)");

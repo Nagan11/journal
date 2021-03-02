@@ -94,9 +94,13 @@ public class MainMenuActivity extends AppCompatActivity {
                     System.out.println(e);
                 }
 
-                currentStates[Order.left()] = weekManager_.getWeekState(weekIndexes_[Order.left()].first, weekIndexes_[Order.left()].second);
                 currentStates[Order.center()] = weekManager_.getWeekState(weekIndexes_[Order.center()].first, weekIndexes_[Order.center()].second);
-                currentStates[Order.right()] = weekManager_.getWeekState(weekIndexes_[Order.right()].first, weekIndexes_[Order.right()].second);
+                if (weekIndexes_[Order.left()].first > 0 && weekIndexes_[Order.left()].second > 0) {
+                    currentStates[Order.left()] = weekManager_.getWeekState(weekIndexes_[Order.left()].first, weekIndexes_[Order.left()].second);
+                }
+                if (weekIndexes_[Order.right()].first > 0 && weekIndexes_[Order.right()].second > 0) {
+                    currentStates[Order.right()] = weekManager_.getWeekState(weekIndexes_[Order.right()].first, weekIndexes_[Order.right()].second);
+                }
 
                 for (int i = 0; i <= 2; i++) {
                     final int fI = Order.get(i);
@@ -198,6 +202,7 @@ public class MainMenuActivity extends AppCompatActivity {
 
         @Override
         public void run() {
+            if (quarterNumber_ == -1 || weekNumber_ == -1) return;
             if (downloader_.downloadPage(quarterNumber_, weekNumber_, YearData.getLink(quarterNumber_, weekNumber_))) {
                 weekManager_.setWeekState(quarterNumber_, weekNumber_, PageLoadState.GATHERING);
             } else {
@@ -297,12 +302,9 @@ public class MainMenuActivity extends AppCompatActivity {
         weekIndexes_[1] = new Pair<>(YearData.getCurrentQuarter(), YearData.getCurrentWeek());
         weekIndexes_[0] = leftWeekIndex(weekIndexes_[1]);
         weekIndexes_[2] = rightWeekIndex(weekIndexes_[1]);
-//        System.out.println("CURRENT Q/W -> " + weekIndexes_[1].first + "/" + weekIndexes_[1].second);
 
         Thread stateUpdater = new Thread(new PageStateUpdaterR());
         stateUpdater.start();
-
-
     }
 
     @Override
@@ -388,7 +390,6 @@ public class MainMenuActivity extends AppCompatActivity {
         if (resourceId > 0) {
             STATUS_BAR_HEIGHT = getResources().getDimensionPixelSize(resourceId);
         }
-        STATUS_BAR_HEIGHT = 0;
         if (STATUS_BAR_HEIGHT == 0) {
             STATUS_BAR_HEIGHT = Calculation.dpToPx(24, CONTEXT);
         }
@@ -433,8 +434,8 @@ public class MainMenuActivity extends AppCompatActivity {
         if (week < 1) {
             quarter--;
             if (quarter < 1) {
-                quarter = 1;
-                week = 1;
+                quarter = -1;
+                week = -1;
             } else {
                 week = YearData.getAmountOfWeeks(quarter);
             }
@@ -447,8 +448,8 @@ public class MainMenuActivity extends AppCompatActivity {
         if (week > YearData.getAmountOfWeeks(quarter)) {
             quarter++;
             if (quarter > 4) {
-                quarter = 4;
-                week = YearData.getAmountOfWeeks(quarter);
+                quarter = -1;
+                week = -1;
             } else {
                 week = 1;
             }
@@ -456,20 +457,28 @@ public class MainMenuActivity extends AppCompatActivity {
         return new Pair<>(quarter, week);
     }
     private void scrollLeft() {
-        Order.rollLeft();
+        if (!(weekIndexes_[Order.center()].first == 1 && weekIndexes_[Order.center()].second == 1)) {
+            Order.rollLeft();
 
-        weekManager_.setWeekState(weekIndexes_[Order.left()].first, weekIndexes_[Order.left()].second, PageLoadState.INACTIVE);
-        weekIndexes_[Order.left()] = leftWeekIndex(weekIndexes_[Order.center()]);
+            if (weekIndexes_[Order.left()].first != -1 && weekIndexes_[Order.left()].second != -1) {
+                weekManager_.setWeekState(weekIndexes_[Order.left()].first, weekIndexes_[Order.left()].second, PageLoadState.INACTIVE);
+            }
+            weekIndexes_[Order.left()] = leftWeekIndex(weekIndexes_[Order.center()]);
 
-        alignFragments();
+            alignFragments();
+        }
     }
     private void scrollRight() {
-        Order.rollRight();
+        if (!(weekIndexes_[Order.center()].first == 4 && weekIndexes_[Order.center()].second == YearData.getAmountOfWeeks(4))) {
+            Order.rollRight();
 
-        weekManager_.setWeekState(weekIndexes_[Order.right()].first, weekIndexes_[Order.right()].second, PageLoadState.INACTIVE);
-        weekIndexes_[Order.right()] = rightWeekIndex(weekIndexes_[Order.center()]);
+            if (weekIndexes_[Order.right()].first != -1 && weekIndexes_[Order.right()].second != -1) {
+                weekManager_.setWeekState(weekIndexes_[Order.right()].first, weekIndexes_[Order.right()].second, PageLoadState.INACTIVE);
+            }
+            weekIndexes_[Order.right()] = rightWeekIndex(weekIndexes_[Order.center()]);
 
-        alignFragments();
+            alignFragments();
+        }
     }
     private void setRootLayoutStartState() {
         rootLayoutSet_.clone(ROOT_LAYOUT);
