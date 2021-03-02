@@ -77,6 +77,7 @@ public class MainMenuActivity extends AppCompatActivity {
         private void buildWeek(int index) {
             ArrayList<ViewSets.Day> week = weekManager_.weeks.get(weekIndexes_[index].first - 1).get(weekIndexes_[index].second - 1);
             for (int i = 0; i < week.size(); i++) {
+                System.out.println(i);
                 SCROLL_LAYOUTS.get(index).addView(week.get(i).getDate());
                 for (ViewSets.Lesson l : week.get(i).getLessons()) {
                     SCROLL_LAYOUTS.get(index).addView(l.getLessonMarkContainer());
@@ -334,6 +335,22 @@ public class MainMenuActivity extends AppCompatActivity {
     }
     public void rightArrowOnClick(View view) {
         scrollRight();
+    }
+    public void updateOnClick(View view) {
+        PageLoadState state = weekManager_.getWeekState(weekIndexes_[Order.center()].first, weekIndexes_[Order.center()].second);
+        switch (state) {
+            case DOWNLOADING:
+            case DOWNLOADING_ERROR:
+            case GATHERING_ERROR:
+            case ACTIVE:
+                weekManager_.weeks.get(weekIndexes_[Order.center()].first - 1).get(weekIndexes_[Order.center()].second - 1).clear();
+                weekManager_.setWeekState(weekIndexes_[Order.center()].first, weekIndexes_[Order.center()].second, PageLoadState.DOWNLOADING);
+                break;
+            case GATHERING:
+            case BUILDING:
+            case INACTIVE:
+                break;
+        }
     }
 
     private void setUserName() {
