@@ -75,21 +75,4 @@
         app:layout_anchor="@+id/LnpWindowLayout"
         app:layout_anchorGravity="bottom|center" />
 
-    <LinearLayout
-        android:id="@+id/CheckBoxLayout"
-        android:layout_width="150dp"
-        android:layout_height="60dp"
-        android:orientation="vertical"
-        app:layout_anchor="@+id/LoginButton"
-        app:layout_anchorGravity="bottom|center"></LinearLayout>
-
-    <CheckBox
-        android:id="@+id/RememberMeCheckBox"
-        android:layout_width="150dp"
-        android:layout_height="wrap_content"
-        android:checked="true"
-        android:text="@string/remember_checkbox_text"
-        app:layout_anchor="@+id/CheckBoxLayout"
-        app:layout_anchorGravity="start|bottom" />
-
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
