@@ -70,6 +70,10 @@ public class MainMenuActivity extends AppCompatActivity {
         public static void rollRight() {
             currentOrder_ = new int[] {currentOrder_[1], currentOrder_[2], currentOrder_[0]};
         }
+
+        public static void resetOrder() {
+            currentOrder_ = new int[] {0, 1, 2};
+        }
     }
 
     private class PageStateUpdaterR implements Runnable {
@@ -326,6 +330,7 @@ public class MainMenuActivity extends AppCompatActivity {
         weekManager_ = new WeekManager(ROOT_DIRECTORY);
         parser_ = new PageParser(ROOT_DIRECTORY);
         fillFragmentArrays();
+        Order.resetOrder();
 
         try {
             YearData.readData(ROOT_DIRECTORY);
@@ -338,7 +343,7 @@ public class MainMenuActivity extends AppCompatActivity {
         weekIndexes_[0] = leftWeekIndex(weekIndexes_[1]);
         weekIndexes_[2] = rightWeekIndex(weekIndexes_[1]);
 
-        System.out.println("current Q/W -> " + weekIndexes_[1].first + "/" + weekIndexes_[1].second);
+        System.out.println("current Q/W -> " + weekIndexes_[Order.center()].first + "/" + weekIndexes_[Order.center()].second);
         System.out.println("weekShift -> " + weekShift_);
 
         setScreenInfo();
@@ -348,10 +353,6 @@ public class MainMenuActivity extends AppCompatActivity {
         setRootLayoutStartState();
 
         setRealName();
-
-        System.out.println(findViewById(R.id.JournalFragment0).getX() + " " + findViewById(R.id.JournalFragment0).getY());
-        System.out.println(findViewById(R.id.JournalFragment1).getX() + " " + findViewById(R.id.JournalFragment1).getY());
-        System.out.println(findViewById(R.id.JournalFragment2).getX() + " " + findViewById(R.id.JournalFragment2).getY());
 
         Thread stateUpdater = new Thread(new PageStateUpdaterR());
         stateUpdater.start();
@@ -388,13 +389,13 @@ public class MainMenuActivity extends AppCompatActivity {
     public void updateOnClick(View view) {
         PageLoadState state = weekManager_.getWeekState(weekIndexes_[Order.center()].first, weekIndexes_[Order.center()].second);
         switch (state) {
-            case DOWNLOADING:
             case DOWNLOADING_ERROR:
             case GATHERING_ERROR:
             case ACTIVE:
                 weekManager_.weeks.get(weekIndexes_[Order.center()].first - 1).get(weekIndexes_[Order.center()].second - 1).clear();
                 weekManager_.setWeekState(weekIndexes_[Order.center()].first, weekIndexes_[Order.center()].second, PageLoadState.DOWNLOADING);
                 break;
+            case DOWNLOADING:
             case GATHERING:
             case BUILDING:
             case INACTIVE:
@@ -403,7 +404,7 @@ public class MainMenuActivity extends AppCompatActivity {
     }
 
     private void setUserName() {
-        String buffer = new String("");
+        String buffer = "";
         try {
             FileReader fin = new FileReader(ROOT_DIRECTORY + "/UserData/username.txt");
 
@@ -414,11 +415,11 @@ public class MainMenuActivity extends AppCompatActivity {
         } catch (Exception e) {
             System.out.println(e);
         }
-        TextView userNameTextView = (TextView)findViewById(R.id.UserNameTextView);
+        TextView userNameTextView = findViewById(R.id.UserNameTextView);
         userNameTextView.setText(buffer);
     }
     private void setRealName() {
-        String buffer = new String("");
+        String buffer = "";
         try {
             FileReader fin = new FileReader(ROOT_DIRECTORY + "/UserData/realName.txt");
 
@@ -429,7 +430,7 @@ public class MainMenuActivity extends AppCompatActivity {
         } catch (Exception e) {
             System.out.println(e);
         }
-        TextView userNameTextView = (TextView)findViewById(R.id.UserNameTextView);
+        TextView userNameTextView = findViewById(R.id.UserNameTextView);
         userNameTextView.setText(buffer);
     }
 
@@ -524,29 +525,9 @@ public class MainMenuActivity extends AppCompatActivity {
     }
     private void scrollLeft() {
         weekShift_--;
-//        if (!(weekIndexes_[Order.center()].first == 1 && weekIndexes_[Order.center()].second == 1)) {
-//            Order.rollLeft();
-//
-//            if (weekIndexes_[Order.left()].first != -1 && weekIndexes_[Order.left()].second != -1) {
-//                weekManager_.setWeekState(weekIndexes_[Order.left()].first, weekIndexes_[Order.left()].second, PageLoadState.INACTIVE);
-//            }
-//            weekIndexes_[Order.left()] = leftWeekIndex(weekIndexes_[Order.center()]);
-//
-//            alignFragments();
-//        }
     }
     private void scrollRight() {
         weekShift_++;
-//        if (!(weekIndexes_[Order.center()].first == 4 && weekIndexes_[Order.center()].second == YearData.getAmountOfWeeks(4))) {
-//            Order.rollRight();
-//
-//            if (weekIndexes_[Order.right()].first != -1 && weekIndexes_[Order.right()].second != -1) {
-//                weekManager_.setWeekState(weekIndexes_[Order.right()].first, weekIndexes_[Order.right()].second, PageLoadState.INACTIVE);
-//            }
-//            weekIndexes_[Order.right()] = rightWeekIndex(weekIndexes_[Order.center()]);
-//
-//            alignFragments();
-//        }
     }
     private void setRootLayoutStartState() {
         rootLayoutSet_.clone(ROOT_LAYOUT);

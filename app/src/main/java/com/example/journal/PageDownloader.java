@@ -37,7 +37,7 @@ public class PageDownloader {
             con.setUseCaches(false);
             con.setRequestMethod("GET");
             con.setRequestProperty("User-Agent", USER_AGENT);
-            con.setRequestProperty("cookie", ("csrftoken=" + csrftoken_ + "; sessionid=" + YearData.getSessionid())); // check
+            con.setRequestProperty("cookie", ("csrftoken=" + csrftoken_ + "; sessionid=" + YearData.getSessionid()));
 
             BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
 

@@ -53,6 +53,7 @@ public class LogInActivity extends AppCompatActivity {
         breakLoginAttempt = false;
 
         loginButton = findViewById(R.id.LoginButton);
+        enableLoginButton();
     }
 
     @Override
