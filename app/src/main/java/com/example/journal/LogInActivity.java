@@ -17,7 +17,7 @@ import java.util.TimerTask;
 
 public class LogInActivity extends AppCompatActivity {
     private String ROOT_DIRECTORY;
-    private Context THIS_CONTEXT;
+    private Context CONTEXT;
     private TextInputEditText usernameField;
     private TextInputEditText passwordField;
     private Intent mainMenuActivity;
@@ -30,8 +30,8 @@ public class LogInActivity extends AppCompatActivity {
     private Thread loginThread;
     private Thread loginAwaitThread;
 
-    private RealNameParser realNameParser_;
-    private String realName_;
+    private RealNameParser realNameParser;
+    private String realName;
 
     private Button loginButton;
 
@@ -42,7 +42,7 @@ public class LogInActivity extends AppCompatActivity {
         setContentView(R.layout.activity_new_user_login);
 
         ROOT_DIRECTORY = String.valueOf(getFilesDir());
-        THIS_CONTEXT = this;
+        CONTEXT = this;
         usernameField = findViewById(R.id.UsernameInput);
         passwordField = findViewById((R.id.PasswordInput));
 
@@ -64,13 +64,10 @@ public class LogInActivity extends AppCompatActivity {
             loginThread = new Thread(new LoginRunnable());
             loginAwaitThread = new Thread(new LoginAwaitRunnable());
             loginThread.start();
-
-
         } catch (Exception e) {
             enableLoginButton();
             System.out.println(e);
         }
-
     }
 
     class LoginRunnable implements Runnable {
@@ -109,26 +106,22 @@ public class LogInActivity extends AppCompatActivity {
 
             switch (loginState) {
                 case LOGGED_IN:
-                    realNameParser_ = new RealNameParser(ROOT_DIRECTORY, logInManager.getSessionid(), logInManager.getPupilUrl());
-                    realName_ = realNameParser_.getRealName();
-                    while (realName_ == "*") {
+                    realNameParser = new RealNameParser(logInManager.getSessionid(), logInManager.getPupilUrl());
+                    realName = realNameParser.getRealName();
+                    while (realName == "*") {
                         try {
                             Thread.sleep(25);
                         } catch (Exception e) {
                             System.out.println(e);
                         }
                     }
-                    logInManager.writeLoginDataToFiles(usernameField.getText().toString(), realName_);
-
-                    enableLoginButton();
-
-                    mainMenuActivity.putExtra("csrftoken", logInManager.getCsrftoken());
+                    logInManager.writeLoginDataToFiles(usernameField.getText().toString(), realName);
                     startActivity(mainMenuActivity);
                     break;
                 case WRONG_PASSWORD:
                     runOnUiThread(new Runnable() {
                         public void run() {
-                            Toast.makeText(THIS_CONTEXT, "Wrong login or password", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(CONTEXT, "Wrong login or password", Toast.LENGTH_SHORT).show();
                         }
                     });
                     enableLoginButton();
@@ -136,7 +129,7 @@ public class LogInActivity extends AppCompatActivity {
                 case ERROR_OCCURED:
                     runOnUiThread(new Runnable() {
                         public void run() {
-                            Toast.makeText(THIS_CONTEXT, "Error occured", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(CONTEXT, "Error occured", Toast.LENGTH_SHORT).show();
                         }
                     });
                     enableLoginButton();
@@ -144,7 +137,7 @@ public class LogInActivity extends AppCompatActivity {
                 case DEFAULT:
                     runOnUiThread(new Runnable() {
                         public void run() {
-                            Toast.makeText(THIS_CONTEXT, "WTF", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(CONTEXT, "WTF", Toast.LENGTH_SHORT).show();
                         }
                     });
                     enableLoginButton();
@@ -168,18 +161,13 @@ public class LogInActivity extends AppCompatActivity {
                 loginButton.setEnabled(true);
             }
         });
-
-        // graphics
     }
-
     private void disableLoginButton() {
         runOnUiThread(new Runnable() {
             public void run() {
                 loginButton.setEnabled(false);
             }
         });
-
-        // graphics
     }
 
 }

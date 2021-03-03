@@ -334,6 +334,13 @@ public class MainMenuActivity extends AppCompatActivity {
             System.out.println("YD initialization failed, " + e);
         }
 
+        weekIndexes_[1] = new Pair<>(YearData.getCurrentQuarter(), YearData.getCurrentWeek());
+        weekIndexes_[0] = leftWeekIndex(weekIndexes_[1]);
+        weekIndexes_[2] = rightWeekIndex(weekIndexes_[1]);
+
+        System.out.println("current Q/W -> " + weekIndexes_[1].first + "/" + weekIndexes_[1].second);
+        System.out.println("weekShift -> " + weekShift_);
+
         setScreenInfo();
         buttonHeight_ = (int)(SCREEN_HEIGHT * 0.085f);
         fragmentHeight_ = SCREEN_HEIGHT - buttonHeight_ - buttonHeight_ - STATUS_BAR_HEIGHT;
@@ -342,9 +349,9 @@ public class MainMenuActivity extends AppCompatActivity {
 
         setRealName();
 
-        weekIndexes_[1] = new Pair<>(YearData.getCurrentQuarter(), YearData.getCurrentWeek());
-        weekIndexes_[0] = leftWeekIndex(weekIndexes_[1]);
-        weekIndexes_[2] = rightWeekIndex(weekIndexes_[1]);
+        System.out.println(findViewById(R.id.JournalFragment0).getX() + " " + findViewById(R.id.JournalFragment0).getY());
+        System.out.println(findViewById(R.id.JournalFragment1).getX() + " " + findViewById(R.id.JournalFragment1).getY());
+        System.out.println(findViewById(R.id.JournalFragment2).getX() + " " + findViewById(R.id.JournalFragment2).getY());
 
         Thread stateUpdater = new Thread(new PageStateUpdaterR());
         stateUpdater.start();

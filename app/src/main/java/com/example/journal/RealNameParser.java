@@ -1,44 +1,28 @@
 package com.example.journal;
 
 import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.InputStreamReader;
-import java.net.CookieHandler;
-import java.net.CookieManager;
-import java.net.CookiePolicy;
-import java.net.CookieStore;
 import java.net.HttpCookie;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.List;
+import java.util.Map;
 
 public class RealNameParser {
     private String USER_AGENT = "Mozilla/5.0";
-    private String ROOT_DIRECTORY;
 
     private String csrftoken_;
     private String sessionid_;
     private String pupilUrl_;
 
-    private CookieManager cookieManager = new CookieManager();
-
-    RealNameParser(String rootDirectory, String sessionid, String pupilUrl) {
-        ROOT_DIRECTORY = rootDirectory;
-
-        cookieManager.setCookiePolicy(CookiePolicy.ACCEPT_ALL);
-        CookieHandler.setDefault(cookieManager);
-
+    RealNameParser(String sessionid, String pupilUrl) {
         sessionid_ = sessionid;
         pupilUrl_ = pupilUrl;
-
-        System.out.println("URL real name -> " + pupilUrl_);
-        System.out.println("sessionid -> " + sessionid_);
     }
 
     public String getRealName() {
         String mainPage = getPageCode(pupilUrl_);
-        System.out.println("out URL -> " + pupilUrl_);
-        String buffer = new String("");
+        String buffer = "";
         if (mainPage.equals("-")) {
             return "-";
         }
@@ -56,19 +40,16 @@ public class RealNameParser {
 
                 if (buffer.equals("<title>")) {
                     while (mainPage.charAt(i) == ' ' || mainPage.charAt(i) == '\t' || mainPage.charAt(i) == '\n') {
-//                        System.out.println(mainPage.charAt(i) + " - space");
                         i++;
                     }
-                    String realName = new String("");
+                    String realName = "";
                     while (mainPage.charAt(i) != '.') {
-//                        System.out.println(mainPage.charAt(i) + " - letter");
                         realName += mainPage.charAt(i);
                         i++;
                     }
                     return realName;
                 }
             }
-//            System.out.println(buffer);
             buffer = "";
         }
         return "-";
@@ -78,8 +59,9 @@ public class RealNameParser {
         try {
             if (csrftoken_ == null) {
                 takeCsrftoken();
-                while (csrftoken_ == null) { Thread.sleep(25); }
-                System.out.println("CSRF real -> " + csrftoken_);
+                if (csrftoken_ == null) {
+                    throw new Exception("csrftoken getting error");
+                }
             }
             URL obj = new URL(url);
             HttpURLConnection con = (HttpURLConnection) obj.openConnection();
@@ -90,7 +72,7 @@ public class RealNameParser {
 
             BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
 
-            String inputLine = new String("");
+            String inputLine;
             StringBuffer response = new StringBuffer();
 
             while ((inputLine = in.readLine()) != null) {
@@ -98,7 +80,6 @@ public class RealNameParser {
             }
 
             in.close();
-
             return response.toString();
         } catch (Exception e) {
             System.out.println(e);
@@ -106,49 +87,43 @@ public class RealNameParser {
         }
     }
 
-    private void takeCsrftoken() throws Exception {
-        // open connection
-        URL connectionUrl = new URL("https://schools.by/login");
-        HttpURLConnection con = (HttpURLConnection)connectionUrl.openConnection();
+    private void takeCsrftoken() {
+        try {
+            // open connection
+            URL connectionUrl = new URL("https://schools.by/login");
+            HttpURLConnection con = (HttpURLConnection)connectionUrl.openConnection();
 
-        // set connection args
-        con.setRequestMethod("GET");
-        con.setRequestProperty("User-Agent", USER_AGENT);
+            // set connection args
+            con.setRequestMethod("GET");
+            con.setRequestProperty("User-Agent", USER_AGENT);
 
-        // get cookies
-        con.getContent();
-        CookieStore cookieJar = cookieManager.getCookieStore();
-        List<HttpCookie> cookies = cookieJar.getCookies();
+            // get cookies
+            con.connect();
+            Map<String,List<String>> hf = con.getHeaderFields();
+            con.disconnect();
 
-        // find csrftoken in cookies and set it
-        for (HttpCookie cookie : cookies) {
-            if (cookie.getName().equals("csrftoken")) {
-                csrftoken_ = cookie.getValue();
-                con.disconnect();
-                cookieJar.removeAll();
-                break;
+            // find csrftoken
+            for (Map.Entry<String, List<String>> ent : hf.entrySet()) {
+                try {
+                    if (ent.getKey().equals("Set-Cookie")) {
+                        List<HttpCookie> cookies = HttpCookie.parse(ent.getValue().get(0));
+                        for (HttpCookie cookie : cookies) {
+                            if (cookie.getName().equals("csrftoken")) {
+                                csrftoken_ = cookie.getValue();
+                                return;
+                            }
+                        }
+                    }
+                } catch (NullPointerException npe) {
+                    continue;
+                }
             }
-        }
-    }
 
-    private void readData() throws Exception {
-        String buffer = new String("");
-        int c;
-
-        FileReader inputSessionid = new FileReader(ROOT_DIRECTORY + "/UserData/sessionid.txt");
-        while ((c = inputSessionid.read()) != -1) {
-            buffer += (char)c;
+            System.out.println("csrftoken not found");
+        } catch (Exception e) {
+            System.out.println("csrftoken getting error, " + e);
+            csrftoken_ = null;
+            return;
         }
-        inputSessionid.close();
-        sessionid_ = new String(buffer);
-        buffer = "";
-
-        FileReader inputPupilUrl = new FileReader(ROOT_DIRECTORY + "/UserData/pupilUrl.txt");
-        while ((c = inputPupilUrl.read()) != -1) {
-            buffer += (char)c;
-        }
-        inputPupilUrl.close();
-        pupilUrl_ = new String(buffer);
-        buffer = "";
     }
 }

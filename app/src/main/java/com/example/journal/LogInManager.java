@@ -4,58 +4,54 @@ import android.os.Build;
 
 import java.io.DataOutputStream;
 import java.io.FileWriter;
-import java.net.*;
+import java.net.HttpCookie;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Map;
 
 public class LogInManager {
     // constants
     private String USER_AGENT = "Mozilla/5.0";
-
-    // login data
-    private String sessionid = "";
-    private String csrftoken = "";
-
-    // assistant variables
-    private CookieManager cookieManager = new CookieManager();
-    // URL data
-    private String pupilUrl;
-    private String postParameters;
-
     private String ROOT_DIRECTORY;
 
-    // constructor
-    public LogInManager(String rtDir) {
-        cookieManager.setCookiePolicy(CookiePolicy.ACCEPT_ALL);
-        CookieHandler.setDefault(cookieManager);
+    // login data
+    private String sessionid_ = "";
+    private String csrftoken_ = "";
 
-        ROOT_DIRECTORY = new String(rtDir);
+    // URL data
+    private String pupilUrl_;
+    private String postParameters_;
+
+    public LogInManager(String rtDir) {
+        ROOT_DIRECTORY = rtDir;
     }
 
     private void setPostParameters(String un, String pw) {
-        postParameters = new String("");
-        postParameters += "csrfmiddlewaretoken=";
-        postParameters += csrftoken;
+        postParameters_ = "csrfmiddlewaretoken=";
+        postParameters_ += csrftoken_;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            postParameters += "&username=";
+            postParameters_ += "&username=";
             try {
-                postParameters += URLEncoder.encode(un, StandardCharsets.UTF_8.toString());
+                postParameters_ += URLEncoder.encode(un, StandardCharsets.UTF_8.toString());
             } catch (Exception e) {
-                postParameters += URLEncoder.encode(un);
+                postParameters_ += URLEncoder.encode(un);
             }
 
-            postParameters += "&password=";
+            postParameters_ += "&password=";
             try {
-                postParameters += URLEncoder.encode(pw, StandardCharsets.UTF_8.toString());
+                postParameters_ += URLEncoder.encode(pw, StandardCharsets.UTF_8.toString());
             } catch (Exception e) {
-                postParameters += URLEncoder.encode(pw);
+                postParameters_ += URLEncoder.encode(pw);
             }
         }
         else {
-            postParameters += "&username=";
-            postParameters += URLEncoder.encode(un);
-            postParameters += "&password=";
-            postParameters += URLEncoder.encode(pw);
+            postParameters_ += "&username=";
+            postParameters_ += URLEncoder.encode(un);
+            postParameters_ += "&password=";
+            postParameters_ += URLEncoder.encode(pw);
         }
     }
 
@@ -71,8 +67,7 @@ public class LogInManager {
 
         try {
             FileWriter foutSessionid = new FileWriter(ROOT_DIRECTORY + "/UserData/sessionid.txt", false);
-            foutSessionid.write(sessionid);
-//            System.out.println(sessionid);
+            foutSessionid.write(sessionid_);
             foutSessionid.flush();
             foutSessionid.close();
         } catch (Exception e) {
@@ -81,7 +76,7 @@ public class LogInManager {
 
         try {
             FileWriter foutUrl = new FileWriter(ROOT_DIRECTORY + "/UserData/pupilUrl.txt", false);
-            foutUrl.write(pupilUrl);
+            foutUrl.write(pupilUrl_);
             foutUrl.flush();
             foutUrl.close();
         } catch (Exception e) {
@@ -116,18 +111,20 @@ public class LogInManager {
         con.setRequestMethod("GET");
         con.setRequestProperty("User-Agent", USER_AGENT);
 
-        // get cookies
-        con.getContent();
-        CookieStore cookieJar = cookieManager.getCookieStore();
-        List<HttpCookie> cookies = cookieJar.getCookies();
-
-        // find csrftoken in cookies and set it
-        for (HttpCookie cookie : cookies) {
-            if (cookie.getName().equals("csrftoken")) {
-                csrftoken = cookie.getValue();
-                con.disconnect();
-                cookieJar.removeAll();
-                break;
+        Map<String,List<String>> hf = con.getHeaderFields();
+        for (Map.Entry<String, List<String>> ent : hf.entrySet()) {
+            try {
+                if (ent.getKey().equals("Set-Cookie")) {
+                    List<HttpCookie> cookies = HttpCookie.parse(ent.getValue().get(0));
+                    for (HttpCookie cookie : cookies) {
+                        if (cookie.getName().equals("csrftoken")) {
+                            csrftoken_ = cookie.getValue();
+                            return;
+                        }
+                    }
+                }
+            } catch (NullPointerException npe) {
+                continue;
             }
         }
     }
@@ -161,9 +158,9 @@ public class LogInManager {
             con.setRequestProperty("accept-encoding", "gzip, deflate, br");
             con.setRequestProperty("accept-language", "en-gb");
             con.setRequestProperty("Connection", "keep-alive");
-            con.setRequestProperty("content-length", Integer.toString(postParameters.length()));
+            con.setRequestProperty("content-length", Integer.toString(postParameters_.length()));
             con.setRequestProperty("content-type", "application/x-www-form-urlencoded");
-            con.setRequestProperty("cookie", "csrftoken=" + csrftoken + ";"); //cookie
+            con.setRequestProperty("cookie", "csrftoken=" + csrftoken_ + ";"); //cookie
             con.setRequestProperty("origin", "https://schools.by");
             con.setRequestProperty("referer", "https://schools.by/login");
             con.setRequestProperty("user-agent", USER_AGENT);
@@ -177,7 +174,7 @@ public class LogInManager {
         // send data
         try {
             DataOutputStream stream = new DataOutputStream(con.getOutputStream());
-            stream.writeBytes(postParameters);
+            stream.writeBytes(postParameters_);
             stream.flush();
             stream.close();
         } catch (Exception e) {
@@ -205,39 +202,42 @@ public class LogInManager {
                 return LoginState.ERROR_OCCURED;
             }
         }
-        System.out.println("responseCode -> " + responseCode);
         if (responseCode == 200) {
             return LoginState.WRONG_PASSWORD;
         }
 
-        // get sessionid and new csrftoken
-        CookieStore cookieJar = cookieManager.getCookieStore();
-        List <HttpCookie> cookies = cookieJar.getCookies();
-        for (HttpCookie cookie : cookies) {
-            if (cookie.getName().equals("csrftoken")) {
-                csrftoken = cookie.getValue();
-            }
-            if (cookie.getName().equals("sessionid")) {
-                sessionid = cookie.getValue();
+        // get csrftoken, sessionid, pupilUrl
+        Map<String,List<String>> hf = con.getHeaderFields();
+        for (Map.Entry<String, List<String>> ent : hf.entrySet()) {
+            try {
+                if (ent.getKey().equals("Set-Cookie")) {
+                    for (String s : ent.getValue()) {
+                        List<HttpCookie> cookies = HttpCookie.parse(s);
+                        for (HttpCookie cookie : cookies) {
+                            if (cookie.getName().equals("csrftoken")) {
+                                csrftoken_ = cookie.getValue();
+                            }
+                            if (cookie.getName().equals("sessionid")) {
+                                sessionid_ = cookie.getValue();
+                            }
+                        }
+                    }
+                }
+                if (ent.getKey().equals("Location")) {
+                    pupilUrl_ = ent.getValue().get(0);
+                }
+            } catch (NullPointerException npe) {
+                continue;
             }
         }
-        cookieJar.removeAll();
-
-        pupilUrl = con.getHeaderField("location");
 
         return LoginState.LOGGED_IN;
     }
 
-    public String getCsrftoken() {
-        return csrftoken;
-    }
-
     public String getSessionid() {
-        return sessionid;
+        return sessionid_;
     }
-
     public String getPupilUrl() {
-        return pupilUrl;
+        return pupilUrl_;
     }
-
 }

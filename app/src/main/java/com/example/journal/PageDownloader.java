@@ -91,7 +91,7 @@ public class PageDownloader {
     private void takeCsrftoken() {
         try {
             // open connection
-            URL connectionUrl = new URL(YearData.getPupilUrl());
+            URL connectionUrl = new URL("https://schools.by/login");
             HttpURLConnection con = (HttpURLConnection)connectionUrl.openConnection();
 
             // set connection args
