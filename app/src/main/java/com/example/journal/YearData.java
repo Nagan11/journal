@@ -1,15 +1,10 @@
 package com.example.journal;
 
-import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 
 public class YearData {
-    private static String sessionid_;
-    private static String pupilUrl_;
-
-    private static ArrayList<String> links_ = new ArrayList<>();
     private static int[] quarterIds_ = new int[] {40, 42, 43, 44};
     private static int[] amountsOfWeeks_ = new int[] {9, 7, 11, 9};
     private static int[][] firstMondays_ = new int[][] { // year, month, day
@@ -54,43 +49,27 @@ public class YearData {
     }
 
     // getters
-    public static int               getAmountOfWeeks(int quarterNumber) {
-        return amountsOfWeeks_[quarterNumber - 1];
-    }              // 1
     public static int               getCurrentQuarter() {
         return currentQuarter_;
     }
     public static int               getCurrentWeek() {
         return currentWeek_;
     }
+    public static int               getAmountOfWeeks(int quarterNumber) {
+        return amountsOfWeeks_[quarterNumber - 1];
+    }                 // 1
+    public static int               getDaysInMonth(int month) {
+        return daysInMonth_[month];
+    } // 1
     public static int               getQuarterId(int quarterNumber) {
         return quarterIds_[quarterNumber - 1];
-    }                  // 1
+    }                     // 1
     public static int[]             getFirstMonday(int quarterNumber) {
         return firstMondays_[quarterNumber - 1];
-    }                // 1
-    public static String            getSessionid() {
-        return sessionid_;
-    }
-    public static String            getPupilUrl() {
-        return pupilUrl_;
-    }
-    public static String            getLink(int quarterNumber, int weekNumber) {
-        int linkIndex = weekNumber - 1;
-        for (int i = 1; i < quarterNumber; i++) {
-            linkIndex += amountsOfWeeks_[i - 1];
-        }
-        return links_.get(linkIndex);
-    }       // 1
-    public static String            getMonthName(int month) {
-        return monthNames_[month];
-    } // 0
-    public static String            getWeekDayName(int weekDay) {
-        return weekDayNames_[weekDay];
-    }                      // Sun, 0
+    }                   // 1
     public static ArrayList<String> getDates(int quarterNumber, int weekNumber) {
         return dates_.get(quarterNumber - 1).get(weekNumber - 1);
-    }      // 1
+    }         // 1
 
     private static boolean isLeap(int a) {
         if (a % 400 == 0) {
@@ -152,50 +131,6 @@ public class YearData {
                 cal.roll(Calendar.WEEK_OF_YEAR, true);
             }
         }
-    }
-    public static void setLinks() {
-        links_.clear();
-        int quarterIdCounter = 0;
-        String currentLink;
-        int[] currentDate = new int[3];
-
-        for (int i = 0; i < 4; i++) {
-            currentDate[0] = firstMondays_[i][0];
-            currentDate[1] = firstMondays_[i][1];
-            currentDate[2] = firstMondays_[i][2];
-            for (int week = 0; week < amountsOfWeeks_[i]; week++) {
-                currentLink = pupilUrl_;
-
-                currentLink += "quarter/";
-                currentLink += Integer.toString(quarterIds_[quarterIdCounter]);
-
-                currentLink += "/week/";
-                currentLink += Integer.toString(currentDate[0]);
-                currentLink += "-";
-                if (currentDate[1] < 10) {
-                    currentLink += "0";
-                }
-                currentLink += Integer.toString(currentDate[1]);
-                currentLink += "-";
-                if(currentDate[2] < 10) {
-                    currentLink += "0";
-                }
-                currentLink += Integer.toString(currentDate[2]);
-
-                links_.add(currentLink);
-
-                currentDate[2] += 7;
-                if (currentDate[2] > daysInMonth_[currentDate[1]]) {
-                    currentDate[2] -= daysInMonth_[currentDate[1]];
-                    currentDate[1]++;
-                }
-            }
-            quarterIdCounter++;
-        }
-
-        String lp = pupilUrl_;
-        lp += "last-page";
-        links_.add(lp);
     }
     private static void defineQuarterAndWeek() {
         GregorianCalendar tempCalendar = new GregorianCalendar();
@@ -357,25 +292,5 @@ public class YearData {
                 }
             }
         }
-    }
-    public static void readData(String rootDirectory) throws Exception {
-        int c;
-        String buffer = "";
-
-        FileReader inputSessionid = new FileReader(rootDirectory + "/UserData/sessionid.txt");
-        while ((c = inputSessionid.read()) != -1) {
-            buffer += (char)c;
-        }
-        inputSessionid.close();
-        sessionid_ = buffer;
-        buffer = "";
-
-        FileReader inputPupilUrl = new FileReader(rootDirectory + "/UserData/pupilUrl.txt");
-        while ((c = inputPupilUrl.read()) != -1) {
-            buffer += (char)c;
-        }
-        inputPupilUrl.close();
-        pupilUrl_ = buffer;
-        pupilUrl_ += "/dnevnik/";
     }
 }

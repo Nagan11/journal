@@ -14,9 +14,12 @@ public class PageDownloader {
     private String USER_AGENT = "Mozilla/5.0";
 
     private String csrftoken_;
+    private String sessionid_;
 
-    public PageDownloader(String rootDirectory) {
+
+    public PageDownloader(String rootDirectory, String sessionid) {
         ROOT_DIRECTORY = rootDirectory;
+        sessionid_ = sessionid;
     }
 
     private String getPageCode(String url) {
@@ -37,7 +40,7 @@ public class PageDownloader {
             con.setUseCaches(false);
             con.setRequestMethod("GET");
             con.setRequestProperty("User-Agent", USER_AGENT);
-            con.setRequestProperty("cookie", ("csrftoken=" + csrftoken_ + "; sessionid=" + YearData.getSessionid()));
+            con.setRequestProperty("cookie", ("csrftoken=" + csrftoken_ + "; sessionid=" + sessionid_));
 
             BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
 

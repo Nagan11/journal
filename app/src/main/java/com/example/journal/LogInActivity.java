@@ -33,7 +33,7 @@ public class LogInActivity extends AppCompatActivity {
     private RealNameParser realNameParser;
     private String realName;
 
-    private Button loginButton;
+    private Button logInButton;
 
 
     @Override
@@ -48,12 +48,12 @@ public class LogInActivity extends AppCompatActivity {
 
         logInManager = new LogInManager(ROOT_DIRECTORY);
 
-        mainMenuActivity = new Intent(this, MainMenuActivity.class);
+        mainMenuActivity = new Intent(CONTEXT, MainMenuActivity.class);
 
         breakLoginAttempt = false;
 
-        loginButton = findViewById(R.id.LoginButton);
-        enableLoginButton();
+        logInButton = findViewById(R.id.LogInButton);
+        enableLogInButton();
     }
 
     @Override
@@ -61,12 +61,12 @@ public class LogInActivity extends AppCompatActivity {
 
     public void loginButtonOnClick(View view) {
         try {
-            disableLoginButton();
+            disableLogInButton();
             loginThread = new Thread(new LoginRunnable());
             loginAwaitThread = new Thread(new LoginAwaitRunnable());
             loginThread.start();
         } catch (Exception e) {
-            enableLoginButton();
+            enableLogInButton();
             System.out.println(e);
         }
     }
@@ -125,7 +125,7 @@ public class LogInActivity extends AppCompatActivity {
                             Toast.makeText(CONTEXT, "Wrong login or password", Toast.LENGTH_SHORT).show();
                         }
                     });
-                    enableLoginButton();
+                    enableLogInButton();
                     break;
                 case ERROR_OCCURED:
                     runOnUiThread(new Runnable() {
@@ -133,7 +133,7 @@ public class LogInActivity extends AppCompatActivity {
                             Toast.makeText(CONTEXT, "Error occured", Toast.LENGTH_SHORT).show();
                         }
                     });
-                    enableLoginButton();
+                    enableLogInButton();
                     break;
                 case DEFAULT:
                     runOnUiThread(new Runnable() {
@@ -141,7 +141,7 @@ public class LogInActivity extends AppCompatActivity {
                             Toast.makeText(CONTEXT, "WTF", Toast.LENGTH_SHORT).show();
                         }
                     });
-                    enableLoginButton();
+                    enableLogInButton();
                     break;
             }
         }
@@ -156,17 +156,17 @@ public class LogInActivity extends AppCompatActivity {
 
     }
 
-    private void enableLoginButton() {
+    private void enableLogInButton() {
         runOnUiThread(new Runnable() {
             public void run() {
-                loginButton.setEnabled(true);
+                logInButton.setEnabled(true);
             }
         });
     }
-    private void disableLoginButton() {
+    private void disableLogInButton() {
         runOnUiThread(new Runnable() {
             public void run() {
-                loginButton.setEnabled(false);
+                logInButton.setEnabled(false);
             }
         });
     }

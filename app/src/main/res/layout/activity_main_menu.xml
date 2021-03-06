@@ -14,13 +14,13 @@
         android:text="@string/default_user_name"
         android:textColor="@color/DarkBlue"
         android:textSize="30sp"
-        app:layout_constraintBottom_toTopOf="@+id/imageView4"
+        app:layout_constraintBottom_toTopOf="@+id/LogOutButton"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <ImageView
-        android:id="@+id/imageView4"
+        android:id="@+id/LogOutButton"
         android:layout_width="60dp"
         android:layout_height="60dp"
         android:onClick="logOutButtonOnClick"
@@ -62,7 +62,7 @@
         android:layout_width="0dp"
         android:layout_height="220px"
         android:background="@color/journalBackground"
-        android:onClick="journalButtonOnClick"
+        android:onClick="journalOnClick"
         android:stateListAnimator="@null"
         android:text="@string/journal_button_text"
         android:textColorLink="@color/journalBackground"
@@ -81,7 +81,7 @@
         tools:layout_editor_absoluteX="90dp">
 
         <ImageButton
-            android:id="@+id/leftArrow"
+            android:id="@+id/WeekBackButton"
             android:layout_width="0dp"
             android:layout_height="0dp"
             android:layout_marginStart="16dp"
@@ -89,18 +89,18 @@
             android:layout_marginEnd="40dp"
             android:layout_marginBottom="8dp"
             android:background="#00FFFFFF"
-            android:onClick="leftArrowOnClick"
+            android:onClick="weekBackOnClick"
             android:paddingStart="16dp"
             android:scaleType="fitStart"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/imageView3"
+            app:layout_constraintEnd_toStartOf="@+id/UpdateButton"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintVertical_bias="0.5"
             app:srcCompat="@drawable/arrow_left" />
 
         <ImageView
-            android:id="@+id/imageView3"
+            android:id="@+id/UpdateButton"
             android:layout_width="0dp"
             android:layout_height="0dp"
             android:layout_marginTop="8dp"
@@ -115,19 +115,19 @@
             app:srcCompat="@drawable/update_icon" />
 
         <ImageView
-            android:id="@+id/rightArrow"
+            android:id="@+id/WeekForwardButton"
             android:layout_width="0dp"
             android:layout_height="0dp"
             android:layout_marginStart="40dp"
             android:layout_marginTop="8dp"
             android:layout_marginEnd="16dp"
             android:layout_marginBottom="8dp"
-            android:onClick="rightArrowOnClick"
+            android:onClick="weekForwardOnClick"
             android:paddingEnd="16dp"
             android:scaleType="fitEnd"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/imageView3"
+            app:layout_constraintStart_toEndOf="@+id/UpdateButton"
             app:layout_constraintTop_toTopOf="parent"
             app:srcCompat="@drawable/arrow_right" />
 

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -7,36 +7,16 @@
     android:fitsSystemWindows="false"
     tools:context=".LogInActivity">
 
-    <com.google.android.material.appbar.AppBarLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:theme="@style/AppTheme.AppBarOverlay" />
-
-    <LinearLayout
-        android:id="@+id/LnpWindowLayout"
-        android:layout_width="match_parent"
-        android:layout_height="283dp"
-        android:orientation="vertical">
-
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/LnpLayout"
-        android:layout_width="match_parent"
-        android:layout_height="60dp"
-        android:orientation="vertical"
-        app:layout_anchor="@+id/LnpWindowLayout"
-        app:layout_anchorGravity="center">
-
-    </LinearLayout>
-
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/UsernameField"
-        android:layout_width="300dp"
+        android:layout_width="275dp"
         android:layout_height="wrap_content"
         app:counterEnabled="false"
-        app:layout_anchor="@+id/LnpLayout"
-        app:layout_anchorGravity="top|center">
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.15">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/UsernameInput"
@@ -49,10 +29,13 @@
 
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/PasswordField"
-        android:layout_width="300dp"
+        android:layout_width="275dp"
         android:layout_height="wrap_content"
-        app:layout_anchor="@+id/LnpLayout"
-        app:layout_anchorGravity="bottom|center">
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/UsernameField"
+        app:layout_constraintVertical_bias="0.0">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/PasswordInput"
@@ -65,14 +48,18 @@
     </com.google.android.material.textfield.TextInputLayout>
 
     <Button
-        android:id="@+id/LoginButton"
-        android:layout_width="300dp"
+        android:id="@+id/LogInButton"
+        android:layout_width="275dp"
         android:layout_height="wrap_content"
+        android:layout_marginTop="48dp"
         android:background="@color/DarkBlue"
         android:onClick="loginButtonOnClick"
         android:text="@string/login_button_text"
         android:textColor="@color/DarkYellow"
-        app:layout_anchor="@+id/LnpWindowLayout"
-        app:layout_anchorGravity="bottom|center" />
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/PasswordField"
+        app:layout_constraintVertical_bias="0.0" />
 
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

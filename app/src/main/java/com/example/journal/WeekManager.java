@@ -7,6 +7,10 @@ import java.util.ArrayList;
 public class WeekManager {
     private String ROOT_DIRECTORY;
 
+    private String sessionid_;
+    private String pupilUrl_;
+    private ArrayList<String> links_ = new ArrayList<>();
+
     private ArrayList< ArrayList< ArrayList<String> > > lessonNames_ = new ArrayList<>(4);
     private ArrayList< ArrayList< ArrayList<String> > > marks_ = new ArrayList<>(4);
     private ArrayList< ArrayList< ArrayList<String> > > hometasks_ = new ArrayList<>(4);
@@ -26,10 +30,16 @@ public class WeekManager {
         HOMETASK
     }
 
-    WeekManager(String rtDir) {
-        ROOT_DIRECTORY = rtDir;
+    WeekManager(String rootDirectory) {
+        ROOT_DIRECTORY = rootDirectory;
         initializeArrayLists();
         checkFolders();
+        try {
+            readData();
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+
     }
 
     public void readWeek(String weekPath, int quarterNumber, int weekNumber) throws Exception {
@@ -158,5 +168,79 @@ public class WeekManager {
         } else {
             quarterFolder.mkdir();
         }
+    }
+
+    public void setLinks() {
+        links_.clear();
+        int quarterIdCounter = 1;
+        String currentLink;
+        int[] currentDate;
+
+        for (int i = 0; i < 4; i++) {
+            currentDate = YearData.getFirstMonday(i + 1).clone();
+            for (int week = 0; week < YearData.getAmountOfWeeks(i + 1); week++) {
+                currentLink = pupilUrl_;
+
+                currentLink += "quarter/";
+                currentLink += Integer.toString(YearData.getQuarterId(quarterIdCounter));
+
+                currentLink += "/week/";
+                currentLink += Integer.toString(currentDate[0]);
+                currentLink += "-";
+                if (currentDate[1] < 10) {
+                    currentLink += "0";
+                }
+                currentLink += Integer.toString(currentDate[1]);
+                currentLink += "-";
+                if(currentDate[2] < 10) {
+                    currentLink += "0";
+                }
+                currentLink += Integer.toString(currentDate[2]);
+
+                links_.add(currentLink);
+
+                currentDate[2] += 7;
+                if (currentDate[2] > YearData.getDaysInMonth(currentDate[1])) {
+                    currentDate[2] -= YearData.getDaysInMonth(currentDate[1]);
+                    currentDate[1]++;
+                }
+            }
+            quarterIdCounter++;
+        }
+
+        String lp = pupilUrl_;
+        lp += "last-page";
+        links_.add(lp);
+    }
+    public String getLink(int quarterNumber, int weekNumber) {
+        int linkIndex = weekNumber - 1;
+        for (int i = 1; i < quarterNumber; i++) {
+            linkIndex += YearData.getAmountOfWeeks(i);
+        }
+        return links_.get(linkIndex);
+    }
+
+    public void readData() throws Exception {
+        int c;
+        String buffer = "";
+
+        FileReader inputSessionid = new FileReader(ROOT_DIRECTORY + "/UserData/sessionid.txt");
+        while ((c = inputSessionid.read()) != -1) {
+            buffer += (char)c;
+        }
+        inputSessionid.close();
+        sessionid_ = buffer;
+        buffer = "";
+
+        FileReader inputPupilUrl = new FileReader(ROOT_DIRECTORY + "/UserData/pupilUrl.txt");
+        while ((c = inputPupilUrl.read()) != -1) {
+            buffer += (char)c;
+        }
+        inputPupilUrl.close();
+        pupilUrl_ = buffer;
+        pupilUrl_ += "/dnevnik/";
+    }
+    public String getSessionid() {
+        return sessionid_;
     }
 }

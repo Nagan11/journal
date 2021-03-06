@@ -209,7 +209,6 @@ public class MainMenuActivity extends AppCompatActivity {
                                 runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
-                                        System.out.println(weekIndexes_[fI].first + "/" + weekIndexes_[fI].second);
                                         STATUS_TEXTS.get(fI).setVisibility(View.INVISIBLE);
                                         buildWeek(fI);
                                     }
@@ -240,7 +239,7 @@ public class MainMenuActivity extends AppCompatActivity {
             quarterNumber_ = quarter;
             weekNumber_ = week;
 
-            downloader_ = new PageDownloader(ROOT_DIRECTORY);
+            downloader_ = new PageDownloader(ROOT_DIRECTORY, weekManager_.getSessionid());
 
             pagePath_ = (ROOT_DIRECTORY + "/p" + quarterNumber_ + "q/w" + weekNumber_ + ".html");
             dataPath_ = (ROOT_DIRECTORY + "/d" + quarterNumber_ + "q/w" + weekNumber_ + ".txt");
@@ -248,9 +247,8 @@ public class MainMenuActivity extends AppCompatActivity {
 
         @Override
         public void run() {
-            System.out.println(quarterNumber_ + "/" + weekNumber_ + " started");
             if (quarterNumber_ == -1 || weekNumber_ == -1) return;
-            if (downloader_.downloadPage(quarterNumber_, weekNumber_, YearData.getLink(quarterNumber_, weekNumber_))) {
+            if (downloader_.downloadPage(quarterNumber_, weekNumber_, weekManager_.getLink(quarterNumber_, weekNumber_))) {
                 weekManager_.setWeekState(quarterNumber_, weekNumber_, PageLoadState.GATHERING);
             } else {
                 weekManager_.setWeekState(quarterNumber_, weekNumber_, PageLoadState.DOWNLOADING_ERROR);
@@ -333,18 +331,15 @@ public class MainMenuActivity extends AppCompatActivity {
         Order.resetOrder();
 
         try {
-            YearData.readData(ROOT_DIRECTORY);
-            YearData.setLinks();
+            weekManager_.readData();
         } catch (Exception e) {
-            System.out.println("YD initialization failed, " + e);
+            System.out.println("weekManager initialization failed, " + e);
         }
+        weekManager_.setLinks();
 
         weekIndexes_[1] = new Pair<>(YearData.getCurrentQuarter(), YearData.getCurrentWeek());
         weekIndexes_[0] = leftWeekIndex(weekIndexes_[1]);
         weekIndexes_[2] = rightWeekIndex(weekIndexes_[1]);
-
-        System.out.println("current Q/W -> " + weekIndexes_[Order.center()].first + "/" + weekIndexes_[Order.center()].second);
-        System.out.println("weekShift -> " + weekShift_);
 
         setScreenInfo();
         buttonHeight_ = (int)(SCREEN_HEIGHT * 0.085f);
@@ -371,7 +366,7 @@ public class MainMenuActivity extends AppCompatActivity {
         Intent logInActivity = new Intent(CONTEXT, LogInActivity.class);
         startActivity(logInActivity);
     }
-    public void journalButtonOnClick(View view) {
+    public void journalOnClick(View view) {
         if (journalClosed_) {
             rootLayoutSet_.setVerticalBias(R.id.JournalButton, 0f);
         } else {
@@ -380,10 +375,10 @@ public class MainMenuActivity extends AppCompatActivity {
         rootLayoutSet_.applyTo(ROOT_LAYOUT);
         journalClosed_ = !journalClosed_;
     }
-    public void leftArrowOnClick(View view) {
+    public void weekBackOnClick(View view) {
         scrollLeft();
     }
-    public void rightArrowOnClick(View view) {
+    public void weekForwardOnClick(View view) {
         scrollRight();
     }
     public void updateOnClick(View view) {
