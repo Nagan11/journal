@@ -9,6 +9,7 @@ public class WeekManager {
 
     private String sessionid_;
     private String pupilUrl_;
+
     private ArrayList<String> links_ = new ArrayList<>();
 
     private ArrayList< ArrayList< ArrayList<String> > > lessonNames_ = new ArrayList<>(4);
@@ -34,12 +35,6 @@ public class WeekManager {
         ROOT_DIRECTORY = rootDirectory;
         initializeArrayLists();
         checkFolders();
-        try {
-            readData();
-        } catch (Exception e) {
-            System.out.println(e);
-        }
-
     }
 
     public void readWeek(String weekPath, int quarterNumber, int weekNumber) throws Exception {
@@ -158,7 +153,7 @@ public class WeekManager {
         }
     }
 
-    private void cleanPagesFolder(int quarterNumber) { // from one
+    private void cleanPagesFolder(int quarterNumber) {
         File quarterFolder = new File(ROOT_DIRECTORY + "p" + quarterNumber + "q");
         if (quarterFolder.exists()) {
             File[] pages = quarterFolder.listFiles();
@@ -168,7 +163,7 @@ public class WeekManager {
         } else {
             quarterFolder.mkdir();
         }
-    }
+    } // 1
 
     public void setLinks() {
         links_.clear();

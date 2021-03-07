@@ -77,10 +77,21 @@ public class MainMenuActivity extends AppCompatActivity {
     }
 
     private class PageStateUpdaterR implements Runnable {
-        private PageLoadState[] previousStates = new PageLoadState[3];
-        private PageLoadState[] currentStates = new PageLoadState[3];
+        private ArrayList< ArrayList<PageLoadState> > previousStates = new ArrayList<>(); // 1
+        private ArrayList< ArrayList<PageLoadState> > currentStates = new ArrayList<>();  // 1
 
-        private Pair<Integer, Integer>[] previousWeekIndexes = weekIndexes_.clone();
+        public PageStateUpdaterR() {
+            previousStates.add(new ArrayList<PageLoadState>());
+            currentStates.add(new ArrayList<PageLoadState>());
+            for (int i = 1; i <= 4; i++) {
+                previousStates.add(new ArrayList<PageLoadState>(YearData.getAmountOfWeeks(i)));
+                currentStates.add(new ArrayList<PageLoadState>(YearData.getAmountOfWeeks(i)));
+                for (int j = 0; j <= YearData.getAmountOfWeeks(i); j++) {
+                    previousStates.get(i).add(null);
+                    currentStates.get(i).add(null);
+                }
+            }
+        }
 
         private void buildWeek(int index) {
             if (weekIndexes_[index].first == -1 || weekIndexes_[index].second == -1) return;
@@ -97,11 +108,7 @@ public class MainMenuActivity extends AppCompatActivity {
         @Override
         public void run() {
             while (true) {
-                try {
-                    Thread.sleep(16);
-                } catch (Exception e) {
-                    System.out.println(e);
-                }
+                try { Thread.sleep(16); } catch (Exception e) { System.out.println(e); }
 
                 if (weekShift_ != 0) {
                     while (weekShift_ > 0) {
@@ -138,18 +145,26 @@ public class MainMenuActivity extends AppCompatActivity {
                     });
                 }
 
-                currentStates[Order.center()] = weekManager_.getWeekState(weekIndexes_[Order.center()].first, weekIndexes_[Order.center()].second);
+                currentStates.get(weekIndexes_[Order.center()].first)
+                        .set(weekIndexes_[Order.center()].second,
+                                weekManager_.getWeekState(weekIndexes_[Order.center()].first, weekIndexes_[Order.center()].second));
                 if (weekIndexes_[Order.left()].first > 0 && weekIndexes_[Order.left()].second > 0) {
-                    currentStates[Order.left()] = weekManager_.getWeekState(weekIndexes_[Order.left()].first, weekIndexes_[Order.left()].second);
+                    currentStates.get(weekIndexes_[Order.left()].first)
+                            .set(weekIndexes_[Order.left()].second,
+                                    weekManager_.getWeekState(weekIndexes_[Order.left()].first, weekIndexes_[Order.left()].second));
                 }
                 if (weekIndexes_[Order.right()].first > 0 && weekIndexes_[Order.right()].second > 0) {
-                    currentStates[Order.right()] = weekManager_.getWeekState(weekIndexes_[Order.right()].first, weekIndexes_[Order.right()].second);
+                    currentStates.get(weekIndexes_[Order.right()].first)
+                            .set(weekIndexes_[Order.right()].second,
+                                    weekManager_.getWeekState(weekIndexes_[Order.right()].first, weekIndexes_[Order.right()].second));
                 }
 
                 for (int i = 0; i <= 2; i++) {
                     final int fI = Order.get(i);
-                    if (currentStates[fI] != previousStates[fI] || weekIndexes_[fI].first != previousWeekIndexes[fI].first || weekIndexes_[fI].second != previousWeekIndexes[fI].second) {
-                        switch (currentStates[fI]) {
+                    if (weekIndexes_[fI].first == -1 || weekIndexes_[fI].second == -1) continue;
+                    if (!currentStates.get(weekIndexes_[fI].first).get(weekIndexes_[fI].second)
+                            .equals(previousStates.get(weekIndexes_[fI].first).get(weekIndexes_[fI].second))) {
+                        switch (currentStates.get(weekIndexes_[fI].first).get(weekIndexes_[fI].second)) {
                             case DOWNLOADING:
                                 runOnUiThread(new Runnable() {
                                     @Override
@@ -215,10 +230,10 @@ public class MainMenuActivity extends AppCompatActivity {
                                 });
                                 break;
                         }
+                        previousStates.get(weekIndexes_[fI].first).set(weekIndexes_[fI].second,
+                                currentStates.get(weekIndexes_[fI].first).get(weekIndexes_[fI].second));
                     }
                 }
-                previousStates = currentStates.clone();
-                previousWeekIndexes = weekIndexes_.clone();
             }
         }
     }

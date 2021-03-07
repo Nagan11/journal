@@ -1,19 +1,32 @@
+/**
+ * Class contains constant information that is mutual for all users.
+ * Class also defines current quarter and week.
+ *
+ * The information is used for:
+ *  - Making URL links to HTML pages (first group of properties)
+ *  - Building layouts (second group of properties)
+ *  - Defining current quarter and week
+ */
+
 package com.example.journal;
 
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 
+
+
 public class YearData {
     private static int[] quarterIds_ = new int[] {40, 42, 43, 44};
     private static int[] amountsOfWeeks_ = new int[] {9, 7, 11, 9};
+    private static int[] daysInMonth_ = new int[13];
     private static int[][] firstMondays_ = new int[][] { // year, month, day
             {2020, 8, 31},
             {2020, 11, 9},
             {2021, 1, 11},
             {2021, 4, 5}
     };
-    private static ArrayList< ArrayList< ArrayList<String> > > dates_ = new ArrayList<>(4);
+
     private static String[] monthNames_ = new String[] {
             "января",
             "февраля",
@@ -37,7 +50,8 @@ public class YearData {
             "Пт",
             "Сб"
     };
-    private static int[] daysInMonth_ = new int[13];
+
+    private static ArrayList< ArrayList< ArrayList<String> > > dates_ = new ArrayList<>(4);
 
     private static int currentQuarter_ = -1;
     private static int currentWeek_ = -1;
