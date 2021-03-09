@@ -9,19 +9,19 @@ import java.util.List;
 import java.util.Map;
 
 public class RealNameParser {
-    private String USER_AGENT = "Mozilla/5.0";
+    private final String USER_AGENT = "Mozilla/5.0";
+    private final String SESSIONID;
+    private final String PUPIL_URL;
 
-    private String csrftoken_;
-    private String sessionid_;
-    private String pupilUrl_;
+    private String csrftoken;
 
     RealNameParser(String sessionid, String pupilUrl) {
-        sessionid_ = sessionid;
-        pupilUrl_ = pupilUrl;
+        SESSIONID = sessionid;
+        PUPIL_URL = pupilUrl;
     }
 
     public String getRealName() {
-        String mainPage = getPageCode(pupilUrl_);
+        String mainPage = getPageCode(PUPIL_URL);
         String buffer = "";
         if (mainPage.equals("-")) {
             return "-";
@@ -57,9 +57,9 @@ public class RealNameParser {
 
     private String getPageCode(String url) {
         try {
-            if (csrftoken_ == null) {
+            if (csrftoken == null) {
                 takeCsrftoken();
-                if (csrftoken_ == null) {
+                if (csrftoken == null) {
                     throw new Exception("csrftoken getting error");
                 }
             }
@@ -68,7 +68,7 @@ public class RealNameParser {
 
             con.setRequestMethod("GET");
             con.setRequestProperty("User-Agent", USER_AGENT);
-            con.setRequestProperty("cookie", "csrftoken=" + csrftoken_ + "; sessionid=" + sessionid_);
+            con.setRequestProperty("cookie", "csrftoken=" + csrftoken + "; sessionid=" + SESSIONID);
 
             BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
 
@@ -99,7 +99,7 @@ public class RealNameParser {
 
             // get cookies
             con.connect();
-            Map<String,List<String>> hf = con.getHeaderFields();
+            Map<String, List<String>> hf = con.getHeaderFields();
             con.disconnect();
 
             // find csrftoken
@@ -109,7 +109,7 @@ public class RealNameParser {
                         List<HttpCookie> cookies = HttpCookie.parse(ent.getValue().get(0));
                         for (HttpCookie cookie : cookies) {
                             if (cookie.getName().equals("csrftoken")) {
-                                csrftoken_ = cookie.getValue();
+                                csrftoken = cookie.getValue();
                                 return;
                             }
                         }
@@ -122,7 +122,7 @@ public class RealNameParser {
             System.out.println("csrftoken not found");
         } catch (Exception e) {
             System.out.println("csrftoken getting error, " + e);
-            csrftoken_ = null;
+            csrftoken = null;
             return;
         }
     }

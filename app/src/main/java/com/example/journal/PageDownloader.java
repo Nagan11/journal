@@ -10,15 +10,15 @@ import java.util.List;
 import java.util.Map;
 
 public class PageDownloader {
-    private String ROOT_DIRECTORY;
-    private String USER_AGENT = "Mozilla/5.0";
+    private final String USER_AGENT = "Mozilla/5.0";
+    private final String ROOT_DIRECTORY;
+    private final String SESSIONID;
 
-    private String csrftoken_;
-    private String sessionid_;
+    private String csrftoken;
 
     public PageDownloader(String rootDirectory, String sessionid) {
         ROOT_DIRECTORY = rootDirectory;
-        sessionid_ = sessionid;
+        SESSIONID = sessionid;
     }
 
     private String getPageCode(String url) throws Exception {
@@ -29,7 +29,7 @@ public class PageDownloader {
         con.setUseCaches(false);
         con.setRequestMethod("GET");
         con.setRequestProperty("User-Agent", USER_AGENT);
-        con.setRequestProperty("cookie", ("csrftoken=" + csrftoken_ + "; sessionid=" + sessionid_));
+        con.setRequestProperty("cookie", ("csrftoken=" + csrftoken + "; sessionid=" + SESSIONID));
 
         String buffer;
         StringBuffer pageCode = new StringBuffer();
@@ -51,7 +51,7 @@ public class PageDownloader {
         int getCodeAttempts = 5;
         while (getCodeAttempts-- > 0) {
             try {
-                if (csrftoken_ == null) takeCsrftoken();
+                if (csrftoken == null) takeCsrftoken();
                 String pageCode = getPageCode(link);
 
                 FileWriter fout = new FileWriter(
@@ -86,7 +86,7 @@ public class PageDownloader {
                     List<HttpCookie> cookies = HttpCookie.parse(ent.getValue().get(0));
                     for (HttpCookie cookie : cookies) {
                         if (cookie.getName().equals("csrftoken")) {
-                            csrftoken_ = cookie.getValue();
+                            csrftoken = cookie.getValue();
                             return;
                         }
                     }

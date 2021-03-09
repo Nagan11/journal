@@ -9,8 +9,8 @@ public class PageParser {
 
     private final String ROOT_DIRECTORY;
 
-    PageParser(String rt_dir) {
-        ROOT_DIRECTORY = rt_dir;
+    PageParser(String rootDirectory) {
+        ROOT_DIRECTORY = rootDirectory;
         checkFolders();
     }
 

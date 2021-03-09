@@ -14,8 +14,9 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 public class StartPage extends AppCompatActivity {
-    String ROOT_DIRECTORY;
-    Intent nextActivity;
+    private String ROOT_DIRECTORY;
+
+    private Intent nextActivity;
 
     @Override
     public void onBackPressed() {}
@@ -44,7 +45,7 @@ public class StartPage extends AppCompatActivity {
         try {
             FileReader fin = new FileReader(ROOT_DIRECTORY + "/UserData/status.txt");
             int c;
-            String status = new String("");
+            String status = "";
 
             while ((c = fin.read()) != -1) {
                 status += (char)c;

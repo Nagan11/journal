@@ -16,11 +16,11 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 public class LogInActivity extends AppCompatActivity {
+    private final Context CONTEXT = this;
     private String ROOT_DIRECTORY;
-    private Context CONTEXT;
+
     private TextInputEditText usernameField;
     private TextInputEditText passwordField;
-    private Intent mainMenuActivity;
 
     private LogInManager logInManager;
 
@@ -35,20 +35,16 @@ public class LogInActivity extends AppCompatActivity {
 
     private Button logInButton;
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_new_user_login);
 
         ROOT_DIRECTORY = String.valueOf(getFilesDir());
-        CONTEXT = this;
         usernameField = findViewById(R.id.UsernameInput);
         passwordField = findViewById((R.id.PasswordInput));
 
         logInManager = new LogInManager(ROOT_DIRECTORY);
-
-        mainMenuActivity = new Intent(CONTEXT, MainMenuActivity.class);
 
         breakLoginAttempt = false;
 
@@ -117,7 +113,7 @@ public class LogInActivity extends AppCompatActivity {
                         }
                     }
                     logInManager.writeLoginDataToFiles(usernameField.getText().toString(), realName);
-                    startActivity(mainMenuActivity);
+                    startActivity(new Intent(CONTEXT, MainMenuActivity.class));
                     break;
                 case WRONG_PASSWORD:
                     runOnUiThread(new Runnable() {

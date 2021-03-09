@@ -13,45 +13,42 @@ import java.util.List;
 import java.util.Map;
 
 public class LogInManager {
-    // constants
-    private String USER_AGENT = "Mozilla/5.0";
-    private String ROOT_DIRECTORY;
+    private final String USER_AGENT = "Mozilla/5.0";
+    private final String ROOT_DIRECTORY;
 
-    // login data
-    private String sessionid_ = "";
-    private String csrftoken_ = "";
+    private String sessionid;
+    private String csrftoken;
 
-    // URL data
-    private String pupilUrl_;
-    private String postParameters_;
+    private String pupilUrl;
+    private String postParameters;
 
-    public LogInManager(String rtDir) {
-        ROOT_DIRECTORY = rtDir;
+    public LogInManager(String rootDirectory) {
+        ROOT_DIRECTORY = rootDirectory;
     }
 
     private void setPostParameters(String un, String pw) {
-        postParameters_ = "csrfmiddlewaretoken=";
-        postParameters_ += csrftoken_;
+        postParameters = "csrfmiddlewaretoken=";
+        postParameters += csrftoken;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            postParameters_ += "&username=";
+            postParameters += "&username=";
             try {
-                postParameters_ += URLEncoder.encode(un, StandardCharsets.UTF_8.toString());
+                postParameters += URLEncoder.encode(un, StandardCharsets.UTF_8.toString());
             } catch (Exception e) {
-                postParameters_ += URLEncoder.encode(un);
+                postParameters += URLEncoder.encode(un);
             }
 
-            postParameters_ += "&password=";
+            postParameters += "&password=";
             try {
-                postParameters_ += URLEncoder.encode(pw, StandardCharsets.UTF_8.toString());
+                postParameters += URLEncoder.encode(pw, StandardCharsets.UTF_8.toString());
             } catch (Exception e) {
-                postParameters_ += URLEncoder.encode(pw);
+                postParameters += URLEncoder.encode(pw);
             }
         }
         else {
-            postParameters_ += "&username=";
-            postParameters_ += URLEncoder.encode(un);
-            postParameters_ += "&password=";
-            postParameters_ += URLEncoder.encode(pw);
+            postParameters += "&username=";
+            postParameters += URLEncoder.encode(un);
+            postParameters += "&password=";
+            postParameters += URLEncoder.encode(pw);
         }
     }
 
@@ -67,7 +64,7 @@ public class LogInManager {
 
         try {
             FileWriter foutSessionid = new FileWriter(ROOT_DIRECTORY + "/UserData/sessionid.txt", false);
-            foutSessionid.write(sessionid_);
+            foutSessionid.write(sessionid);
             foutSessionid.flush();
             foutSessionid.close();
         } catch (Exception e) {
@@ -76,7 +73,7 @@ public class LogInManager {
 
         try {
             FileWriter foutUrl = new FileWriter(ROOT_DIRECTORY + "/UserData/pupilUrl.txt", false);
-            foutUrl.write(pupilUrl_);
+            foutUrl.write(pupilUrl);
             foutUrl.flush();
             foutUrl.close();
         } catch (Exception e) {
@@ -118,7 +115,7 @@ public class LogInManager {
                     List<HttpCookie> cookies = HttpCookie.parse(ent.getValue().get(0));
                     for (HttpCookie cookie : cookies) {
                         if (cookie.getName().equals("csrftoken")) {
-                            csrftoken_ = cookie.getValue();
+                            csrftoken = cookie.getValue();
                             return;
                         }
                     }
@@ -158,9 +155,9 @@ public class LogInManager {
             con.setRequestProperty("accept-encoding", "gzip, deflate, br");
             con.setRequestProperty("accept-language", "en-gb");
             con.setRequestProperty("Connection", "keep-alive");
-            con.setRequestProperty("content-length", Integer.toString(postParameters_.length()));
+            con.setRequestProperty("content-length", Integer.toString(postParameters.length()));
             con.setRequestProperty("content-type", "application/x-www-form-urlencoded");
-            con.setRequestProperty("cookie", "csrftoken=" + csrftoken_ + ";"); //cookie
+            con.setRequestProperty("cookie", "csrftoken=" + csrftoken + ";"); //cookie
             con.setRequestProperty("origin", "https://schools.by");
             con.setRequestProperty("referer", "https://schools.by/login");
             con.setRequestProperty("user-agent", USER_AGENT);
@@ -174,7 +171,7 @@ public class LogInManager {
         // send data
         try {
             DataOutputStream stream = new DataOutputStream(con.getOutputStream());
-            stream.writeBytes(postParameters_);
+            stream.writeBytes(postParameters);
             stream.flush();
             stream.close();
         } catch (Exception e) {
@@ -215,16 +212,16 @@ public class LogInManager {
                         List<HttpCookie> cookies = HttpCookie.parse(s);
                         for (HttpCookie cookie : cookies) {
                             if (cookie.getName().equals("csrftoken")) {
-                                csrftoken_ = cookie.getValue();
+                                csrftoken = cookie.getValue();
                             }
                             if (cookie.getName().equals("sessionid")) {
-                                sessionid_ = cookie.getValue();
+                                sessionid = cookie.getValue();
                             }
                         }
                     }
                 }
                 if (ent.getKey().equals("Location")) {
-                    pupilUrl_ = ent.getValue().get(0);
+                    pupilUrl = ent.getValue().get(0);
                 }
             } catch (NullPointerException npe) {
                 continue;
@@ -235,9 +232,9 @@ public class LogInManager {
     }
 
     public String getSessionid() {
-        return sessionid_;
+        return sessionid;
     }
     public String getPupilUrl() {
-        return pupilUrl_;
+        return pupilUrl;
     }
 }

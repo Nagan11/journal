@@ -21,58 +21,59 @@ import java.util.ArrayList;
 
 
 public class MainMenuActivity extends AppCompatActivity {
-    private Context CONTEXT = this;
+    private final Context CONTEXT = this;
     private String ROOT_DIRECTORY;
-    private int SCREEN_WIDTH = 1080;
-    private int SCREEN_HEIGHT = 1920;
-    private int STATUS_BAR_HEIGHT = 0;
-    private int fragmentHeight_;
-    private int buttonHeight_;
 
-    private ArrayList<Fragment> FRAGMENTS = new ArrayList<>();
-    private ArrayList<LinearLayout> SCROLL_LAYOUTS = new ArrayList<>();
-    private ArrayList<TextView> STATUS_TEXTS = new ArrayList<>();
-    private ConstraintLayout ROOT_LAYOUT;
+    private int screenWidthPx;
+    private int screenHeightPx;
+    private int statusBarHeightPx = 0;
+    private int fragmentHeightPx;
+    private int buttonHeightPx;
 
-    private ConstraintSet rootLayoutSet_ = new ConstraintSet();
+    private ArrayList<Fragment> fragments = new ArrayList<>();
+    private ArrayList<LinearLayout> scrollLayouts = new ArrayList<>();
+    private ArrayList<TextView> statusTexts = new ArrayList<>();
+    private ConstraintLayout rootLayout;
 
-    private WeekManager weekManager_;
-    private PageParser parser_;
+    private ConstraintSet rootLayoutSet = new ConstraintSet();
 
-    private Pair<Integer, Integer>[] weekIndexes_ = new Pair[3]; // .first - quarter, .second - week
+    private WeekManager weekManager;
+    private PageParser parser;
 
-    private boolean journalClosed_ = true;
+    private Pair<Integer, Integer>[] weekIndexes = new Pair[3]; // .first - quarter, .second - week
 
-    private int weekShift_ = 0;
+    private boolean journalClosed = true;
+
+    private int weekShift = 0;
 
 
 
     private static class Order {
-        private static int[] currentOrder_ = new int[] {0, 1, 2};
+        private static int[] currentOrder = new int[] {0, 1, 2};
 
         public static int get(int index) {
-            return currentOrder_[index];
+            return currentOrder[index];
         }
 
         public static int left() {
-            return currentOrder_[0];
+            return currentOrder[0];
         }
         public static int center() {
-            return currentOrder_[1];
+            return currentOrder[1];
         }
         public static int right() {
-            return currentOrder_[2];
+            return currentOrder[2];
         }
 
         public static void rollLeft() {
-            currentOrder_ = new int[] {currentOrder_[2], currentOrder_[0], currentOrder_[1]};
+            currentOrder = new int[] {currentOrder[2], currentOrder[0], currentOrder[1]};
         }
         public static void rollRight() {
-            currentOrder_ = new int[] {currentOrder_[1], currentOrder_[2], currentOrder_[0]};
+            currentOrder = new int[] {currentOrder[1], currentOrder[2], currentOrder[0]};
         }
 
         public static void resetOrder() {
-            currentOrder_ = new int[] {0, 1, 2};
+            currentOrder = new int[] {0, 1, 2};
         }
     }
 
@@ -95,13 +96,13 @@ public class MainMenuActivity extends AppCompatActivity {
         }
 
         private void buildWeek(int index) {
-            if (weekIndexes_[index].first == -1 || weekIndexes_[index].second == -1) return;
-            ArrayList<ViewSets.Day> week = weekManager_.weeks.get(weekIndexes_[index].first - 1).get(weekIndexes_[index].second - 1);
+            if (weekIndexes[index].first == -1 || weekIndexes[index].second == -1) return;
+            ArrayList<ViewSets.Day> week = weekManager.weeks.get(weekIndexes[index].first - 1).get(weekIndexes[index].second - 1);
             for (int i = 0; i < week.size(); i++) {
-                SCROLL_LAYOUTS.get(index).addView(week.get(i).getDate());
+                scrollLayouts.get(index).addView(week.get(i).getDate());
                 for (ViewSets.Lesson l : week.get(i).getLessons()) {
-                    SCROLL_LAYOUTS.get(index).addView(l.getLessonMarkContainer());
-                    SCROLL_LAYOUTS.get(index).addView(l.getHometask());
+                    scrollLayouts.get(index).addView(l.getLessonMarkContainer());
+                    scrollLayouts.get(index).addView(l.getHometask());
                 }
             }
         }
@@ -111,21 +112,21 @@ public class MainMenuActivity extends AppCompatActivity {
             while (true) {
                 try { Thread.sleep(16); } catch (Exception e) { System.out.println(e); }
 
-                previousWeekIndexes = weekIndexes_.clone();
-                if (weekShift_ != 0) {
-                    while (weekShift_ > 0) {
-                        if (!(weekIndexes_[Order.center()].first == 4 && weekIndexes_[Order.center()].second == YearData.getAmountOfWeeks(4))) {
+                previousWeekIndexes = weekIndexes.clone();
+                if (weekShift != 0) {
+                    while (weekShift > 0) {
+                        if (!(weekIndexes[Order.center()].first == 4 && weekIndexes[Order.center()].second == YearData.getAmountOfWeeks(4))) {
                             Order.rollRight();
-                            weekIndexes_[Order.right()] = rightWeekIndex(weekIndexes_[Order.center()]);
+                            weekIndexes[Order.right()] = rightWeekIndex(weekIndexes[Order.center()]);
                         }
-                        weekShift_--;
+                        weekShift--;
                     }
-                    while (weekShift_ < 0) {
-                        if (!(weekIndexes_[Order.center()].first == 1 && weekIndexes_[Order.center()].second == 1)) {
+                    while (weekShift < 0) {
+                        if (!(weekIndexes[Order.center()].first == 1 && weekIndexes[Order.center()].second == 1)) {
                             Order.rollLeft();
-                            weekIndexes_[Order.left()] = leftWeekIndex(weekIndexes_[Order.center()]);
+                            weekIndexes[Order.left()] = leftWeekIndex(weekIndexes[Order.center()]);
                         }
-                        weekShift_++;
+                        weekShift++;
                     }
                     runOnUiThread(new Runnable() {
                         @Override
@@ -135,43 +136,43 @@ public class MainMenuActivity extends AppCompatActivity {
                     });
                 }
 
-                currentStates.get(weekIndexes_[Order.center()].first)
-                        .set(weekIndexes_[Order.center()].second,
-                                weekManager_.getWeekState(weekIndexes_[Order.center()].first, weekIndexes_[Order.center()].second));
-                if (weekIndexes_[Order.left()].first > 0 && weekIndexes_[Order.left()].second > 0) {
-                    currentStates.get(weekIndexes_[Order.left()].first)
-                            .set(weekIndexes_[Order.left()].second,
-                                    weekManager_.getWeekState(weekIndexes_[Order.left()].first, weekIndexes_[Order.left()].second));
+                currentStates.get(weekIndexes[Order.center()].first)
+                        .set(weekIndexes[Order.center()].second,
+                                weekManager.getWeekState(weekIndexes[Order.center()].first, weekIndexes[Order.center()].second));
+                if (weekIndexes[Order.left()].first > 0 && weekIndexes[Order.left()].second > 0) {
+                    currentStates.get(weekIndexes[Order.left()].first)
+                            .set(weekIndexes[Order.left()].second,
+                                    weekManager.getWeekState(weekIndexes[Order.left()].first, weekIndexes[Order.left()].second));
                 }
-                if (weekIndexes_[Order.right()].first > 0 && weekIndexes_[Order.right()].second > 0) {
-                    currentStates.get(weekIndexes_[Order.right()].first)
-                            .set(weekIndexes_[Order.right()].second,
-                                    weekManager_.getWeekState(weekIndexes_[Order.right()].first, weekIndexes_[Order.right()].second));
+                if (weekIndexes[Order.right()].first > 0 && weekIndexes[Order.right()].second > 0) {
+                    currentStates.get(weekIndexes[Order.right()].first)
+                            .set(weekIndexes[Order.right()].second,
+                                    weekManager.getWeekState(weekIndexes[Order.right()].first, weekIndexes[Order.right()].second));
                 }
 
                 for (int i = 0; i <= 2; i++) {
                     final int fI = Order.get(i);
 
-                    if (weekIndexes_[fI].first == -1 || weekIndexes_[fI].second == -1) continue;
+                    if (weekIndexes[fI].first == -1 || weekIndexes[fI].second == -1) continue;
 
-                    final boolean weekIndexesDiffer = !(weekIndexes_[fI].first == previousWeekIndexes[fI].first &&
-                            weekIndexes_[fI].second == previousWeekIndexes[fI].second);
-                    final boolean weekStatesDiffer = !currentStates.get(weekIndexes_[fI].first).get(weekIndexes_[fI].second)
-                            .equals(previousStates.get(weekIndexes_[fI].first).get(weekIndexes_[fI].second));
+                    final boolean weekIndexesDiffer = !(weekIndexes[fI].first == previousWeekIndexes[fI].first &&
+                            weekIndexes[fI].second == previousWeekIndexes[fI].second);
+                    final boolean weekStatesDiffer = !currentStates.get(weekIndexes[fI].first).get(weekIndexes[fI].second)
+                            .equals(previousStates.get(weekIndexes[fI].first).get(weekIndexes[fI].second));
 
                     if (weekIndexesDiffer || weekStatesDiffer) {
-                        switch (currentStates.get(weekIndexes_[fI].first).get(weekIndexes_[fI].second)) {
+                        switch (currentStates.get(weekIndexes[fI].first).get(weekIndexes[fI].second)) {
                             case DOWNLOADING:
                                 runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
-                                        STATUS_TEXTS.get(fI).setText("Downloading...");
-                                        SCROLL_LAYOUTS.get(fI).removeAllViews();
-                                        STATUS_TEXTS.get(fI).setVisibility(View.VISIBLE);
+                                        statusTexts.get(fI).setText("Downloading...");
+                                        scrollLayouts.get(fI).removeAllViews();
+                                        statusTexts.get(fI).setVisibility(View.VISIBLE);
 
                                         if (weekStatesDiffer) {
                                             Thread updater = new Thread(new UpdateWeekR(CONTEXT, ROOT_DIRECTORY,
-                                                    weekIndexes_[fI].first, weekIndexes_[fI].second));
+                                                    weekIndexes[fI].first, weekIndexes[fI].second));
                                             updater.start();
                                         }
                                     }
@@ -181,9 +182,9 @@ public class MainMenuActivity extends AppCompatActivity {
                                 runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
-                                        STATUS_TEXTS.get(fI).setText("Downloading error");
-                                        SCROLL_LAYOUTS.get(fI).removeAllViews();
-                                        STATUS_TEXTS.get(fI).setVisibility(View.VISIBLE);
+                                        statusTexts.get(fI).setText("Downloading error");
+                                        scrollLayouts.get(fI).removeAllViews();
+                                        statusTexts.get(fI).setVisibility(View.VISIBLE);
                                     }
                                 });
                                 break;
@@ -191,9 +192,9 @@ public class MainMenuActivity extends AppCompatActivity {
                                 runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
-                                        STATUS_TEXTS.get(fI).setText("Gathering info...");
-                                        SCROLL_LAYOUTS.get(fI).removeAllViews();
-                                        STATUS_TEXTS.get(fI).setVisibility(View.VISIBLE);
+                                        statusTexts.get(fI).setText("Gathering info...");
+                                        scrollLayouts.get(fI).removeAllViews();
+                                        statusTexts.get(fI).setVisibility(View.VISIBLE);
                                     }
                                 });
                                 break;
@@ -201,9 +202,9 @@ public class MainMenuActivity extends AppCompatActivity {
                                 runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
-                                        STATUS_TEXTS.get(fI).setText("Gathering info error");
-                                        SCROLL_LAYOUTS.get(fI).removeAllViews();
-                                        STATUS_TEXTS.get(fI).setVisibility(View.VISIBLE);
+                                        statusTexts.get(fI).setText("Gathering info error");
+                                        scrollLayouts.get(fI).removeAllViews();
+                                        statusTexts.get(fI).setVisibility(View.VISIBLE);
                                     }
                                 });
                                 break;
@@ -211,9 +212,9 @@ public class MainMenuActivity extends AppCompatActivity {
                                 runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
-                                        STATUS_TEXTS.get(fI).setText("Loading...");
-                                        SCROLL_LAYOUTS.get(fI).removeAllViews();
-                                        STATUS_TEXTS.get(fI).setVisibility(View.VISIBLE);
+                                        statusTexts.get(fI).setText("Loading...");
+                                        scrollLayouts.get(fI).removeAllViews();
+                                        statusTexts.get(fI).setVisibility(View.VISIBLE);
                                     }
                                 });
                                 break;
@@ -221,15 +222,15 @@ public class MainMenuActivity extends AppCompatActivity {
                                 runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
-                                        STATUS_TEXTS.get(fI).setVisibility(View.INVISIBLE);
-                                        SCROLL_LAYOUTS.get(fI).removeAllViews();
+                                        statusTexts.get(fI).setVisibility(View.INVISIBLE);
+                                        scrollLayouts.get(fI).removeAllViews();
                                         buildWeek(fI);
                                     }
                                 });
                                 break;
                         }
-                        previousStates.get(weekIndexes_[fI].first).set(weekIndexes_[fI].second,
-                                currentStates.get(weekIndexes_[fI].first).get(weekIndexes_[fI].second));
+                        previousStates.get(weekIndexes[fI].first).set(weekIndexes[fI].second,
+                                currentStates.get(weekIndexes[fI].first).get(weekIndexes[fI].second));
                     }
                 }
             }
@@ -237,97 +238,97 @@ public class MainMenuActivity extends AppCompatActivity {
     }
 
     public class UpdateWeekR implements Runnable {
-        private Context CONTEXT;
-        private String ROOT_DIRECTORY;
+        private final Context CONTEXT;
+        private final String ROOT_DIRECTORY;
 
-        private PageDownloader downloader_;
+        private PageDownloader downloader;
 
-        private int quarterNumber_, weekNumber_;
-        private String pagePath_;
-        private String dataPath_;
+        private int quarterNumber, weekNumber;
+        private String pagePath;
+        private String dataPath;
 
         UpdateWeekR(Context context, String rtDir, int quarter, int week) {
             CONTEXT = context;
             ROOT_DIRECTORY = rtDir;
-            quarterNumber_ = quarter;
-            weekNumber_ = week;
+            quarterNumber = quarter;
+            weekNumber = week;
 
-            downloader_ = new PageDownloader(ROOT_DIRECTORY, weekManager_.getSessionid());
+            downloader = new PageDownloader(ROOT_DIRECTORY, weekManager.getSessionid());
 
-            pagePath_ = (ROOT_DIRECTORY + "/p" + quarterNumber_ + "q/w" + weekNumber_ + ".html");
-            dataPath_ = (ROOT_DIRECTORY + "/d" + quarterNumber_ + "q/w" + weekNumber_ + ".txt");
+            pagePath = (ROOT_DIRECTORY + "/p" + quarterNumber + "q/w" + weekNumber + ".html");
+            dataPath = (ROOT_DIRECTORY + "/d" + quarterNumber + "q/w" + weekNumber + ".txt");
         }
 
         @Override
         public void run() {
-            if (quarterNumber_ == -1 || weekNumber_ == -1) return;
+            if (quarterNumber == -1 || weekNumber == -1) return;
 
-            if (downloader_.downloadPage(quarterNumber_, weekNumber_, weekManager_.getLink(quarterNumber_, weekNumber_))) {
-                weekManager_.setWeekState(quarterNumber_, weekNumber_, PageLoadState.GATHERING);
+            if (downloader.downloadPage(quarterNumber, weekNumber, weekManager.getLink(quarterNumber, weekNumber))) {
+                weekManager.setWeekState(quarterNumber, weekNumber, PageLoadState.GATHERING);
             } else {
-                weekManager_.setWeekState(quarterNumber_, weekNumber_, PageLoadState.DOWNLOADING_ERROR);
+                weekManager.setWeekState(quarterNumber, weekNumber, PageLoadState.DOWNLOADING_ERROR);
                 return;
             }
 
-            synchronized (parser_) {
-                parser_.parsePage(pagePath_, dataPath_);
+            synchronized (parser) {
+                parser.parsePage(pagePath, dataPath);
             }
 
             try {
-                weekManager_.readWeek(dataPath_, quarterNumber_, weekNumber_);
+                weekManager.readWeek(dataPath, quarterNumber, weekNumber);
             } catch (Exception e) {
-                weekManager_.setWeekState(quarterNumber_, weekNumber_, PageLoadState.GATHERING_ERROR);
+                weekManager.setWeekState(quarterNumber, weekNumber, PageLoadState.GATHERING_ERROR);
                 return;
             }
-            weekManager_.setWeekState(quarterNumber_, weekNumber_, PageLoadState.BUILDING);
+            weekManager.setWeekState(quarterNumber, weekNumber, PageLoadState.BUILDING);
 
             int startIndex = 0;
-            weekManager_.weeks.get(quarterNumber_ - 1).get(weekNumber_ - 1).add(new ViewSets.Day(
+            weekManager.weeks.get(quarterNumber - 1).get(weekNumber - 1).add(new ViewSets.Day(
                     CONTEXT,
-                    startIndex, startIndex + weekManager_.getMaxLessons(quarterNumber_, weekNumber_) - 1,
-                    YearData.getDates(quarterNumber_, weekNumber_).get(0),
-                    weekManager_.getLessonNames(quarterNumber_, weekNumber_),
-                    weekManager_.getMarks(quarterNumber_, weekNumber_),
-                    weekManager_.getHometasks(quarterNumber_, weekNumber_), false)
+                    startIndex, startIndex + weekManager.getMaxLessons(quarterNumber, weekNumber) - 1,
+                    YearData.getDates(quarterNumber, weekNumber).get(0),
+                    weekManager.getLessonNames(quarterNumber, weekNumber),
+                    weekManager.getMarks(quarterNumber, weekNumber),
+                    weekManager.getHometasks(quarterNumber, weekNumber), false)
             );
-            startIndex += weekManager_.getMaxLessons(quarterNumber_, weekNumber_);
-            weekManager_.weeks.get(quarterNumber_ - 1).get(weekNumber_ - 1).add(new ViewSets.Day(
+            startIndex += weekManager.getMaxLessons(quarterNumber, weekNumber);
+            weekManager.weeks.get(quarterNumber - 1).get(weekNumber - 1).add(new ViewSets.Day(
                     CONTEXT,
-                    startIndex, startIndex + weekManager_.getMaxLessons(quarterNumber_, weekNumber_) - 1,
-                    YearData.getDates(quarterNumber_, weekNumber_).get(1),
-                    weekManager_.getLessonNames(quarterNumber_, weekNumber_),
-                    weekManager_.getMarks(quarterNumber_, weekNumber_),
-                    weekManager_.getHometasks(quarterNumber_, weekNumber_), false)
+                    startIndex, startIndex + weekManager.getMaxLessons(quarterNumber, weekNumber) - 1,
+                    YearData.getDates(quarterNumber, weekNumber).get(1),
+                    weekManager.getLessonNames(quarterNumber, weekNumber),
+                    weekManager.getMarks(quarterNumber, weekNumber),
+                    weekManager.getHometasks(quarterNumber, weekNumber), false)
             );
-            startIndex += weekManager_.getMaxLessons(quarterNumber_, weekNumber_);
-            weekManager_.weeks.get(quarterNumber_ - 1).get(weekNumber_ - 1).add(new ViewSets.Day(
+            startIndex += weekManager.getMaxLessons(quarterNumber, weekNumber);
+            weekManager.weeks.get(quarterNumber - 1).get(weekNumber - 1).add(new ViewSets.Day(
                     CONTEXT,
-                    startIndex, startIndex + weekManager_.getMaxLessons(quarterNumber_, weekNumber_) - 1,
-                    YearData.getDates(quarterNumber_, weekNumber_).get(2),
-                    weekManager_.getLessonNames(quarterNumber_, weekNumber_),
-                    weekManager_.getMarks(quarterNumber_, weekNumber_),
-                    weekManager_.getHometasks(quarterNumber_, weekNumber_), false)
+                    startIndex, startIndex + weekManager.getMaxLessons(quarterNumber, weekNumber) - 1,
+                    YearData.getDates(quarterNumber, weekNumber).get(2),
+                    weekManager.getLessonNames(quarterNumber, weekNumber),
+                    weekManager.getMarks(quarterNumber, weekNumber),
+                    weekManager.getHometasks(quarterNumber, weekNumber), false)
             );
-            startIndex += weekManager_.getMaxLessons(quarterNumber_, weekNumber_);
-            weekManager_.weeks.get(quarterNumber_ - 1).get(weekNumber_ - 1).add(new ViewSets.Day(
+            startIndex += weekManager.getMaxLessons(quarterNumber, weekNumber);
+            weekManager.weeks.get(quarterNumber - 1).get(weekNumber - 1).add(new ViewSets.Day(
                     CONTEXT,
-                    startIndex, startIndex + weekManager_.getMaxLessons(quarterNumber_, weekNumber_) - 1,
-                    YearData.getDates(quarterNumber_, weekNumber_).get(3),
-                    weekManager_.getLessonNames(quarterNumber_, weekNumber_),
-                    weekManager_.getMarks(quarterNumber_, weekNumber_),
-                    weekManager_.getHometasks(quarterNumber_, weekNumber_), false)
+                    startIndex, startIndex + weekManager.getMaxLessons(quarterNumber, weekNumber) - 1,
+                    YearData.getDates(quarterNumber, weekNumber).get(3),
+                    weekManager.getLessonNames(quarterNumber, weekNumber),
+                    weekManager.getMarks(quarterNumber, weekNumber),
+                    weekManager.getHometasks(quarterNumber, weekNumber), false)
             );
-            startIndex += weekManager_.getMaxLessons(quarterNumber_, weekNumber_);
-            weekManager_.weeks.get(quarterNumber_ - 1).get(weekNumber_ - 1).add(new ViewSets.Day(
+            startIndex += weekManager.getMaxLessons(quarterNumber, weekNumber);
+            weekManager.weeks.get(quarterNumber - 1).get(weekNumber - 1).add(new ViewSets.Day(
                     CONTEXT,
-                    startIndex, startIndex + weekManager_.getMaxLessons(quarterNumber_, weekNumber_) - 1,
-                    YearData.getDates(quarterNumber_, weekNumber_).get(4),
-                    weekManager_.getLessonNames(quarterNumber_, weekNumber_),
-                    weekManager_.getMarks(quarterNumber_, weekNumber_),
-                    weekManager_.getHometasks(quarterNumber_, weekNumber_), true)
+                    startIndex, startIndex + weekManager.getMaxLessons(quarterNumber, weekNumber) - 1,
+                    YearData.getDates(quarterNumber, weekNumber).get(4),
+                    weekManager.getLessonNames(quarterNumber, weekNumber),
+                    weekManager.getMarks(quarterNumber, weekNumber),
+                    weekManager.getHometasks(quarterNumber, weekNumber), true)
             );
 
-            weekManager_.setWeekState(quarterNumber_, weekNumber_, PageLoadState.READY);
+            weekManager.setWeekState(quarterNumber, weekNumber, PageLoadState.READY);
         }
     }
 
@@ -338,26 +339,26 @@ public class MainMenuActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main_menu);
 
         ROOT_DIRECTORY = String.valueOf(getFilesDir());
-        ROOT_LAYOUT = findViewById(R.id.RootLayout);
-        weekManager_ = new WeekManager(ROOT_DIRECTORY);
-        parser_ = new PageParser(ROOT_DIRECTORY);
+        rootLayout = findViewById(R.id.RootLayout);
+        weekManager = new WeekManager(ROOT_DIRECTORY);
+        parser = new PageParser(ROOT_DIRECTORY);
         fillFragmentArrays();
         Order.resetOrder();
 
         try {
-            weekManager_.readData();
+            weekManager.readData();
         } catch (Exception e) {
             System.out.println("weekManager initialization failed, " + e);
         }
-        weekManager_.setLinks();
+        weekManager.setLinks();
 
-        weekIndexes_[1] = new Pair<>(YearData.getCurrentQuarter(), YearData.getCurrentWeek());
-        weekIndexes_[0] = leftWeekIndex(weekIndexes_[1]);
-        weekIndexes_[2] = rightWeekIndex(weekIndexes_[1]);
+        weekIndexes[1] = new Pair<>(YearData.getCurrentQuarter(), YearData.getCurrentWeek());
+        weekIndexes[0] = leftWeekIndex(weekIndexes[1]);
+        weekIndexes[2] = rightWeekIndex(weekIndexes[1]);
 
         setScreenInfo();
-        buttonHeight_ = (int)(SCREEN_HEIGHT * 0.085f);
-        fragmentHeight_ = SCREEN_HEIGHT - buttonHeight_ - buttonHeight_ - STATUS_BAR_HEIGHT;
+        buttonHeightPx = (int)(screenHeightPx * 0.085f);
+        fragmentHeightPx = screenHeightPx - buttonHeightPx - buttonHeightPx - statusBarHeightPx;
 
         setRootLayoutStartState();
 
@@ -369,10 +370,10 @@ public class MainMenuActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        if (!journalClosed_) {
-            rootLayoutSet_.setVerticalBias(R.id.JournalButton, 1f);
-            rootLayoutSet_.applyTo(ROOT_LAYOUT);
-            journalClosed_ = !journalClosed_;
+        if (!journalClosed) {
+            rootLayoutSet.setVerticalBias(R.id.JournalButton, 1f);
+            rootLayoutSet.applyTo(rootLayout);
+            journalClosed = !journalClosed;
         }
     }
     public void logOutButtonOnClick(View view) {
@@ -381,13 +382,13 @@ public class MainMenuActivity extends AppCompatActivity {
         startActivity(logInActivity);
     }
     public void journalOnClick(View view) {
-        if (journalClosed_) {
-            rootLayoutSet_.setVerticalBias(R.id.JournalButton, 0f);
+        if (journalClosed) {
+            rootLayoutSet.setVerticalBias(R.id.JournalButton, 0f);
         } else {
-            rootLayoutSet_.setVerticalBias(R.id.JournalButton, 1f);
+            rootLayoutSet.setVerticalBias(R.id.JournalButton, 1f);
         }
-        rootLayoutSet_.applyTo(ROOT_LAYOUT);
-        journalClosed_ = !journalClosed_;
+        rootLayoutSet.applyTo(rootLayout);
+        journalClosed = !journalClosed;
     }
     public void weekBackOnClick(View view) {
         scrollLeft();
@@ -396,13 +397,13 @@ public class MainMenuActivity extends AppCompatActivity {
         scrollRight();
     }
     public void updateOnClick(View view) {
-        PageLoadState state = weekManager_.getWeekState(weekIndexes_[Order.center()].first, weekIndexes_[Order.center()].second);
+        PageLoadState state = weekManager.getWeekState(weekIndexes[Order.center()].first, weekIndexes[Order.center()].second);
         switch (state) {
             case DOWNLOADING_ERROR:
             case GATHERING_ERROR:
             case READY:
-                weekManager_.weeks.get(weekIndexes_[Order.center()].first - 1).get(weekIndexes_[Order.center()].second - 1).clear();
-                weekManager_.setWeekState(weekIndexes_[Order.center()].first, weekIndexes_[Order.center()].second, PageLoadState.DOWNLOADING);
+                weekManager.weeks.get(weekIndexes[Order.center()].first - 1).get(weekIndexes[Order.center()].second - 1).clear();
+                weekManager.setWeekState(weekIndexes[Order.center()].first, weekIndexes[Order.center()].second, PageLoadState.DOWNLOADING);
                 break;
             case DOWNLOADING:
             case GATHERING:
@@ -459,49 +460,49 @@ public class MainMenuActivity extends AppCompatActivity {
         }
     }
     private void setScreenInfo() {
-        SCREEN_WIDTH = CONTEXT.getResources().getDisplayMetrics().widthPixels;
-        SCREEN_HEIGHT = CONTEXT.getResources().getDisplayMetrics().heightPixels;
+        screenWidthPx = CONTEXT.getResources().getDisplayMetrics().widthPixels;
+        screenHeightPx = CONTEXT.getResources().getDisplayMetrics().heightPixels;
         int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
         if (resourceId > 0) {
-            STATUS_BAR_HEIGHT = getResources().getDimensionPixelSize(resourceId);
+            statusBarHeightPx = getResources().getDimensionPixelSize(resourceId);
         }
-        if (STATUS_BAR_HEIGHT == 0) {
-            STATUS_BAR_HEIGHT = Calculation.dpToPx(24, CONTEXT);
+        if (statusBarHeightPx == 0) {
+            statusBarHeightPx = Calculation.dpToPx(24, CONTEXT);
         }
     }
     private void fillFragmentArrays() {
-        FRAGMENTS.add(getSupportFragmentManager().findFragmentById(R.id.JournalFragment0));
-        FRAGMENTS.add(getSupportFragmentManager().findFragmentById(R.id.JournalFragment1));
-        FRAGMENTS.add(getSupportFragmentManager().findFragmentById(R.id.JournalFragment2));
+        fragments.add(getSupportFragmentManager().findFragmentById(R.id.JournalFragment0));
+        fragments.add(getSupportFragmentManager().findFragmentById(R.id.JournalFragment1));
+        fragments.add(getSupportFragmentManager().findFragmentById(R.id.JournalFragment2));
 
-        SCROLL_LAYOUTS.add((LinearLayout)findViewById(R.id.ScrollLayout0));
-        SCROLL_LAYOUTS.add((LinearLayout)findViewById(R.id.ScrollLayout1));
-        SCROLL_LAYOUTS.add((LinearLayout)findViewById(R.id.ScrollLayout2));
+        scrollLayouts.add((LinearLayout)findViewById(R.id.ScrollLayout0));
+        scrollLayouts.add((LinearLayout)findViewById(R.id.ScrollLayout1));
+        scrollLayouts.add((LinearLayout)findViewById(R.id.ScrollLayout2));
 
-        STATUS_TEXTS.add((TextView)findViewById(R.id.StatusText0));
-        STATUS_TEXTS.add((TextView)findViewById(R.id.StatusText1));
-        STATUS_TEXTS.add((TextView)findViewById(R.id.StatusText2));
+        statusTexts.add((TextView)findViewById(R.id.StatusText0));
+        statusTexts.add((TextView)findViewById(R.id.StatusText1));
+        statusTexts.add((TextView)findViewById(R.id.StatusText2));
     }
 
     private void alignFragments() {
-        rootLayoutSet_.clear(FRAGMENTS.get(Order.left()).getId(), ConstraintSet.LEFT);
-        rootLayoutSet_.clear(FRAGMENTS.get(Order.left()).getId(), ConstraintSet.RIGHT);
-        rootLayoutSet_.clear(FRAGMENTS.get(Order.center()).getId(), ConstraintSet.LEFT);
-        rootLayoutSet_.clear(FRAGMENTS.get(Order.center()).getId(), ConstraintSet.RIGHT);
-        rootLayoutSet_.clear(FRAGMENTS.get(Order.right()).getId(), ConstraintSet.LEFT);
-        rootLayoutSet_.clear(FRAGMENTS.get(Order.right()).getId(), ConstraintSet.RIGHT);
+        rootLayoutSet.clear(fragments.get(Order.left()).getId(), ConstraintSet.LEFT);
+        rootLayoutSet.clear(fragments.get(Order.left()).getId(), ConstraintSet.RIGHT);
+        rootLayoutSet.clear(fragments.get(Order.center()).getId(), ConstraintSet.LEFT);
+        rootLayoutSet.clear(fragments.get(Order.center()).getId(), ConstraintSet.RIGHT);
+        rootLayoutSet.clear(fragments.get(Order.right()).getId(), ConstraintSet.LEFT);
+        rootLayoutSet.clear(fragments.get(Order.right()).getId(), ConstraintSet.RIGHT);
 
-        rootLayoutSet_.connect(FRAGMENTS.get(Order.center()).getId(), ConstraintSet.LEFT, ROOT_LAYOUT.getId(), ConstraintSet.LEFT, 0);
-        rootLayoutSet_.connect(FRAGMENTS.get(Order.center()).getId(), ConstraintSet.RIGHT, ROOT_LAYOUT.getId(), ConstraintSet.RIGHT, 0);
-        rootLayoutSet_.setHorizontalBias(FRAGMENTS.get(Order.center()).getId(), 0.5f);
-        rootLayoutSet_.connect(FRAGMENTS.get(Order.left()).getId(), ConstraintSet.RIGHT, FRAGMENTS.get(Order.center()).getId(), ConstraintSet.LEFT, 0);
-        rootLayoutSet_.connect(FRAGMENTS.get(Order.left()).getId(), ConstraintSet.LEFT, ROOT_LAYOUT.getId(), ConstraintSet.LEFT, 0);
-        rootLayoutSet_.setHorizontalBias(FRAGMENTS.get(Order.left()).getId(), 1f);
-        rootLayoutSet_.connect(FRAGMENTS.get(Order.right()).getId(), ConstraintSet.LEFT, FRAGMENTS.get(Order.center()).getId(), ConstraintSet.RIGHT, 0);
-        rootLayoutSet_.connect(FRAGMENTS.get(Order.right()).getId(), ConstraintSet.RIGHT, ROOT_LAYOUT.getId(), ConstraintSet.RIGHT, 0);
-        rootLayoutSet_.setHorizontalBias(FRAGMENTS.get(Order.right()).getId(), 0f);
+        rootLayoutSet.connect(fragments.get(Order.center()).getId(), ConstraintSet.LEFT, rootLayout.getId(), ConstraintSet.LEFT, 0);
+        rootLayoutSet.connect(fragments.get(Order.center()).getId(), ConstraintSet.RIGHT, rootLayout.getId(), ConstraintSet.RIGHT, 0);
+        rootLayoutSet.setHorizontalBias(fragments.get(Order.center()).getId(), 0.5f);
+        rootLayoutSet.connect(fragments.get(Order.left()).getId(), ConstraintSet.RIGHT, fragments.get(Order.center()).getId(), ConstraintSet.LEFT, 0);
+        rootLayoutSet.connect(fragments.get(Order.left()).getId(), ConstraintSet.LEFT, rootLayout.getId(), ConstraintSet.LEFT, 0);
+        rootLayoutSet.setHorizontalBias(fragments.get(Order.left()).getId(), 1f);
+        rootLayoutSet.connect(fragments.get(Order.right()).getId(), ConstraintSet.LEFT, fragments.get(Order.center()).getId(), ConstraintSet.RIGHT, 0);
+        rootLayoutSet.connect(fragments.get(Order.right()).getId(), ConstraintSet.RIGHT, rootLayout.getId(), ConstraintSet.RIGHT, 0);
+        rootLayoutSet.setHorizontalBias(fragments.get(Order.right()).getId(), 0f);
 
-        rootLayoutSet_.applyTo(ROOT_LAYOUT);
+        rootLayoutSet.applyTo(rootLayout);
     }
     private Pair<Integer, Integer> leftWeekIndex(Pair<Integer, Integer> p) {
         int quarter = p.first;
@@ -532,40 +533,40 @@ public class MainMenuActivity extends AppCompatActivity {
         return new Pair<>(quarter, week);
     }
     private void scrollLeft() {
-        weekShift_--;
+        weekShift--;
     }
     private void scrollRight() {
-        weekShift_++;
+        weekShift++;
     }
     private void setRootLayoutStartState() {
-        rootLayoutSet_.clone(ROOT_LAYOUT);
-        rootLayoutSet_.clear(R.id.JournalFragment0);
-        rootLayoutSet_.clear(R.id.JournalFragment1);
-        rootLayoutSet_.clear(R.id.JournalFragment2);
+        rootLayoutSet.clone(rootLayout);
+        rootLayoutSet.clear(R.id.JournalFragment0);
+        rootLayoutSet.clear(R.id.JournalFragment1);
+        rootLayoutSet.clear(R.id.JournalFragment2);
 
-        rootLayoutSet_.setTranslationZ(ROOT_LAYOUT.getId(), 0f);
-        rootLayoutSet_.setTranslationZ(R.id.JournalButton, 100f);
-        rootLayoutSet_.setTranslationZ(R.id.ControlPanel, 100f);
-        rootLayoutSet_.setTranslationZ(R.id.JournalFragment0, 100f);
-        rootLayoutSet_.setTranslationZ(R.id.JournalFragment1, 100f);
-        rootLayoutSet_.setTranslationZ(R.id.JournalFragment2, 100f);
+        rootLayoutSet.setTranslationZ(rootLayout.getId(), 0f);
+        rootLayoutSet.setTranslationZ(R.id.JournalButton, 100f);
+        rootLayoutSet.setTranslationZ(R.id.ControlPanel, 100f);
+        rootLayoutSet.setTranslationZ(R.id.JournalFragment0, 100f);
+        rootLayoutSet.setTranslationZ(R.id.JournalFragment1, 100f);
+        rootLayoutSet.setTranslationZ(R.id.JournalFragment2, 100f);
 
-        rootLayoutSet_.constrainHeight(R.id.JournalFragment0, fragmentHeight_);
-        rootLayoutSet_.constrainWidth(R.id.JournalFragment0, SCREEN_WIDTH);
-        rootLayoutSet_.constrainHeight(R.id.JournalFragment1, fragmentHeight_);
-        rootLayoutSet_.constrainWidth(R.id.JournalFragment1, SCREEN_WIDTH);
-        rootLayoutSet_.constrainHeight(R.id.JournalFragment2, fragmentHeight_);
-        rootLayoutSet_.constrainWidth(R.id.JournalFragment2, SCREEN_WIDTH);
+        rootLayoutSet.constrainHeight(R.id.JournalFragment0, fragmentHeightPx);
+        rootLayoutSet.constrainWidth(R.id.JournalFragment0, screenWidthPx);
+        rootLayoutSet.constrainHeight(R.id.JournalFragment1, fragmentHeightPx);
+        rootLayoutSet.constrainWidth(R.id.JournalFragment1, screenWidthPx);
+        rootLayoutSet.constrainHeight(R.id.JournalFragment2, fragmentHeightPx);
+        rootLayoutSet.constrainWidth(R.id.JournalFragment2, screenWidthPx);
 
-        rootLayoutSet_.connect(FRAGMENTS.get(Order.left()).getId(), ConstraintSet.TOP, R.id.JournalButton, ConstraintSet.BOTTOM, 0);
-        rootLayoutSet_.connect(FRAGMENTS.get(Order.center()).getId(), ConstraintSet.TOP, R.id.JournalButton, ConstraintSet.BOTTOM, 0);
-        rootLayoutSet_.connect(FRAGMENTS.get(Order.right()).getId(), ConstraintSet.TOP, R.id.JournalButton, ConstraintSet.BOTTOM, 0);
+        rootLayoutSet.connect(fragments.get(Order.left()).getId(), ConstraintSet.TOP, R.id.JournalButton, ConstraintSet.BOTTOM, 0);
+        rootLayoutSet.connect(fragments.get(Order.center()).getId(), ConstraintSet.TOP, R.id.JournalButton, ConstraintSet.BOTTOM, 0);
+        rootLayoutSet.connect(fragments.get(Order.right()).getId(), ConstraintSet.TOP, R.id.JournalButton, ConstraintSet.BOTTOM, 0);
 
-        rootLayoutSet_.constrainHeight(R.id.JournalButton, buttonHeight_);
-        rootLayoutSet_.constrainHeight(R.id.ControlPanel, buttonHeight_);
-        rootLayoutSet_.connect(R.id.ControlPanel, ConstraintSet.TOP, R.id.JournalButton, ConstraintSet.BOTTOM, fragmentHeight_);
-        rootLayoutSet_.connect(R.id.ControlPanel, ConstraintSet.LEFT, ROOT_LAYOUT.getId(), ConstraintSet.LEFT, 0);
-        rootLayoutSet_.connect(R.id.ControlPanel, ConstraintSet.RIGHT, ROOT_LAYOUT.getId(), ConstraintSet.RIGHT, 0);
+        rootLayoutSet.constrainHeight(R.id.JournalButton, buttonHeightPx);
+        rootLayoutSet.constrainHeight(R.id.ControlPanel, buttonHeightPx);
+        rootLayoutSet.connect(R.id.ControlPanel, ConstraintSet.TOP, R.id.JournalButton, ConstraintSet.BOTTOM, fragmentHeightPx);
+        rootLayoutSet.connect(R.id.ControlPanel, ConstraintSet.LEFT, rootLayout.getId(), ConstraintSet.LEFT, 0);
+        rootLayoutSet.connect(R.id.ControlPanel, ConstraintSet.RIGHT, rootLayout.getId(), ConstraintSet.RIGHT, 0);
 
         alignFragments();
     }

@@ -5,18 +5,18 @@ import java.io.FileReader;
 import java.util.ArrayList;
 
 public class WeekManager {
-    private String ROOT_DIRECTORY;
+    private final String ROOT_DIRECTORY;
 
-    private String sessionid_;
-    private String pupilUrl_;
+    private String sessionid;
+    private String pupilUrl;
 
-    private ArrayList<String> links_ = new ArrayList<>();
+    private ArrayList<String> links = new ArrayList<>();
 
-    private ArrayList< ArrayList< ArrayList<String> > > lessonNames_ = new ArrayList<>(4);
-    private ArrayList< ArrayList< ArrayList<String> > > marks_ = new ArrayList<>(4);
-    private ArrayList< ArrayList< ArrayList<String> > > hometasks_ = new ArrayList<>(4);
-    private ArrayList< ArrayList <PageLoadState> > weekStates_ = new ArrayList<>(4);
-    private Integer[][] maxLessons_ = new Integer[][] {
+    private ArrayList< ArrayList< ArrayList<String> > > lessonNames = new ArrayList<>(4);
+    private ArrayList< ArrayList< ArrayList<String> > > marks = new ArrayList<>(4);
+    private ArrayList< ArrayList< ArrayList<String> > > hometasks = new ArrayList<>(4);
+    private ArrayList< ArrayList <PageLoadState> > weekStates = new ArrayList<>(4);
+    private Integer[][] maxLessons = new Integer[][] {
             new Integer[YearData.getAmountOfWeeks(1)],
             new Integer[YearData.getAmountOfWeeks(2)],
             new Integer[YearData.getAmountOfWeeks(3)],
@@ -43,7 +43,7 @@ public class WeekManager {
         int currentChar;
         String buf = "";
 
-        if (maxLessons_[quarterNumber - 1][weekNumber - 1] == null) {
+        if (maxLessons[quarterNumber - 1][weekNumber - 1] == null) {
             int stagesCounter = 0;
             while ((currentChar = fin.read()) != -1) {
                 if (currentChar == '>') {
@@ -51,15 +51,15 @@ public class WeekManager {
                     switch (stage) {
                         case LESSON:
                             stage = ReadStage.MARK;
-                            lessonNames_.get(quarterNumber - 1).get(weekNumber - 1).add(buf);
+                            lessonNames.get(quarterNumber - 1).get(weekNumber - 1).add(buf);
                             break;
                         case MARK:
                             stage = ReadStage.HOMETASK;
-                            marks_.get(quarterNumber - 1).get(weekNumber - 1).add(buf);
+                            marks.get(quarterNumber - 1).get(weekNumber - 1).add(buf);
                             break;
                         case HOMETASK:
                             stage = ReadStage.LESSON;
-                            hometasks_.get(quarterNumber - 1).get(weekNumber - 1).add(buf);
+                            hometasks.get(quarterNumber - 1).get(weekNumber - 1).add(buf);
                             break;
                     }
                     buf = "";
@@ -67,22 +67,22 @@ public class WeekManager {
                     buf += (char)currentChar;
                 }
             }
-            maxLessons_[quarterNumber - 1][weekNumber - 1] = stagesCounter / 18;
+            maxLessons[quarterNumber - 1][weekNumber - 1] = stagesCounter / 18;
         } else {
             while ((currentChar = fin.read()) != -1) {
                 if (currentChar == '>') {
                     switch (stage) {
                         case LESSON:
                             stage = ReadStage.MARK;
-                            lessonNames_.get(quarterNumber - 1).get(weekNumber - 1).add(buf);
+                            lessonNames.get(quarterNumber - 1).get(weekNumber - 1).add(buf);
                             break;
                         case MARK:
                             stage = ReadStage.HOMETASK;
-                            marks_.get(quarterNumber - 1).get(weekNumber - 1).add(buf);
+                            marks.get(quarterNumber - 1).get(weekNumber - 1).add(buf);
                             break;
                         case HOMETASK:
                             stage = ReadStage.LESSON;
-                            hometasks_.get(quarterNumber - 1).get(weekNumber - 1).add(buf);
+                            hometasks.get(quarterNumber - 1).get(weekNumber - 1).add(buf);
                             break;
                     }
                     buf = "";
@@ -95,41 +95,41 @@ public class WeekManager {
     } // 1
 
     public ArrayList<String> getLessonNames(int quarterNumber, int weekNumber) {
-        return lessonNames_.get(quarterNumber - 1).get(weekNumber - 1);
+        return lessonNames.get(quarterNumber - 1).get(weekNumber - 1);
     } // 1
     public ArrayList<String> getMarks(int quarterNumber, int weekNumber) {
-        return marks_.get(quarterNumber - 1).get(weekNumber - 1);
+        return marks.get(quarterNumber - 1).get(weekNumber - 1);
     }       // 1
     public ArrayList<String> getHometasks(int quarterNumber, int weekNumber) {
-        return hometasks_.get(quarterNumber - 1).get(weekNumber - 1);
+        return hometasks.get(quarterNumber - 1).get(weekNumber - 1);
     }   // 1
     public int               getMaxLessons(int quarterNumber, int weekNumber) {
-        if (maxLessons_[quarterNumber - 1][weekNumber - 1] != null) {
-            return maxLessons_[quarterNumber - 1][weekNumber - 1];
+        if (maxLessons[quarterNumber - 1][weekNumber - 1] != null) {
+            return maxLessons[quarterNumber - 1][weekNumber - 1];
         }
         return -1;
     }  // 1
 
     public PageLoadState getWeekState(int quarterNumber, int weekNumber) {
-        return weekStates_.get(quarterNumber - 1).get(weekNumber - 1);
+        return weekStates.get(quarterNumber - 1).get(weekNumber - 1);
     }             // 1
     public void setWeekState(int quarterNumber, int weekNumber, PageLoadState state) {
-        weekStates_.get(quarterNumber - 1).set(weekNumber - 1, state);
+        weekStates.get(quarterNumber - 1).set(weekNumber - 1, state);
     } // 1
 
     private void initializeArrayLists() {
         for (int i = 0; i < 4; i++) {
-            lessonNames_.add(new ArrayList< ArrayList<String> >());
-            marks_.add(new ArrayList< ArrayList<String> >());
-            hometasks_.add(new ArrayList< ArrayList<String> >());
+            lessonNames.add(new ArrayList< ArrayList<String> >());
+            marks.add(new ArrayList< ArrayList<String> >());
+            hometasks.add(new ArrayList< ArrayList<String> >());
             weeks.add(new ArrayList<ArrayList<ViewSets.Day>>());
-            weekStates_.add(new ArrayList<PageLoadState>());
+            weekStates.add(new ArrayList<PageLoadState>());
             for (int j = 0; j < YearData.getAmountOfWeeks(i + 1); j++) {
-                lessonNames_.get(i).add(new ArrayList<String>());
-                marks_.get(i).add(new ArrayList<String>());
-                hometasks_.get(i).add(new ArrayList<String>());
+                lessonNames.get(i).add(new ArrayList<String>());
+                marks.get(i).add(new ArrayList<String>());
+                hometasks.get(i).add(new ArrayList<String>());
                 weeks.get(i).add(new ArrayList<ViewSets.Day>());
-                weekStates_.get(i).add(PageLoadState.DOWNLOADING);
+                weekStates.get(i).add(PageLoadState.DOWNLOADING);
             }
         }
     }
@@ -166,7 +166,7 @@ public class WeekManager {
     } // 1
 
     public void setLinks() {
-        links_.clear();
+        links.clear();
         int quarterIdCounter = 1;
         String currentLink;
         int[] currentDate;
@@ -174,7 +174,7 @@ public class WeekManager {
         for (int i = 0; i < 4; i++) {
             currentDate = YearData.getFirstMonday(i + 1).clone();
             for (int week = 0; week < YearData.getAmountOfWeeks(i + 1); week++) {
-                currentLink = pupilUrl_;
+                currentLink = pupilUrl;
 
                 currentLink += "quarter/";
                 currentLink += Integer.toString(YearData.getQuarterId(quarterIdCounter));
@@ -192,7 +192,7 @@ public class WeekManager {
                 }
                 currentLink += Integer.toString(currentDate[2]);
 
-                links_.add(currentLink);
+                links.add(currentLink);
 
                 currentDate[2] += 7;
                 if (currentDate[2] > YearData.getDaysInMonth(currentDate[1])) {
@@ -203,16 +203,16 @@ public class WeekManager {
             quarterIdCounter++;
         }
 
-        String lp = pupilUrl_;
+        String lp = pupilUrl;
         lp += "last-page";
-        links_.add(lp);
+        links.add(lp);
     }
     public String getLink(int quarterNumber, int weekNumber) {
         int linkIndex = weekNumber - 1;
         for (int i = 1; i < quarterNumber; i++) {
             linkIndex += YearData.getAmountOfWeeks(i);
         }
-        return links_.get(linkIndex);
+        return links.get(linkIndex);
     }
 
     public void readData() throws Exception {
@@ -224,7 +224,7 @@ public class WeekManager {
             buffer += (char)c;
         }
         inputSessionid.close();
-        sessionid_ = buffer;
+        sessionid = buffer;
         buffer = "";
 
         FileReader inputPupilUrl = new FileReader(ROOT_DIRECTORY + "/UserData/pupilUrl.txt");
@@ -232,10 +232,10 @@ public class WeekManager {
             buffer += (char)c;
         }
         inputPupilUrl.close();
-        pupilUrl_ = buffer;
-        pupilUrl_ += "/dnevnik/";
+        pupilUrl = buffer;
+        pupilUrl += "/dnevnik/";
     }
     public String getSessionid() {
-        return sessionid_;
+        return sessionid;
     }
 }
