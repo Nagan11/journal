@@ -79,6 +79,7 @@ public class MainMenuActivity extends AppCompatActivity {
     private class PageStateUpdaterR implements Runnable {
         private ArrayList< ArrayList<PageLoadState> > previousStates = new ArrayList<>(); // 1
         private ArrayList< ArrayList<PageLoadState> > currentStates = new ArrayList<>();  // 1
+        private Pair<Integer, Integer>[] previousWeekIndexes;
 
         public PageStateUpdaterR() {
             previousStates.add(new ArrayList<PageLoadState>());
@@ -110,16 +111,11 @@ public class MainMenuActivity extends AppCompatActivity {
             while (true) {
                 try { Thread.sleep(16); } catch (Exception e) { System.out.println(e); }
 
+                previousWeekIndexes = weekIndexes_.clone();
                 if (weekShift_ != 0) {
                     while (weekShift_ > 0) {
                         if (!(weekIndexes_[Order.center()].first == 4 && weekIndexes_[Order.center()].second == YearData.getAmountOfWeeks(4))) {
                             Order.rollRight();
-
-                            if (weekIndexes_[Order.right()].first != -1 && weekIndexes_[Order.right()].second != -1) {
-                                if (weekManager_.getWeekState(weekIndexes_[Order.right()].first, weekIndexes_[Order.right()].second) == PageLoadState.ACTIVE) {
-                                    weekManager_.setWeekState(weekIndexes_[Order.right()].first, weekIndexes_[Order.right()].second, PageLoadState.INACTIVE);
-                                }
-                            }
                             weekIndexes_[Order.right()] = rightWeekIndex(weekIndexes_[Order.center()]);
                         }
                         weekShift_--;
@@ -127,12 +123,6 @@ public class MainMenuActivity extends AppCompatActivity {
                     while (weekShift_ < 0) {
                         if (!(weekIndexes_[Order.center()].first == 1 && weekIndexes_[Order.center()].second == 1)) {
                             Order.rollLeft();
-
-                            if (weekIndexes_[Order.left()].first != -1 && weekIndexes_[Order.left()].second != -1) {
-                                if (weekManager_.getWeekState(weekIndexes_[Order.left()].first, weekIndexes_[Order.left()].second) == PageLoadState.ACTIVE) {
-                                    weekManager_.setWeekState(weekIndexes_[Order.left()].first, weekIndexes_[Order.left()].second, PageLoadState.INACTIVE);
-                                }
-                            }
                             weekIndexes_[Order.left()] = leftWeekIndex(weekIndexes_[Order.center()]);
                         }
                         weekShift_++;
@@ -161,20 +151,29 @@ public class MainMenuActivity extends AppCompatActivity {
 
                 for (int i = 0; i <= 2; i++) {
                     final int fI = Order.get(i);
+
                     if (weekIndexes_[fI].first == -1 || weekIndexes_[fI].second == -1) continue;
-                    if (!currentStates.get(weekIndexes_[fI].first).get(weekIndexes_[fI].second)
-                            .equals(previousStates.get(weekIndexes_[fI].first).get(weekIndexes_[fI].second))) {
+
+                    final boolean weekIndexesDiffer = !(weekIndexes_[fI].first == previousWeekIndexes[fI].first &&
+                            weekIndexes_[fI].second == previousWeekIndexes[fI].second);
+                    final boolean weekStatesDiffer = !currentStates.get(weekIndexes_[fI].first).get(weekIndexes_[fI].second)
+                            .equals(previousStates.get(weekIndexes_[fI].first).get(weekIndexes_[fI].second));
+
+                    if (weekIndexesDiffer || weekStatesDiffer) {
                         switch (currentStates.get(weekIndexes_[fI].first).get(weekIndexes_[fI].second)) {
                             case DOWNLOADING:
                                 runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
-                                        SCROLL_LAYOUTS.get(fI).removeAllViews();
                                         STATUS_TEXTS.get(fI).setText("Downloading...");
+                                        SCROLL_LAYOUTS.get(fI).removeAllViews();
                                         STATUS_TEXTS.get(fI).setVisibility(View.VISIBLE);
-                                        Thread updater = new Thread(new UpdateWeekR(CONTEXT, ROOT_DIRECTORY,
-                                                weekIndexes_[fI].first, weekIndexes_[fI].second));
-                                        updater.start();
+
+                                        if (weekStatesDiffer) {
+                                            Thread updater = new Thread(new UpdateWeekR(CONTEXT, ROOT_DIRECTORY,
+                                                    weekIndexes_[fI].first, weekIndexes_[fI].second));
+                                            updater.start();
+                                        }
                                     }
                                 });
                                 break;
@@ -183,6 +182,8 @@ public class MainMenuActivity extends AppCompatActivity {
                                     @Override
                                     public void run() {
                                         STATUS_TEXTS.get(fI).setText("Downloading error");
+                                        SCROLL_LAYOUTS.get(fI).removeAllViews();
+                                        STATUS_TEXTS.get(fI).setVisibility(View.VISIBLE);
                                     }
                                 });
                                 break;
@@ -191,6 +192,8 @@ public class MainMenuActivity extends AppCompatActivity {
                                     @Override
                                     public void run() {
                                         STATUS_TEXTS.get(fI).setText("Gathering info...");
+                                        SCROLL_LAYOUTS.get(fI).removeAllViews();
+                                        STATUS_TEXTS.get(fI).setVisibility(View.VISIBLE);
                                     }
                                 });
                                 break;
@@ -199,6 +202,8 @@ public class MainMenuActivity extends AppCompatActivity {
                                     @Override
                                     public void run() {
                                         STATUS_TEXTS.get(fI).setText("Gathering info error");
+                                        SCROLL_LAYOUTS.get(fI).removeAllViews();
+                                        STATUS_TEXTS.get(fI).setVisibility(View.VISIBLE);
                                     }
                                 });
                                 break;
@@ -207,24 +212,17 @@ public class MainMenuActivity extends AppCompatActivity {
                                     @Override
                                     public void run() {
                                         STATUS_TEXTS.get(fI).setText("Loading...");
-                                    }
-                                });
-                                break;
-                            case INACTIVE:
-                                runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
                                         SCROLL_LAYOUTS.get(fI).removeAllViews();
-                                        STATUS_TEXTS.get(fI).setText("Loading...");
+                                        STATUS_TEXTS.get(fI).setVisibility(View.VISIBLE);
                                     }
                                 });
-                                weekManager_.setWeekState(weekIndexes_[fI].first, weekIndexes_[fI].second, PageLoadState.ACTIVE);
                                 break;
-                            case ACTIVE:
+                            case READY:
                                 runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
                                         STATUS_TEXTS.get(fI).setVisibility(View.INVISIBLE);
+                                        SCROLL_LAYOUTS.get(fI).removeAllViews();
                                         buildWeek(fI);
                                     }
                                 });
@@ -263,6 +261,7 @@ public class MainMenuActivity extends AppCompatActivity {
         @Override
         public void run() {
             if (quarterNumber_ == -1 || weekNumber_ == -1) return;
+
             if (downloader_.downloadPage(quarterNumber_, weekNumber_, weekManager_.getLink(quarterNumber_, weekNumber_))) {
                 weekManager_.setWeekState(quarterNumber_, weekNumber_, PageLoadState.GATHERING);
             } else {
@@ -328,7 +327,7 @@ public class MainMenuActivity extends AppCompatActivity {
                     weekManager_.getHometasks(quarterNumber_, weekNumber_), true)
             );
 
-            weekManager_.setWeekState(quarterNumber_, weekNumber_, PageLoadState.INACTIVE);
+            weekManager_.setWeekState(quarterNumber_, weekNumber_, PageLoadState.READY);
         }
     }
 
@@ -401,14 +400,13 @@ public class MainMenuActivity extends AppCompatActivity {
         switch (state) {
             case DOWNLOADING_ERROR:
             case GATHERING_ERROR:
-            case ACTIVE:
+            case READY:
                 weekManager_.weeks.get(weekIndexes_[Order.center()].first - 1).get(weekIndexes_[Order.center()].second - 1).clear();
                 weekManager_.setWeekState(weekIndexes_[Order.center()].first, weekIndexes_[Order.center()].second, PageLoadState.DOWNLOADING);
                 break;
             case DOWNLOADING:
             case GATHERING:
             case BUILDING:
-            case INACTIVE:
                 break;
         }
     }

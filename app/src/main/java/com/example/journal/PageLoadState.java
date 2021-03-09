@@ -6,6 +6,5 @@ public enum PageLoadState {
     GATHERING,
     GATHERING_ERROR,
     BUILDING,
-    INACTIVE,
-    ACTIVE
+    READY
 }
