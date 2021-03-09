@@ -16,119 +16,86 @@ public class PageDownloader {
     private String csrftoken_;
     private String sessionid_;
 
-
     public PageDownloader(String rootDirectory, String sessionid) {
         ROOT_DIRECTORY = rootDirectory;
         sessionid_ = sessionid;
     }
 
-    private String getPageCode(String url) {
-        try {
-            if (csrftoken_ == null) {
-                takeCsrftoken();
-                if (csrftoken_ == null) {
-                    takeCsrftoken();
-                    if (csrftoken_ == null) {
-                        return "FE";
-                    }
-                }
-            }
-            URL obj = new URL(url);
-            HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+    private String getPageCode(String url) throws Exception {
+        URL obj = new URL(url);
+        HttpURLConnection con = (HttpURLConnection) obj.openConnection();
 
-            con.setInstanceFollowRedirects(false);
-            con.setUseCaches(false);
-            con.setRequestMethod("GET");
-            con.setRequestProperty("User-Agent", USER_AGENT);
-            con.setRequestProperty("cookie", ("csrftoken=" + csrftoken_ + "; sessionid=" + sessionid_));
+        con.setInstanceFollowRedirects(false);
+        con.setUseCaches(false);
+        con.setRequestMethod("GET");
+        con.setRequestProperty("User-Agent", USER_AGENT);
+        con.setRequestProperty("cookie", ("csrftoken=" + csrftoken_ + "; sessionid=" + sessionid_));
 
-            BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
-
-            String inputLine;
-            StringBuffer response = new StringBuffer();
-
-            while ((inputLine = in.readLine()) != null) {
-                response.append(inputLine);
-                response.append("\n");
-            }
-            in.close();
-            con.disconnect();
-
-            return response.toString();
-        } catch (Exception e) {
-            return "-";
+        String buffer;
+        StringBuffer pageCode = new StringBuffer();
+        BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+        while ((buffer = in.readLine()) != null) {
+            pageCode.append(buffer);
+            pageCode.append("\n");
         }
+        in.close();
+
+        con.disconnect();
+
+        if (pageCode.length() < 1) throw new Exception("Response missing");
+
+        return pageCode.toString();
     }
 
-    public boolean downloadPage(int quarterNumber, int weekNumber, String link) { // from one
-        try {
-            String pageCode = "-";
-            int counter = 5;
-            while (counter > 0 && pageCode.equals("-")) {
-                pageCode = getPageCode(link);
-                if (pageCode.equals("FE")) {
-                    System.out.println("FATAL ERROR");
-                    return false;
-                } else {
-                    System.out.println("NETWORK ERROR");
-                    counter--;
-                }
+    public boolean downloadPage(int quarterNumber, int weekNumber, String link) { // 1
+        int getCodeAttempts = 5;
+        while (getCodeAttempts-- > 0) {
+            try {
+                if (csrftoken_ == null) takeCsrftoken();
+                String pageCode = getPageCode(link);
+
+                FileWriter fout = new FileWriter(
+                        ROOT_DIRECTORY + "/p" + quarterNumber + "q/w" + weekNumber + ".html"
+                );
+                fout.write(pageCode);
+                fout.flush();
+                fout.close();
+                return true;
+            } catch (Exception e) {
+                System.out.println("Exception -> " + e);
+                continue;
             }
-            if (pageCode.equals("-")) {
-                System.out.println("NETWORK ERROR (FINAL)");
-                return false;
-            }
-            FileWriter fout = new FileWriter(
-                    ROOT_DIRECTORY + "/p" + quarterNumber + "q/w" + weekNumber + ".html"
-            );
-            fout.write(pageCode);
-            fout.flush();
-            fout.close();
-        } catch (Exception e) {
-            System.out.println("EXCEPTION -> " + e);
-            return false;
         }
-        return true;
+        return false;
     }
 
-    private void takeCsrftoken() {
-        try {
-            // open connection
-            URL connectionUrl = new URL("https://schools.by/login");
-            HttpURLConnection con = (HttpURLConnection)connectionUrl.openConnection();
+    private void takeCsrftoken() throws Exception {
+        URL connectionUrl = new URL("https://schools.by/login");
+        HttpURLConnection con = (HttpURLConnection)connectionUrl.openConnection();
 
-            // set connection args
-            con.setRequestMethod("GET");
-            con.setRequestProperty("User-Agent", USER_AGENT);
+        con.setRequestMethod("GET");
+        con.setRequestProperty("User-Agent", USER_AGENT);
 
-            // get cookies
-            con.connect();
-            Map<String,List<String>> hf = con.getHeaderFields();
-            con.disconnect();
+        con.connect();
+        Map<String, List<String>> hf = con.getHeaderFields();
+        con.disconnect();
 
-            // find csrftoken
-            for (Map.Entry<String, List<String>> ent : hf.entrySet()) {
-                try {
-                    if (ent.getKey().equals("Set-Cookie")) {
-                        List<HttpCookie> cookies = HttpCookie.parse(ent.getValue().get(0));
-                        for (HttpCookie cookie : cookies) {
-                            if (cookie.getName().equals("csrftoken")) {
-                                csrftoken_ = cookie.getValue();
-                                return;
-                            }
+        for (Map.Entry<String, List<String>> ent : hf.entrySet()) {
+            try {
+                if (ent.getKey().equals("Set-Cookie")) {
+                    List<HttpCookie> cookies = HttpCookie.parse(ent.getValue().get(0));
+                    for (HttpCookie cookie : cookies) {
+                        if (cookie.getName().equals("csrftoken")) {
+                            csrftoken_ = cookie.getValue();
+                            return;
                         }
                     }
-                } catch (NullPointerException npe) {
-                    continue;
                 }
+            } catch (NullPointerException npe) {
+                continue;
             }
-
-            System.out.println("csrftoken not found");
-        } catch (Exception e) {
-            System.out.println("csrftoken getting error, " + e);
-            csrftoken_ = null;
-            return;
         }
+        throw new Exception("csrftoken not found in headers");
     }
 
 }
