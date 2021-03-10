@@ -25,6 +25,8 @@ public class PageDownloader {
         URL obj = new URL(url);
         HttpURLConnection con = (HttpURLConnection) obj.openConnection();
 
+        con.setConnectTimeout(2500);
+        con.setReadTimeout(2500);
         con.setInstanceFollowRedirects(false);
         con.setUseCaches(false);
         con.setRequestMethod("GET");
@@ -73,6 +75,8 @@ public class PageDownloader {
         URL connectionUrl = new URL("https://schools.by/login");
         HttpURLConnection con = (HttpURLConnection)connectionUrl.openConnection();
 
+        con.setConnectTimeout(2500);
+        con.setReadTimeout(2500);
         con.setRequestMethod("GET");
         con.setRequestProperty("User-Agent", USER_AGENT);
 
