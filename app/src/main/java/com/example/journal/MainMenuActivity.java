@@ -378,7 +378,7 @@ public class MainMenuActivity extends AppCompatActivity {
     }
     public void logOutButtonOnClick(View view) {
         cleanUserData();
-        Intent logInActivity = new Intent(CONTEXT, LogInActivity.class);
+        Intent logInActivity = new Intent(CONTEXT, LoginActivity.class);
         startActivity(logInActivity);
     }
     public void journalOnClick(View view) {

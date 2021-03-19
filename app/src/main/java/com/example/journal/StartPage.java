@@ -34,7 +34,7 @@ public class StartPage extends AppCompatActivity {
             SwitchTimerTask timerTask = new SwitchTimerTask();
             switchTimer.schedule(timerTask, 0);
         } else {
-            nextActivity = new Intent(this, LogInActivity.class);
+            nextActivity = new Intent(this, LoginActivity.class);
             Timer switchTimer = new Timer();
             SwitchTimerTask timerTask = new SwitchTimerTask();
             switchTimer.schedule(timerTask, 0);

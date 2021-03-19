@@ -10,6 +10,9 @@
     <color name="colorPrimaryDark">#00296B</color>
     <color name="colorAccent">#00509D</color>
 
+    <color name="loginButtonBackground">#00296B</color>
+    <color name="loginButtonText">#FDC500</color>
+
     <color name="journalBackground">#EAEAEA</color>
     <color name="journalLessonMarkBackground">#FCFCFC</color>
     <color name="journalHometaskBackground">#F4F4F4</color>

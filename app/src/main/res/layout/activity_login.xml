@@ -2,13 +2,14 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/rootLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="false"
-    tools:context=".LogInActivity">
+    tools:context=".LoginActivity">
 
     <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/UsernameField"
+        android:id="@+id/usernameField"
         android:layout_width="275dp"
         android:layout_height="wrap_content"
         app:counterEnabled="false"
@@ -19,7 +20,7 @@
         app:layout_constraintVertical_bias="0.15">
 
         <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/UsernameInput"
+            android:id="@+id/usernameInput"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="@string/login_field_hint"
@@ -28,17 +29,17 @@
     </com.google.android.material.textfield.TextInputLayout>
 
     <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/PasswordField"
+        android:id="@+id/passwordField"
         android:layout_width="275dp"
         android:layout_height="wrap_content"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/UsernameField"
+        app:layout_constraintTop_toBottomOf="@+id/usernameField"
         app:layout_constraintVertical_bias="0.0">
 
         <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/PasswordInput"
+            android:id="@+id/passwordInput"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="@string/password_field_hint"
@@ -48,7 +49,7 @@
     </com.google.android.material.textfield.TextInputLayout>
 
     <Button
-        android:id="@+id/LogInButton"
+        android:id="@+id/logInButton"
         android:layout_width="275dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="48dp"
@@ -59,7 +60,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/PasswordField"
+        app:layout_constraintTop_toBottomOf="@+id/passwordField"
         app:layout_constraintVertical_bias="0.0" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
