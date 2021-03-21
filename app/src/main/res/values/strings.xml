@@ -6,7 +6,7 @@
 
     <string name="login_field_hint">Логин</string>
     <string name="password_field_hint">Пароль</string>
-    <string name="login_button_text">Войти</string>
+    <string name="log_in_button_text">Войти</string>
     <string name="remember_checkbox_text">Запомнить меня</string>
 
     <string name="logo_image_description">Logo</string>

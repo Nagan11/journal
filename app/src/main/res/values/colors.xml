@@ -10,8 +10,18 @@
     <color name="colorPrimaryDark">#00296B</color>
     <color name="colorAccent">#00509D</color>
 
-    <color name="loginButtonBackground">#00296B</color>
-    <color name="loginButtonText">#FDC500</color>
+    <color name="logInButtonNormalText">#FDC500</color>
+    <color name="logInButtonNormalBackground">#00296B</color>
+    <color name="logInButtonLoadingText">#00296B</color>
+    <color name="logInButtonLoadingBackground">#FDC500</color>
+    <color name="logInButtonErrorText">#F6F6F6</color>
+    <color name="logInButtonErrorBackground">#BE130D</color>
+    <color name="logInButtonSuccessText">#FFFFFF</color>
+    <color name="logInButtonSuccessBackground">#00C800</color>
+    <color name="logInButtonNormalLoadingMiddle">#7F7736</color>
+    <color name="logInButtonLoadingErrorMiddle">#DE6C07</color>
+    <color name="logInButtonLoadingSuccessMiddle">#97DB18</color>
+    <color name="logInButtonErrorNormalMiddle">#5F1E3C</color>
 
     <color name="journalBackground">#EAEAEA</color>
     <color name="journalLessonMarkBackground">#FCFCFC</color>
