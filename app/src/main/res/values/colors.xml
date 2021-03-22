@@ -15,4 +15,7 @@
     <color name="journalHometaskBackground">#F4F4F4</color>
     <color name="journalTitleText">#252525</color>
     <color name="journalMainText">#252525</color>
+
+    <color name="yearLessonMarkBackground">#FCFCFC</color>
+    <color name="yearMarksBackground">#F4F4F4</color>
 </resources>

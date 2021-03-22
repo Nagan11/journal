@@ -320,10 +320,7 @@ void fout_to_file()
 
 std::string jstring2string(JNIEnv *env, jstring jStr)
 {
-	if (!jStr)
-	{
-		return "";
-	}
+	if (!jStr) return "";
 
 	const jclass stringClass = env->GetObjectClass(jStr);
 	const jmethodID getBytes = env->GetMethodID(stringClass, "getBytes", "(Ljava/lang/String;)[B");
@@ -343,8 +340,6 @@ std::string jstring2string(JNIEnv *env, jstring jStr)
 JNIEXPORT void JNICALL
 Java_com_example_journal_PageParser_parsePage(JNIEnv *env, jobject thisObj, jstring page_path, jstring file_path)
 {
-	std::chrono::time_point<std::chrono::steady_clock> start = std::chrono::steady_clock::now();
-
 	_lessons.clear();
 	_marks.clear();
 	_hometasks.clear();
@@ -357,30 +352,8 @@ Java_com_example_journal_PageParser_parsePage(JNIEnv *env, jobject thisObj, jstr
 	format_lessons();
 	fout_to_file();
 
-	std::chrono::time_point<std::chrono::steady_clock> finish = std::chrono::steady_clock::now();
-	std::chrono::milliseconds elapsed_time = std::chrono::duration_cast<std::chrono::milliseconds>(finish - start);
-
-	file_output << "\n" << elapsed_time.count();
-
 	file_input.close();
 	file_output.close();
 
 	return;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

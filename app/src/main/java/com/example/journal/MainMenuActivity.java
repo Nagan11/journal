@@ -34,6 +34,7 @@ public class MainMenuActivity extends AppCompatActivity {
     private ArrayList<LinearLayout> scrollLayouts = new ArrayList<>();
     private ArrayList<TextView> statusTexts = new ArrayList<>();
     private ConstraintLayout rootLayout;
+    private LinearLayout scrollLayoutYear;
 
     private ConstraintSet rootLayoutSet = new ConstraintSet();
 
@@ -332,6 +333,87 @@ public class MainMenuActivity extends AppCompatActivity {
         }
     }
 
+    public class UpdateYearMarks implements Runnable {
+        String link = weekManager.getLink(5, 0);
+        String pagePath = ROOT_DIRECTORY + "/p4q/w111.html";
+        String dataPath = ROOT_DIRECTORY + "/lp.txt";
+        PageDownloader downloader = new PageDownloader(ROOT_DIRECTORY, weekManager.getSessionid());
+        LastPageParser parser = new LastPageParser(ROOT_DIRECTORY);
+
+        ArrayList<String> lessons = new ArrayList<>();
+        ArrayList<ArrayList<String>> quarterMarks = new ArrayList<>();
+        ArrayList<String> yearMarks = new ArrayList<>();
+        ArrayList<ViewSets.YearLessonMarks> layouts = new ArrayList<>();
+
+        UpdateYearMarks() {
+            quarterMarks.add(new ArrayList<String>());
+            quarterMarks.add(new ArrayList<String>());
+            quarterMarks.add(new ArrayList<String>());
+            quarterMarks.add(new ArrayList<String>());
+        }
+
+        public void run() {
+            downloader.downloadPage(4, 111, link);
+            parser.parsePage(pagePath, dataPath);
+
+            try {
+                FileReader fin = new FileReader(dataPath);
+                int c = 0;
+                String buf;
+
+                while (c != -1) {
+                    buf = "";
+                    while ((c = fin.read()) != '>' && c != -1) buf += (char)c;
+                    lessons.add(buf);
+
+                    buf = "";
+                    while ((c = fin.read()) != '>' && c != -1) buf += (char)c;
+                    quarterMarks.get(0).add(buf);
+
+                    buf = "";
+                    while ((c = fin.read()) != '>' && c != -1) buf += (char)c;
+                    quarterMarks.get(1).add(buf);
+
+                    buf = "";
+                    while ((c = fin.read()) != '>' && c != -1) buf += (char)c;
+                    quarterMarks.get(2).add(buf);
+
+                    buf = "";
+                    while ((c = fin.read()) != '>' && c != -1) buf += (char)c;
+                    quarterMarks.get(3).add(buf);
+
+                    buf = "";
+                    while ((c = fin.read()) != '>' && c != -1) buf += (char)c;
+                    yearMarks.add(buf);
+                }
+            } catch (Exception e) {}
+
+            for (int i = 0; i < lessons.size() - 1; i++) {
+                layouts.add(new ViewSets.YearLessonMarks(CONTEXT, lessons.get(i), yearMarks.get(i),
+                        quarterMarks.get(0).get(i), quarterMarks.get(1).get(i),
+                        quarterMarks.get(2).get(i), quarterMarks.get(3).get(i)));
+            }
+
+            for (int i = 0; i < lessons.size(); i++) {
+                System.out.print(lessons.get(i));
+                for (int j = 0; j < 4; j++) {
+                    System.out.print(" " + quarterMarks.get(j).get(i));
+                }
+                System.out.println(" " + yearMarks.get(i));
+            }
+
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    for (int i = 0; i < lessons.size() - 1; i++) {
+                        scrollLayoutYear.addView(layouts.get(i).getLessonMark());
+                        scrollLayoutYear.addView(layouts.get(i).getMarks());
+                    }
+                }
+            });
+        }
+    }
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -340,6 +422,7 @@ public class MainMenuActivity extends AppCompatActivity {
 
         ROOT_DIRECTORY = String.valueOf(getFilesDir());
         rootLayout = findViewById(R.id.RootLayout);
+        scrollLayoutYear = findViewById(R.id.ScrollLayoutYear);
         weekManager = new WeekManager(ROOT_DIRECTORY);
         parser = new PageParser(ROOT_DIRECTORY);
         fillFragmentArrays();
@@ -366,6 +449,9 @@ public class MainMenuActivity extends AppCompatActivity {
 
         Thread stateUpdater = new Thread(new PageStateUpdaterR());
         stateUpdater.start();
+
+        Thread updateYearMarks = new Thread(new UpdateYearMarks());
+        updateYearMarks.start();
     }
 
     @Override

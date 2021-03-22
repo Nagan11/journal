@@ -127,7 +127,6 @@ public class ViewSets {
             return hometask;
         }
     }
-
     public static class Day {
         private TextView date;
         private ArrayList<Lesson> lessons = new ArrayList<>();
@@ -181,6 +180,113 @@ public class ViewSets {
         }
         public ArrayList<Lesson> getLessons() {
             return lessons;
+        }
+    }
+    public static class YearLessonMarks {
+        private LinearLayout lessonMark;
+        private LinearLayout marks;
+
+        YearLessonMarks(Context context, String lesson, String yearMark, String mark1, String mark2, String mark3, String mark4) {
+            LinearLayout.LayoutParams lessonMarkParams = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
+            );
+            lessonMarkParams.setLayoutDirection(LinearLayout.HORIZONTAL);
+            LinearLayout.LayoutParams marksParams = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
+            );
+            marksParams.setLayoutDirection(LinearLayout.HORIZONTAL);
+            marksParams.setMargins(0, 0, 0, Calculation.dpToPx(16, context));
+
+            lessonMark = new LinearLayout(context);
+            lessonMark.setBackground(ResourcesCompat.getDrawable(context.getResources(), R.drawable.lesson_mark_year_background, null));
+            marks = new LinearLayout(context);
+            marks.setBackground(ResourcesCompat.getDrawable(context.getResources(), R.drawable.marks_year_background, null));
+
+
+            LinearLayout.LayoutParams lessonNameParams = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT
+            );
+            lessonNameParams.weight = 1f;
+            lessonNameParams.setMargins(
+                    Calculation.dpToPx(16, context), Calculation.dpToPx(16, context),
+                    Calculation.dpToPx(16, context), Calculation.dpToPx(16, context)
+            );
+
+            TextView lessonName = new TextView(context);
+            lessonName.setText(lesson);
+            lessonName.setTextColor(Color.BLACK);
+            lessonName.setTextSize(30);
+            lessonMark.addView(lessonName);
+
+            LinearLayout.LayoutParams yearMarkParams = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT
+            );
+            yearMarkParams.weight = 0f;
+            yearMarkParams.setMargins(
+                    Calculation.dpToPx(16, context), Calculation.dpToPx(16, context),
+                    Calculation.dpToPx(16, context), Calculation.dpToPx(16, context)
+            );
+
+            TextView yearMarkL = new TextView(context);
+            yearMarkL.setText(yearMark);
+            yearMarkL.setTextColor(Color.BLACK);
+            yearMarkL.setTextSize(30);
+            lessonMark.addView(yearMarkL);
+
+            lessonName.setLayoutParams(lessonNameParams);
+            yearMarkL.setLayoutParams(yearMarkParams);
+            lessonMark.setLayoutParams(lessonMarkParams);
+
+
+            LinearLayout.LayoutParams markParams = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT
+            );
+            markParams.weight = 1f;
+            markParams.setMargins(
+                    Calculation.dpToPx(16, context), Calculation.dpToPx(16, context),
+                    Calculation.dpToPx(16, context), Calculation.dpToPx(16, context)
+            );
+
+            TextView mark1L = new TextView(context);
+            mark1L.setText(mark1);
+            mark1L.setTextColor(Color.BLACK);
+            mark1L.setTextSize(25);
+            mark1L.setGravity(Gravity.CENTER);
+
+            TextView mark2L = new TextView(context);
+            mark2L.setText(mark2);
+            mark2L.setTextColor(Color.BLACK);
+            mark2L.setTextSize(25);
+            mark2L.setGravity(Gravity.CENTER);
+
+            TextView mark3L = new TextView(context);
+            mark3L.setText(mark3);
+            mark3L.setTextColor(Color.BLACK);
+            mark3L.setTextSize(25);
+            mark3L.setGravity(Gravity.CENTER);
+
+            TextView mark4L = new TextView(context);
+            mark4L.setText(mark4);
+            mark4L.setTextColor(Color.BLACK);
+            mark4L.setTextSize(25);
+            mark4L.setGravity(Gravity.CENTER);
+
+            marks.setLayoutParams(marksParams);
+            mark1L.setLayoutParams(markParams);
+            mark2L.setLayoutParams(markParams);
+            mark3L.setLayoutParams(markParams);
+            mark4L.setLayoutParams(markParams);
+            marks.addView(mark1L);
+            marks.addView(mark2L);
+            marks.addView(mark3L);
+            marks.addView(mark4L);
+        }
+
+        public LinearLayout getLessonMark() {
+            return lessonMark;
+        }
+        public LinearLayout getMarks() {
+            return marks;
         }
     }
 }

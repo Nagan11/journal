@@ -208,6 +208,8 @@ public class WeekManager {
         links.add(lp);
     }
     public String getLink(int quarterNumber, int weekNumber) {
+        if (quarterNumber == 5) return links.get(links.size() - 1);
+
         int linkIndex = weekNumber - 1;
         for (int i = 1; i < quarterNumber; i++) {
             linkIndex += YearData.getAmountOfWeeks(i);

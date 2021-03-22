@@ -21,6 +21,28 @@ public class PageDownloader {
         SESSIONID = sessionid;
     }
 
+    public boolean downloadPage(int quarterNumber, int weekNumber, String link) { // 1
+        int getCodeAttempts = 5;
+        while (getCodeAttempts-- > 0) {
+            try {
+                if (csrftoken == null) takeCsrftoken();
+                String pageCode = getPageCode(link);
+
+                FileWriter fout = new FileWriter(
+                        ROOT_DIRECTORY + "/p" + quarterNumber + "q/w" + weekNumber + ".html"
+                );
+                fout.write(pageCode);
+                fout.flush();
+                fout.close();
+                return true;
+            } catch (Exception e) {
+                System.out.println("Exception -> " + e);
+                continue;
+            }
+        }
+        return false;
+    }
+
     private String getPageCode(String url) throws Exception {
         URL obj = new URL(url);
         HttpURLConnection con = (HttpURLConnection) obj.openConnection();
@@ -47,28 +69,6 @@ public class PageDownloader {
         if (pageCode.length() < 1) throw new Exception("Response missing");
 
         return pageCode.toString();
-    }
-
-    public boolean downloadPage(int quarterNumber, int weekNumber, String link) { // 1
-        int getCodeAttempts = 5;
-        while (getCodeAttempts-- > 0) {
-            try {
-                if (csrftoken == null) takeCsrftoken();
-                String pageCode = getPageCode(link);
-
-                FileWriter fout = new FileWriter(
-                        ROOT_DIRECTORY + "/p" + quarterNumber + "q/w" + weekNumber + ".html"
-                );
-                fout.write(pageCode);
-                fout.flush();
-                fout.close();
-                return true;
-            } catch (Exception e) {
-                System.out.println("Exception -> " + e);
-                continue;
-            }
-        }
-        return false;
     }
 
     private void takeCsrftoken() throws Exception {
