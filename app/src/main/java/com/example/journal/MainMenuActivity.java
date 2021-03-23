@@ -389,16 +389,23 @@ public class MainMenuActivity extends AppCompatActivity {
                 }
             } catch (Exception e) {}
 
-            for (int i = 0; i < lessons.size() - 1; i++) {
-                layouts.add(new ViewSets.YearLessonMarks(CONTEXT, lessons.get(i), yearMarks.get(i),
-                        quarterMarks.get(0).get(i), quarterMarks.get(1).get(i),
-                        quarterMarks.get(2).get(i), quarterMarks.get(3).get(i)));
+            for (int i = 0; i < lessons.size(); i++) {
+                if (!lessons.get(i).equals("") && !(
+                        quarterMarks.get(0).get(i).equals("-") &&
+                        quarterMarks.get(1).get(i).equals("-") &&
+                        quarterMarks.get(2).get(i).equals("-") &&
+                        quarterMarks.get(3).get(i).equals("-")
+                )) {
+                    layouts.add(new ViewSets.YearLessonMarks(CONTEXT, lessons.get(i), yearMarks.get(i),
+                            quarterMarks.get(0).get(i), quarterMarks.get(1).get(i),
+                            quarterMarks.get(2).get(i), quarterMarks.get(3).get(i)));
+                }
             }
 
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    for (int i = 0; i < lessons.size() - 1; i++) {
+                    for (int i = 0; i < layouts.size(); i++) {
                         scrollLayoutYear.addView(layouts.get(i).getLessonMark());
                         scrollLayoutYear.addView(layouts.get(i).getMarks());
                     }
