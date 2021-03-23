@@ -6,6 +6,7 @@
     tools:context=".LastPageFragment">
 
     <ScrollView
+        android:id="@+id/ScrollViewYear"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="@color/journalBackground">
@@ -14,7 +15,10 @@
             android:id="@+id/ScrollLayoutYear"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="16dp"
-            android:orientation="vertical"/>
+            android:orientation="vertical"
+            android:paddingLeft="16dp"
+            android:paddingTop="16dp"
+            android:paddingRight="16dp"
+            android:paddingBottom="0dp" />
     </ScrollView>
 </FrameLayout>

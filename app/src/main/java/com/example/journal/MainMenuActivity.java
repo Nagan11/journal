@@ -44,6 +44,7 @@ public class MainMenuActivity extends AppCompatActivity {
     private Pair<Integer, Integer>[] weekIndexes = new Pair[3]; // .first - quarter, .second - week
 
     private boolean journalClosed = true;
+    private boolean lpClosed = true;
 
     private int weekShift = 0;
 
@@ -394,14 +395,6 @@ public class MainMenuActivity extends AppCompatActivity {
                         quarterMarks.get(2).get(i), quarterMarks.get(3).get(i)));
             }
 
-            for (int i = 0; i < lessons.size(); i++) {
-                System.out.print(lessons.get(i));
-                for (int j = 0; j < 4; j++) {
-                    System.out.print(" " + quarterMarks.get(j).get(i));
-                }
-                System.out.println(" " + yearMarks.get(i));
-            }
-
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
@@ -459,7 +452,12 @@ public class MainMenuActivity extends AppCompatActivity {
         if (!journalClosed) {
             rootLayoutSet.setVerticalBias(R.id.JournalButton, 1f);
             rootLayoutSet.applyTo(rootLayout);
-            journalClosed = !journalClosed;
+            journalClosed = true;
+        }
+        if (!lpClosed) {
+            rootLayoutSet.setHorizontalBias(R.id.LastPageFragment, 0f);
+            rootLayoutSet.applyTo(rootLayout);
+            lpClosed = true;
         }
     }
     public void logOutButtonOnClick(View view) {
@@ -475,6 +473,11 @@ public class MainMenuActivity extends AppCompatActivity {
         }
         rootLayoutSet.applyTo(rootLayout);
         journalClosed = !journalClosed;
+    }
+    public void lpOnClick(View view) {
+        rootLayoutSet.setHorizontalBias(R.id.LastPageFragment, 1f);
+        rootLayoutSet.applyTo(rootLayout);
+        lpClosed = false;
     }
     public void weekBackOnClick(View view) {
         scrollLeft();
@@ -636,6 +639,7 @@ public class MainMenuActivity extends AppCompatActivity {
         rootLayoutSet.setTranslationZ(R.id.JournalFragment0, 100f);
         rootLayoutSet.setTranslationZ(R.id.JournalFragment1, 100f);
         rootLayoutSet.setTranslationZ(R.id.JournalFragment2, 100f);
+        rootLayoutSet.setTranslationZ(R.id.LastPageFragment, 150f);
 
         rootLayoutSet.constrainHeight(R.id.JournalFragment0, fragmentHeightPx);
         rootLayoutSet.constrainWidth(R.id.JournalFragment0, screenWidthPx);
@@ -643,6 +647,13 @@ public class MainMenuActivity extends AppCompatActivity {
         rootLayoutSet.constrainWidth(R.id.JournalFragment1, screenWidthPx);
         rootLayoutSet.constrainHeight(R.id.JournalFragment2, fragmentHeightPx);
         rootLayoutSet.constrainWidth(R.id.JournalFragment2, screenWidthPx);
+
+        rootLayoutSet.constrainWidth(R.id.LastPageFragment, screenWidthPx);
+        rootLayoutSet.connect(R.id.LastPageFragment, ConstraintSet.LEFT, rootLayout.getId(), ConstraintSet.LEFT, screenWidthPx);
+        rootLayoutSet.connect(R.id.LastPageFragment, ConstraintSet.TOP, rootLayout.getId(), ConstraintSet.TOP);
+        rootLayoutSet.connect(R.id.LastPageFragment, ConstraintSet.RIGHT, rootLayout.getId(), ConstraintSet.RIGHT);
+        rootLayoutSet.connect(R.id.LastPageFragment, ConstraintSet.BOTTOM, rootLayout.getId(), ConstraintSet.BOTTOM);
+        rootLayoutSet.setHorizontalBias(R.id.LastPageFragment, 0f);
 
         rootLayoutSet.connect(fragments.get(Order.left()).getId(), ConstraintSet.TOP, R.id.JournalButton, ConstraintSet.BOTTOM, 0);
         rootLayoutSet.connect(fragments.get(Order.center()).getId(), ConstraintSet.TOP, R.id.JournalButton, ConstraintSet.BOTTOM, 0);
