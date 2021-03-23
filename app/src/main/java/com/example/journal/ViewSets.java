@@ -11,6 +11,8 @@ import android.widget.TextView;
 
 import androidx.core.content.res.ResourcesCompat;
 
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 
 public class ViewSets {
@@ -228,8 +230,47 @@ public class ViewSets {
             );
 
             TextView yearMarkL = new TextView(context);
-            yearMarkL.setText(yearMark);
-            yearMarkL.setTextColor(Color.BLACK);
+            if (!yearMark.equals("-")) {
+                yearMarkL.setText(yearMark);
+                yearMarkL.setTextColor(Color.BLACK);
+            } else {
+                try {
+                    int counter = 0;
+                    float f1 = 0, f2 = 0, f3 = 0, f4 = 0;
+
+                    if (!mark1.equals("-")) {
+                        f1 = Float.parseFloat(mark1);
+                        counter++;
+                    }
+                    if (!mark2.equals("-")) {
+                        f2 = Float.parseFloat(mark2);
+                        counter++;
+                    }
+                    if (!mark3.equals("-")) {
+                        f3 = Float.parseFloat(mark3);
+                        counter++;
+                    }
+                    if (!mark4.equals("-")) {
+                        f4 = Float.parseFloat(mark4);
+                        counter++;
+                    }
+
+                    if (counter == 0) {
+                        yearMarkL.setText(yearMark.equals("-") ? "" : yearMark);
+                        yearMarkL.setTextColor(Color.BLACK);
+                    } else {
+                        float tempF = (f1 + f2 + f3 + f4) / counter;
+                        DecimalFormat df = new DecimalFormat("#.##");
+                        df.setRoundingMode(RoundingMode.HALF_UP);
+                        yearMarkL.setText(df.format(tempF));
+                        yearMarkL.setTextColor(Color.GRAY);
+                    }
+                } catch (NumberFormatException e) {
+                    yearMarkL.setText(yearMark.equals("-") ? "" : yearMark);
+                    yearMarkL.setTextColor(Color.BLACK);
+                }
+            }
+
             yearMarkL.setTextSize(30);
             lessonMark.addView(yearMarkL);
 
@@ -248,25 +289,25 @@ public class ViewSets {
             );
 
             TextView mark1L = new TextView(context);
-            mark1L.setText(mark1);
+            mark1L.setText(mark1.equals("-") ? "" : mark1);
             mark1L.setTextColor(Color.BLACK);
             mark1L.setTextSize(25);
             mark1L.setGravity(Gravity.CENTER);
 
             TextView mark2L = new TextView(context);
-            mark2L.setText(mark2);
+            mark2L.setText(mark2.equals("-") ? "" : mark2);
             mark2L.setTextColor(Color.BLACK);
             mark2L.setTextSize(25);
             mark2L.setGravity(Gravity.CENTER);
 
             TextView mark3L = new TextView(context);
-            mark3L.setText(mark3);
+            mark3L.setText(mark3.equals("-") ? "" : mark3);
             mark3L.setTextColor(Color.BLACK);
             mark3L.setTextSize(25);
             mark3L.setGravity(Gravity.CENTER);
 
             TextView mark4L = new TextView(context);
-            mark4L.setText(mark4);
+            mark4L.setText(mark4.equals("-") ? "" : mark4);
             mark4L.setTextColor(Color.BLACK);
             mark4L.setTextSize(25);
             mark4L.setGravity(Gravity.CENTER);
