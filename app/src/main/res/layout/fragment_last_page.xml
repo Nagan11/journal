@@ -21,4 +21,14 @@
             android:paddingRight="16dp"
             android:paddingBottom="0dp" />
     </ScrollView>
+
+    <TextView
+        android:id="@+id/StatusTextLp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:text="Hello"
+        android:textColor="@color/DarkBlue"
+        android:textSize="32sp" />
 </FrameLayout>

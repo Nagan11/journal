@@ -354,7 +354,29 @@ public class MainMenuActivity extends AppCompatActivity {
         }
 
         public void run() {
-            downloader.downloadPage(4, 111, link);
+            final TextView statusText = findViewById(R.id.StatusTextLp);
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    statusText.setVisibility(View.VISIBLE);
+                    statusText.setText("Downloading...");
+                }
+            });
+            if (!downloader.downloadPage(4, 111, link)) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        statusText.setText("Downloading error");
+                    }
+                });
+                return;
+            }
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    statusText.setText("Gathering info...");
+                }
+            });
             parser.parsePage(pagePath, dataPath);
 
             try {
@@ -387,8 +409,21 @@ public class MainMenuActivity extends AppCompatActivity {
                     while ((c = fin.read()) != '>' && c != -1) buf += (char)c;
                     yearMarks.add(buf);
                 }
-            } catch (Exception e) {}
+            } catch (Exception e) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        statusText.setText("Gathering info error");
+                    }
+                });
+            }
 
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    statusText.setText("Loading...");
+                }
+            });
             for (int i = 0; i < lessons.size(); i++) {
                 if (!lessons.get(i).equals("") && !(
                         quarterMarks.get(0).get(i).equals("-") &&
@@ -405,6 +440,7 @@ public class MainMenuActivity extends AppCompatActivity {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
+                    statusText.setVisibility(View.INVISIBLE);
                     for (int i = 0; i < layouts.size(); i++) {
                         scrollLayoutYear.addView(layouts.get(i).getLessonMark());
                         scrollLayoutYear.addView(layouts.get(i).getMarks());
