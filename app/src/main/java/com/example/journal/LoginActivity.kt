@@ -6,6 +6,7 @@ import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.view.Choreographer
 import android.view.View
+import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
@@ -15,8 +16,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.*
 import kotlin.math.roundToInt
-
-
 
 fun Color24(hexString32: String): Color24 {
     return Color24(
@@ -47,14 +46,14 @@ class LoginActivity : AppCompatActivity() {
 
     private val LOGIN_MANAGER by lazy { LoginManager(ROOT_DIRECTORY) }
 
-    private val BUTTON_NORMAL_TEXT_COLOR            by lazy { ContextCompat.getColor(CONTEXT, R.color.logInButtonNormalText) }
-    private val BUTTON_NORMAL_BACKGROUND_COLOR      by lazy { ContextCompat.getColor(CONTEXT, R.color.logInButtonNormalBackground) }
-    private val BUTTON_LOADING_TEXT_COLOR           by lazy { ContextCompat.getColor(CONTEXT, R.color.logInButtonLoadingText) }
-    private val BUTTON_LOADING_BACKGROUND_COLOR     by lazy { ContextCompat.getColor(CONTEXT, R.color.logInButtonLoadingBackground) }
-    private val BUTTON_ERROR_TEXT_COLOR             by lazy { ContextCompat.getColor(CONTEXT, R.color.logInButtonErrorText) }
-    private val BUTTON_ERROR_BACKGROUND_COLOR       by lazy { ContextCompat.getColor(CONTEXT, R.color.logInButtonErrorBackground) }
-    private val BUTTON_SUCCESS_TEXT_COLOR           by lazy { ContextCompat.getColor(CONTEXT, R.color.logInButtonSuccessText) }
-    private val BUTTON_SUCCESS_BACKGROUND_COLOR     by lazy { ContextCompat.getColor(CONTEXT, R.color.logInButtonSuccessBackground) }
+    private val BUTTON_NORMAL_TEXT_COLOR        by lazy { ContextCompat.getColor(CONTEXT, R.color.logInButtonNormalText) }
+    private val BUTTON_NORMAL_BACKGROUND_COLOR  by lazy { ContextCompat.getColor(CONTEXT, R.color.logInButtonNormalBackground) }
+    private val BUTTON_LOADING_TEXT_COLOR       by lazy { ContextCompat.getColor(CONTEXT, R.color.logInButtonLoadingText) }
+    private val BUTTON_LOADING_BACKGROUND_COLOR by lazy { ContextCompat.getColor(CONTEXT, R.color.logInButtonLoadingBackground) }
+    private val BUTTON_ERROR_TEXT_COLOR         by lazy { ContextCompat.getColor(CONTEXT, R.color.logInButtonErrorText) }
+    private val BUTTON_ERROR_BACKGROUND_COLOR   by lazy { ContextCompat.getColor(CONTEXT, R.color.logInButtonErrorBackground) }
+    private val BUTTON_SUCCESS_TEXT_COLOR       by lazy { ContextCompat.getColor(CONTEXT, R.color.logInButtonSuccessText) }
+    private val BUTTON_SUCCESS_BACKGROUND_COLOR by lazy { ContextCompat.getColor(CONTEXT, R.color.logInButtonSuccessBackground) }
 
     private val ANIMATION_DURATION_FRAMES: Int = 16
     private val PAUSE_DURATION_FRAMES: Int     = 30
@@ -92,8 +91,6 @@ class LoginActivity : AppCompatActivity() {
             Choreographer.getInstance().postFrameCallback(callback)
         }
     }
-
-
     class GradientButtonAnimation(
             _duration: Int, _functionQueue: ArrayDeque<FramerateSynchronizedFunction>,
             _button: Button, _enabledAtEnd: Boolean,
@@ -183,6 +180,8 @@ class LoginActivity : AppCompatActivity() {
     fun logInButtonOnClick(view: View) {
         logInButton.isEnabled = false
         setButtonStateLoading()
+        val view = this.currentFocus
+
         val username = usernameInput.text.toString()
         val password = passwordInput.text.toString()
 
@@ -203,6 +202,11 @@ class LoginActivity : AppCompatActivity() {
 
             if (loggedIn!!) {
                 setButtonStateSuccess()
+                if (view != null) {
+                    val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
+                    imm.hideSoftInputFromWindow(view.windowToken, 0)
+                }
+
                 val nameParser = RealNameParser(LOGIN_MANAGER.csrftoken!!, LOGIN_MANAGER.sessionid!!, LOGIN_MANAGER.pupilUrl!!)
                 var realName: String? = null
                 for (i in 1..3) {
@@ -214,7 +218,7 @@ class LoginActivity : AppCompatActivity() {
                 LOGIN_MANAGER.writeLoginDataToFiles(username, if (realName == null) username else realName!!)
 
                 GlobalScope.launch {
-                    while (functionQueue.size > 0) { delay(50L) }
+                    while (functionQueue.size > 0) delay(50L)
                     startActivity(Intent(CONTEXT, MainMenuActivity::class.java))
                 }
             } else {
