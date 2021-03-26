@@ -2,6 +2,7 @@ package com.example.journal
 
 import android.content.Context
 import android.content.Intent
+import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.view.Choreographer
 import android.view.View
@@ -14,6 +15,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.*
 import kotlin.math.roundToInt
+
 
 
 fun Color24(hexString32: String): Color24 {
@@ -53,91 +55,120 @@ class LoginActivity : AppCompatActivity() {
     private val BUTTON_ERROR_BACKGROUND_COLOR       by lazy { ContextCompat.getColor(CONTEXT, R.color.logInButtonErrorBackground) }
     private val BUTTON_SUCCESS_TEXT_COLOR           by lazy { ContextCompat.getColor(CONTEXT, R.color.logInButtonSuccessText) }
     private val BUTTON_SUCCESS_BACKGROUND_COLOR     by lazy { ContextCompat.getColor(CONTEXT, R.color.logInButtonSuccessBackground) }
-    private val BUTTON_NORMAL_LOADING_MIDDLE_COLOR  by lazy { ContextCompat.getColor(CONTEXT, R.color.logInButtonNormalLoadingMiddle) }
-    private val BUTTON_LOADING_ERROR_MIDDLE_COLOR   by lazy { ContextCompat.getColor(CONTEXT, R.color.logInButtonLoadingErrorMiddle) }
-    private val BUTTON_LOADING_SUCCESS_MIDDLE_COLOR by lazy { ContextCompat.getColor(CONTEXT, R.color.logInButtonLoadingSuccessMiddle) }
-    private val BUTTON_ERROR_NORMAL_MIDDLE_COLOR    by lazy { ContextCompat.getColor(CONTEXT, R.color.logInButtonErrorNormalMiddle) }
 
     private val ANIMATION_DURATION_FRAMES: Int = 16
-    private val PAUSE_DURATION_FRAMES: Int     = 40
+    private val PAUSE_DURATION_FRAMES: Int     = 30
 
-    private var animationQueue = ArrayDeque<GradientButtonAnimation>()
+    private var functionQueue = ArrayDeque<FramerateSynchronizedFunction>()
 
-    class GradientButtonAnimation(logInButton: Button, animationQueue: ArrayDeque<GradientButtonAnimation>,
-                                  textColorStartInt: Int, bgColorStartInt: Int,
-                                  textColorMiddleInt: Int, bgColorMiddleInt: Int,
-                                  textColorEndInt: Int, bgColorEndInt: Int,
-                                  dur: Int, newText: String, enabledAtEnd: Boolean) {
-        private var framesLeft = dur
-        private val middleOfAnimation = dur / 2
+    interface FramerateSynchronizedFunction {
+        var framesLeft: Int
+        val function: (frameTimeNanos: Long) -> Unit
+        val onFunctionStop: () -> Unit
+        val launchFunction: () -> Unit
+    }
 
-        private var textColor = Color24(Integer.toHexString(textColorStartInt))
-        private var bgColor = Color24(Integer.toHexString(bgColorStartInt))
-        private var textColorMiddle = Color24(Integer.toHexString(textColorMiddleInt))
-        private var bgColorMiddle = Color24(Integer.toHexString(bgColorMiddleInt))
-        private var textColorEnd = Color24(Integer.toHexString(textColorEndInt))
-        private var bgColorEnd = Color24(Integer.toHexString(bgColorEndInt))
+    class AnimationPause(
+            _duration: Int, _functionQueue: ArrayDeque<FramerateSynchronizedFunction>
+    ) : FramerateSynchronizedFunction {
+        override var framesLeft = _duration
 
-        private val rBgEndMiddleDiff = (bgColorEnd.r - bgColorMiddle.r) / middleOfAnimation
-        private val gBgEndMiddleDiff = (bgColorEnd.g - bgColorMiddle.g) / middleOfAnimation
-        private val bBgEndMiddleDiff = (bgColorEnd.b - bgColorMiddle.b) / middleOfAnimation
+        override val function: (frameTimeNanos: Long) -> Unit = {
+            framesLeft--
+        }
 
-        private val rMiddleBgStartDiff = (bgColorMiddle.r - bgColor.r) / middleOfAnimation
-        private val gMiddleBgStartDiff = (bgColorMiddle.g - bgColor.g) / middleOfAnimation
-        private val bMiddleBgStartDiff = (bgColorMiddle.b - bgColor.b) / middleOfAnimation
+        override val onFunctionStop: () -> Unit = {
+            _functionQueue.removeFirst()
+            if (_functionQueue.size > 0) _functionQueue.first.launchFunction()
+        }
 
-        private val rTextEndMiddleDiff = (textColorEnd.r - textColorMiddle.r) / middleOfAnimation
-        private val gTextEndMiddleDiff = (textColorEnd.g - textColorMiddle.g) / middleOfAnimation
-        private val bTextEndMiddleDiff = (textColorEnd.b - textColorMiddle.b) / middleOfAnimation
+        private var callback: (Long) -> Unit = {}
+        override val launchFunction: () -> Unit = {
+            callback = {
+                function(it)
+                framesLeft--
+                if (framesLeft > 0) Choreographer.getInstance().postFrameCallback(callback) else onFunctionStop()
+            }
+            Choreographer.getInstance().postFrameCallback(callback)
+        }
+    }
 
-        private val rMiddleTextStartDiff = (textColorMiddle.r - textColor.r) / middleOfAnimation
-        private val gMiddleTextStartDiff = (textColorMiddle.g - textColor.g) / middleOfAnimation
-        private val bMiddleTextStartDiff = (textColorMiddle.b - textColor.b) / middleOfAnimation
 
-        private var doFrame: (frameTimeNanos: Long) -> Unit = {
+    class GradientButtonAnimation(
+            _duration: Int, _functionQueue: ArrayDeque<FramerateSynchronizedFunction>,
+            _button: Button, _enabledAtEnd: Boolean,
+            _textColorEndInt: Int, _bgColorEndInt: Int, _newText: String
+    ) : FramerateSynchronizedFunction {
+        override var framesLeft = _duration
+        val middleOfAnimation = _duration / 2
+
+        private lateinit var textColor: Color24
+        private lateinit var bgColor: Color24
+        private val textColorEnd = Color24(Integer.toHexString(_textColorEndInt))
+        private val bgColorEnd = Color24(Integer.toHexString(_bgColorEndInt))
+        private val middleColor by lazy {
+            Color24(
+                    bgColor.r + ((bgColorEnd.r - bgColor.r) / 2),
+                    bgColor.g + ((bgColorEnd.g - bgColor.g) / 2),
+                    bgColor.b + ((bgColorEnd.b - bgColor.b) / 2)
+            )
+        }
+
+        private val rBgDiff by lazy { (bgColorEnd.r - bgColor.r) / _duration }
+        private val gBgDiff by lazy { (bgColorEnd.g - bgColor.g) / _duration }
+        private val bBgDiff by lazy { (bgColorEnd.b - bgColor.b) / _duration }
+
+        private val rTextEndMiddleDiff by lazy { (textColorEnd.r - middleColor.r) / middleOfAnimation }
+        private val gTextEndMiddleDiff by lazy { (textColorEnd.g - middleColor.g) / middleOfAnimation }
+        private val bTextEndMiddleDiff by lazy { (textColorEnd.b - middleColor.b) / middleOfAnimation }
+
+        private val rMiddleTextStartDiff by lazy { (middleColor.r - textColor.r) / middleOfAnimation }
+        private val gMiddleTextStartDiff by lazy { (middleColor.g - textColor.g) / middleOfAnimation }
+        private val bMiddleTextStartDiff by lazy { (middleColor.b - textColor.b) / middleOfAnimation }
+
+        override val function: (frameTimeNanos: Long) -> Unit = {
             if (framesLeft > middleOfAnimation) {
                 textColor.r += rMiddleTextStartDiff
                 textColor.g += gMiddleTextStartDiff
                 textColor.b += bMiddleTextStartDiff
-
-                bgColor.r += rMiddleBgStartDiff
-                bgColor.g += gMiddleBgStartDiff
-                bgColor.b += bMiddleBgStartDiff
+                bgColor.r += rBgDiff
+                bgColor.g += gBgDiff
+                bgColor.b += bBgDiff
             } else if (framesLeft == middleOfAnimation) {
-                textColor = textColorMiddle.copy()
-                bgColor = bgColorMiddle.copy()
-                logInButton.setText(newText)
+                textColor = middleColor.copy()
+                bgColor = middleColor.copy()
+                _button.text = _newText
             } else if (framesLeft < middleOfAnimation) {
                 textColor.r += rTextEndMiddleDiff
                 textColor.g += gTextEndMiddleDiff
                 textColor.b += bTextEndMiddleDiff
-
-                bgColor.r += rBgEndMiddleDiff
-                bgColor.g += gBgEndMiddleDiff
-                bgColor.b += bBgEndMiddleDiff
+                bgColor.r += rBgDiff
+                bgColor.g += gBgDiff
+                bgColor.b += bBgDiff
             }
-            logInButton.setBackgroundColor(bgColor.toHexColor32().toLong(16).toInt())
-            logInButton.setTextColor(textColor.toHexColor32().toLong(16).toInt())
-        }
-
-        private var onAnimationStop: () -> Unit = {
-            logInButton.setBackgroundColor(bgColorEnd.toHexColor32().toLong(16).toInt())
-            logInButton.setTextColor(textColorEnd.toHexColor32().toLong(16).toInt())
-            logInButton.isEnabled = enabledAtEnd
-
-            animationQueue.removeFirst()
-            if (animationQueue.size > 0) animationQueue.first.start()
+            _button.setBackgroundColor(bgColor.toHexColor32().toLong(16).toInt())
+            _button.setTextColor(textColor.toHexColor32().toLong(16).toInt())
         }
 
         private var callback: (Long) -> Unit = {}
-
-        fun start() {
+        override val launchFunction: () -> Unit = {
+            textColor = Color24(Integer.toHexString(_button.textColors.defaultColor))
+            bgColor = Color24(Integer.toHexString((_button.background as ColorDrawable).color))
             callback = {
-                doFrame(it)
+                function(it)
                 framesLeft--
-                if (framesLeft > 0) Choreographer.getInstance().postFrameCallback(callback) else onAnimationStop()
+                if (framesLeft > 0) Choreographer.getInstance().postFrameCallback(callback) else onFunctionStop()
             }
             Choreographer.getInstance().postFrameCallback(callback)
+        }
+
+        override val onFunctionStop: () -> Unit = {
+            _button.setBackgroundColor(bgColorEnd.toHexColor32().toLong(16).toInt())
+            _button.setTextColor(textColorEnd.toHexColor32().toLong(16).toInt())
+            _button.isEnabled = _enabledAtEnd
+
+            _functionQueue.removeFirst()
+            if (_functionQueue.size > 0) _functionQueue.first.launchFunction()
         }
     }
 
@@ -151,7 +182,7 @@ class LoginActivity : AppCompatActivity() {
 
     fun logInButtonOnClick(view: View) {
         logInButton.isEnabled = false
-        setButtonStateLoadingAfterNormal()
+        setButtonStateLoading()
         val username = usernameInput.text.toString()
         val password = passwordInput.text.toString()
 
@@ -164,14 +195,14 @@ class LoginActivity : AppCompatActivity() {
                 } catch (e: Exception) {
                     if (i == 3) {
                         println("Login failed, $e")
-                        setButtonStateErrorAfterLoadingThenNormal()
+                        setButtonStateError()
                         return@launch
                     }
                 }
             }
 
             if (loggedIn!!) {
-                setButtonStateSuccessAfterLoading()
+                setButtonStateSuccess()
                 val nameParser = RealNameParser(LOGIN_MANAGER.csrftoken!!, LOGIN_MANAGER.sessionid!!, LOGIN_MANAGER.pupilUrl!!)
                 var realName: String? = null
                 for (i in 1..3) {
@@ -183,11 +214,11 @@ class LoginActivity : AppCompatActivity() {
                 LOGIN_MANAGER.writeLoginDataToFiles(username, if (realName == null) username else realName!!)
 
                 GlobalScope.launch {
-                    while (animationQueue.size > 0) { delay(50L) }
+                    while (functionQueue.size > 0) { delay(50L) }
                     startActivity(Intent(CONTEXT, MainMenuActivity::class.java))
                 }
             } else {
-                setButtonStateWrongAfterLoadingThenNormal()
+                setButtonStateWrongData()
             }
         }
     }
@@ -199,100 +230,67 @@ class LoginActivity : AppCompatActivity() {
         logInButton.isEnabled = true
     }
 
-    private fun setButtonStateLoadingAfterNormal() {
-        animationQueue.addLast(
+    private fun setButtonStateLoading() {
+        functionQueue.addLast(
                 GradientButtonAnimation(
-                        logInButton, animationQueue,
-                        BUTTON_NORMAL_TEXT_COLOR, BUTTON_NORMAL_BACKGROUND_COLOR,
-                        BUTTON_NORMAL_LOADING_MIDDLE_COLOR, BUTTON_NORMAL_LOADING_MIDDLE_COLOR,
-                        BUTTON_LOADING_TEXT_COLOR, BUTTON_LOADING_BACKGROUND_COLOR,
-                        ANIMATION_DURATION_FRAMES, "Вход...", false
+                        ANIMATION_DURATION_FRAMES, functionQueue,
+                        logInButton, false,
+                        BUTTON_LOADING_TEXT_COLOR, BUTTON_LOADING_BACKGROUND_COLOR, "Вход..."
                 )
         )
-        runOnUiThread { if (animationQueue.size == 1) animationQueue.first.start() }
+        runOnUiThread { if (functionQueue.size == 1) functionQueue.first.launchFunction() }
     }
-
-    private fun setButtonStateWrongAfterLoadingThenNormal() {
-        animationQueue.addLast(
+    private fun setButtonStateWrongData() {
+        functionQueue.addLast(
                 GradientButtonAnimation(
-                        logInButton, animationQueue,
-                        BUTTON_LOADING_TEXT_COLOR, BUTTON_LOADING_BACKGROUND_COLOR,
-                        BUTTON_LOADING_ERROR_MIDDLE_COLOR, BUTTON_LOADING_ERROR_MIDDLE_COLOR,
-                        BUTTON_ERROR_TEXT_COLOR, BUTTON_ERROR_BACKGROUND_COLOR,
-                        ANIMATION_DURATION_FRAMES, "Неверный логин/пароль", false
+                        ANIMATION_DURATION_FRAMES, functionQueue,
+                        logInButton, false,
+                        BUTTON_ERROR_TEXT_COLOR, BUTTON_ERROR_BACKGROUND_COLOR, "Неверный логин/пароль"
                 )
         )
-        animationQueue.addLast(
+        functionQueue.addLast(
+                AnimationPause(PAUSE_DURATION_FRAMES * 3 / 2, functionQueue)
+        )
+        functionQueue.addLast(
                 GradientButtonAnimation(
-                        logInButton, animationQueue,
-                        BUTTON_ERROR_TEXT_COLOR, BUTTON_ERROR_BACKGROUND_COLOR,
-                        BUTTON_ERROR_TEXT_COLOR, BUTTON_ERROR_BACKGROUND_COLOR,
-                        BUTTON_ERROR_TEXT_COLOR, BUTTON_ERROR_BACKGROUND_COLOR,
-                        PAUSE_DURATION_FRAMES, "Неверный логин/пароль", false
+                        ANIMATION_DURATION_FRAMES, functionQueue,
+                        logInButton, true,
+                        BUTTON_NORMAL_TEXT_COLOR, BUTTON_NORMAL_BACKGROUND_COLOR, "Войти"
                 )
         )
-        animationQueue.addLast(
-                GradientButtonAnimation(
-                        logInButton, animationQueue,
-                        BUTTON_ERROR_TEXT_COLOR, BUTTON_ERROR_BACKGROUND_COLOR,
-                        BUTTON_ERROR_NORMAL_MIDDLE_COLOR, BUTTON_ERROR_NORMAL_MIDDLE_COLOR,
-                        BUTTON_NORMAL_TEXT_COLOR, BUTTON_NORMAL_BACKGROUND_COLOR,
-                        ANIMATION_DURATION_FRAMES, "Войти", true
-                )
-        )
-        runOnUiThread { if (animationQueue.size == 3) animationQueue.first.start() }
+        runOnUiThread { if (functionQueue.size == 3) functionQueue.first.launchFunction() }
     }
-
-    private fun setButtonStateErrorAfterLoadingThenNormal() {
-        animationQueue.addLast(
+    private fun setButtonStateError() {
+        functionQueue.addLast(
                 GradientButtonAnimation(
-                        logInButton, animationQueue,
-                        BUTTON_LOADING_TEXT_COLOR, BUTTON_LOADING_BACKGROUND_COLOR,
-                        BUTTON_LOADING_ERROR_MIDDLE_COLOR, BUTTON_LOADING_ERROR_MIDDLE_COLOR,
-                        BUTTON_ERROR_TEXT_COLOR, BUTTON_ERROR_BACKGROUND_COLOR,
-                        ANIMATION_DURATION_FRAMES, "Ошибка", false
+                        ANIMATION_DURATION_FRAMES, functionQueue,
+                        logInButton, false,
+                        BUTTON_ERROR_TEXT_COLOR, BUTTON_ERROR_BACKGROUND_COLOR, "Ошибка"
                 )
         )
-        animationQueue.addLast(
+        functionQueue.addLast(
+                AnimationPause(PAUSE_DURATION_FRAMES, functionQueue)
+        )
+        functionQueue.addLast(
                 GradientButtonAnimation(
-                        logInButton, animationQueue,
-                        BUTTON_ERROR_TEXT_COLOR, BUTTON_ERROR_BACKGROUND_COLOR,
-                        BUTTON_ERROR_TEXT_COLOR, BUTTON_ERROR_BACKGROUND_COLOR,
-                        BUTTON_ERROR_TEXT_COLOR, BUTTON_ERROR_BACKGROUND_COLOR,
-                        PAUSE_DURATION_FRAMES / 2, "Ошибка", false
+                        ANIMATION_DURATION_FRAMES, functionQueue,
+                        logInButton, true,
+                        BUTTON_NORMAL_TEXT_COLOR, BUTTON_NORMAL_BACKGROUND_COLOR, "Войти"
                 )
         )
-        animationQueue.addLast(
-                GradientButtonAnimation(
-                        logInButton, animationQueue,
-                        BUTTON_ERROR_TEXT_COLOR, BUTTON_ERROR_BACKGROUND_COLOR,
-                        BUTTON_ERROR_NORMAL_MIDDLE_COLOR, BUTTON_ERROR_NORMAL_MIDDLE_COLOR,
-                        BUTTON_NORMAL_TEXT_COLOR, BUTTON_NORMAL_BACKGROUND_COLOR,
-                        ANIMATION_DURATION_FRAMES, "Войти", true
-                )
-        )
-        runOnUiThread { if (animationQueue.size == 3) animationQueue.first.start() }
+        runOnUiThread { if (functionQueue.size == 3) functionQueue.first.launchFunction() }
     }
-
-    private fun setButtonStateSuccessAfterLoading() {
-        animationQueue.addLast(
+    private fun setButtonStateSuccess() {
+        functionQueue.addLast(
                 GradientButtonAnimation(
-                        logInButton, animationQueue,
-                        BUTTON_LOADING_TEXT_COLOR, BUTTON_LOADING_BACKGROUND_COLOR,
-                        BUTTON_LOADING_SUCCESS_MIDDLE_COLOR, BUTTON_LOADING_SUCCESS_MIDDLE_COLOR,
-                        BUTTON_SUCCESS_TEXT_COLOR, BUTTON_SUCCESS_BACKGROUND_COLOR,
-                        ANIMATION_DURATION_FRAMES, "Успешно", false
+                        ANIMATION_DURATION_FRAMES, functionQueue,
+                        logInButton, false,
+                        BUTTON_SUCCESS_TEXT_COLOR, BUTTON_SUCCESS_BACKGROUND_COLOR, "Успешно"
                 )
         )
-        animationQueue.addLast(
-                GradientButtonAnimation(
-                        logInButton, animationQueue,
-                        BUTTON_SUCCESS_TEXT_COLOR, BUTTON_SUCCESS_BACKGROUND_COLOR,
-                        BUTTON_SUCCESS_TEXT_COLOR, BUTTON_SUCCESS_BACKGROUND_COLOR,
-                        BUTTON_SUCCESS_TEXT_COLOR, BUTTON_SUCCESS_BACKGROUND_COLOR,
-                        PAUSE_DURATION_FRAMES / 2, "Успешно", false
-                )
+        functionQueue.addLast(
+                AnimationPause(PAUSE_DURATION_FRAMES, functionQueue)
         )
-        runOnUiThread { if (animationQueue.size == 2) animationQueue.first.start() }
+        runOnUiThread { if (functionQueue.size == 2) functionQueue.first.launchFunction() }
     }
 }
