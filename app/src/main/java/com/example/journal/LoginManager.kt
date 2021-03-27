@@ -1,7 +1,7 @@
 package com.example.journal
 
-import android.os.Build
 import java.io.DataOutputStream
+import java.io.File
 import java.io.FileWriter
 import java.net.*
 import java.nio.charset.StandardCharsets
@@ -90,7 +90,6 @@ class LoginManager(rootDirectory: String) {
             } catch (npe: NullPointerException) {continue}
         }
 
-
         if (sessionid == null || pupilUrl == null) {
             throw Exception("sessionid or pupilUrl missing")
         } else {
@@ -117,9 +116,7 @@ class LoginManager(rootDirectory: String) {
                     for (str in entry.value) {
                         val cookies = HttpCookie.parse(str)
                         for (cookie in cookies) {
-                            if (cookie.name == "csrftoken") {
-                                return cookie.value
-                            }
+                            if (cookie.name == "csrftoken") return cookie.value
                         }
                     }
                 }
@@ -129,45 +126,30 @@ class LoginManager(rootDirectory: String) {
     }
 
     fun writeLoginDataToFiles(username: String, realName: String) {
-        val foutUsername = FileWriter("$ROOT_DIRECTORY/UserData/username.txt", false)
-        foutUsername.write(username)
-        foutUsername.flush()
-        foutUsername.close()
+        val usersFolder = File("$ROOT_DIRECTORY/users")
+        if (!usersFolder.exists()) usersFolder.mkdir()
 
-        val foutSessionid = FileWriter("$ROOT_DIRECTORY/UserData/sessionid.txt", false)
-        foutSessionid.write(sessionid)
-        foutSessionid.flush()
-        foutSessionid.close()
 
-        val foutUrl = FileWriter("$ROOT_DIRECTORY/UserData/pupilUrl.txt", false)
-        foutUrl.write(pupilUrl)
-        foutUrl.flush()
-        foutUrl.close()
+        val userDataWriter = FileWriter("$ROOT_DIRECTORY/users/$username.txt", false);
 
-        val foutRealName = FileWriter("$ROOT_DIRECTORY/UserData/realName.txt", false)
-        foutRealName.write(realName)
-        foutRealName.flush()
-        foutRealName.close()
+        userDataWriter.write("sessionid: $sessionid" + "\n")
+        userDataWriter.write("pupilUrl: $pupilUrl" + "\n")
+        userDataWriter.write("realName: $realName")
 
-        val foutStatus = FileWriter("$ROOT_DIRECTORY/UserData/status.txt", false)
-        foutStatus.write("YES")
-        foutStatus.flush()
-        foutStatus.close()
+        userDataWriter.flush()
+        userDataWriter.close()
+
+
+        val currentUserWriter = FileWriter("$ROOT_DIRECTORY/current_user.txt", false)
+        currentUserWriter.write(username)
+        currentUserWriter.flush()
+        currentUserWriter.close()
     }
 
     private fun getEncodedPostParameters(username: String, password: String) : String {
         var pp = "csrfmiddlewaretoken=$csrftoken"
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            pp += "&username="
-            pp += URLEncoder.encode(username, StandardCharsets.UTF_8.toString())
-            pp += "&password="
-            pp += URLEncoder.encode(password, StandardCharsets.UTF_8.toString())
-        } else {
-            pp += "&username="
-            pp += URLEncoder.encode(username)
-            pp += "&password="
-            pp += URLEncoder.encode(password)
-        }
+        pp += "&username=${URLEncoder.encode(username, StandardCharsets.UTF_8.toString())}"
+        pp += "&password=${URLEncoder.encode(password, StandardCharsets.UTF_8.toString())}"
         return pp
     }
 }

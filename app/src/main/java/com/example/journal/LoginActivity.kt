@@ -45,8 +45,6 @@ class LoginActivity : AppCompatActivity() {
     private val CONTEXT: Context = this
     private val ROOT_DIRECTORY: String by lazy { filesDir.toString() }
 
-    private val LOGIN_MANAGER by lazy { LoginManager(ROOT_DIRECTORY) }
-
     private val BUTTON_NORMAL_TEXT_COLOR        by lazy { ContextCompat.getColor(CONTEXT, R.color.logInButtonNormalText) }
     private val BUTTON_NORMAL_BACKGROUND_COLOR  by lazy { ContextCompat.getColor(CONTEXT, R.color.logInButtonNormalBackground) }
     private val BUTTON_LOADING_TEXT_COLOR       by lazy { ContextCompat.getColor(CONTEXT, R.color.logInButtonLoadingText) }
@@ -58,6 +56,8 @@ class LoginActivity : AppCompatActivity() {
 
     private val ANIMATION_DURATION_FRAMES: Int = 16
     private val PAUSE_DURATION_FRAMES: Int     = 30
+
+    private val loginManager by lazy { LoginManager(ROOT_DIRECTORY) }
 
     private var functionQueue = ArrayDeque<FramerateSynchronizedFunction>()
 
@@ -198,7 +198,7 @@ class LoginActivity : AppCompatActivity() {
             var loggedIn: Boolean? = null
             for (i in 1..3) {
                 try {
-                    loggedIn = LOGIN_MANAGER.tryToLogin(username, password)
+                    loggedIn = loginManager.tryToLogin(username, password)
                     break
                 } catch (e: Exception) {
                     if (i == 3) {
@@ -216,7 +216,7 @@ class LoginActivity : AppCompatActivity() {
                     imm.hideSoftInputFromWindow(view.windowToken, 0)
                 }
 
-                val nameParser = RealNameParser(LOGIN_MANAGER.csrftoken!!, LOGIN_MANAGER.sessionid!!, LOGIN_MANAGER.pupilUrl!!)
+                val nameParser = RealNameParser(loginManager.csrftoken!!, loginManager.sessionid!!, loginManager.pupilUrl!!)
                 var realName: String? = null
                 for (i in 1..3) {
                     try {
@@ -224,7 +224,7 @@ class LoginActivity : AppCompatActivity() {
                         break
                     } catch (e: Exception) {}
                 }
-                LOGIN_MANAGER.writeLoginDataToFiles(username, if (realName == null) username else realName!!)
+                loginManager.writeLoginDataToFiles(username, if (realName == null) username else realName!!)
 
                 GlobalScope.launch {
                     while (functionQueue.size > 0) delay(50L)

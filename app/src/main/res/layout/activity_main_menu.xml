@@ -2,27 +2,31 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/RootLayout"
+    android:id="@+id/mainRootLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".MainMenuActivity">
 
     <TextView
-        android:id="@+id/UserNameTextView"
+        android:id="@+id/userNameTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/default_user_name"
+        android:text="user_name"
         android:textColor="@color/DarkBlue"
         android:textSize="30sp"
-        app:layout_constraintBottom_toTopOf="@+id/LogOutButton"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.12"
+        tools:ignore="HardcodedText" />
 
-    <ImageView
-        android:id="@+id/LogOutButton"
+    <ImageButton
+        android:id="@+id/logOutButton"
         android:layout_width="60dp"
         android:layout_height="60dp"
+        android:background="@drawable/log_out"
+        android:contentDescription="log out icon"
         android:onClick="logOutButtonOnClick"
         android:scaleType="fitCenter"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -30,107 +34,63 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.3"
-        app:srcCompat="@drawable/log_out" />
-
-    <fragment
-        android:id="@+id/JournalFragment0"
-        android:name="com.example.journal.JournalFragment0"
-        android:layout_width="500px"
-        android:layout_height="1920px"
-        app:layout_constraintEnd_toStartOf="@+id/JournalFragment1"
-        app:layout_constraintTop_toBottomOf="@+id/JournalButton" />
-
-    <fragment
-        android:id="@+id/JournalFragment1"
-        android:name="com.example.journal.JournalFragment1"
-        android:layout_width="match_parent"
-        android:layout_height="1000px"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/JournalButton"
-        app:layout_constraintVertical_bias="0.0" />
-
-    <fragment
-        android:id="@+id/JournalFragment2"
-        android:name="com.example.journal.JournalFragment2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        tools:ignore="HardcodedText" />
 
     <Button
-        android:id="@+id/JournalButton"
-        android:layout_width="0dp"
-        android:layout_height="220px"
-        android:background="@color/journalBackground"
-        android:onClick="journalOnClick"
-        android:stateListAnimator="@null"
-        android:text="@string/journal_button_text"
-        android:textColorLink="@color/journalBackground"
+        android:id="@+id/journalButton"
+        android:layout_width="275dp"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="7dp"
+        android:background="@color/DarkBlue"
+        android:onClick="journalButtonOnClick"
+        android:text="Дневник"
+        android:textColor="@color/DarkYellow"
+        app:layout_constraintBottom_toTopOf="@+id/lpButton"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="1.0"
+        tools:ignore="HardcodedText" />
+
+    <Button
+        android:id="@+id/lpButton"
+        android:layout_width="275dp"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="7dp"
+        android:background="@color/DarkBlue"
+        android:onClick="lpButtonOnClick"
+        android:text="Четверть / год"
+        android:textColor="@color/DarkYellow"
+        app:layout_constraintBottom_toTopOf="@+id/subjectsButton"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="1.0"
+        tools:ignore="HardcodedText" />
+
+    <Button
+        android:id="@+id/subjectsButton"
+        android:layout_width="275dp"
+        android:layout_height="wrap_content"
+        android:background="@color/DarkBlue"
+        android:onClick="subjectsButtonOnClick"
+        android:text="Предметы"
+        android:textColor="@color/DarkYellow"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="1.0" />
+        app:layout_constraintVertical_bias="0.9"
+        tools:ignore="HardcodedText" />
 
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/ControlPanel"
-        android:layout_width="match_parent"
-        android:layout_height="220px"
-        android:background="@color/journalBackground"
-        app:layout_constraintTop_toBottomOf="@+id/JournalFragment1"
-        tools:layout_editor_absoluteX="90dp">
-
-        <ImageButton
-            android:id="@+id/WeekBackButton"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="8dp"
-            android:layout_marginEnd="40dp"
-            android:layout_marginBottom="8dp"
-            android:background="#00FFFFFF"
-            android:onClick="weekBackOnClick"
-            android:paddingStart="16dp"
-            android:scaleType="fitStart"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/UpdateButton"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="0.5"
-            app:srcCompat="@drawable/arrow_left" />
-
-        <ImageView
-            android:id="@+id/UpdateButton"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_marginTop="8dp"
-            android:layout_marginBottom="8dp"
-            android:onClick="updateOnClick"
-            android:scaleType="fitCenter"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintDimensionRatio="w,1:1"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:srcCompat="@drawable/update_icon" />
-
-        <ImageView
-            android:id="@+id/WeekForwardButton"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_marginStart="40dp"
-            android:layout_marginTop="8dp"
-            android:layout_marginEnd="16dp"
-            android:layout_marginBottom="8dp"
-            android:onClick="weekForwardOnClick"
-            android:paddingEnd="16dp"
-            android:scaleType="fitEnd"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/UpdateButton"
-            app:layout_constraintTop_toTopOf="parent"
-            app:srcCompat="@drawable/arrow_right" />
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
-
+    <fragment
+        android:id="@+id/journalFragment"
+        android:name="com.example.journal.JournalFragment"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="visible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 </androidx.constraintlayout.widget.ConstraintLayout>
