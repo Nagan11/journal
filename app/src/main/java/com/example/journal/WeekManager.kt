@@ -1,6 +1,5 @@
 package com.example.journal
 
-import com.example.journal.ViewSets.Day
 import java.io.File
 import java.io.FileReader
 import kotlin.collections.ArrayList
@@ -18,7 +17,7 @@ class WeekManager(private val ROOT_DIRECTORY: String, private val pupilUrl: Stri
     )
 
     var weekLinks = ArrayList<ArrayList<String>>()
-    var weeksLayouts = ArrayList<ArrayList<ArrayList<Day>>>(4)
+    var weeksLayouts = ArrayList<ArrayList<ArrayList<DayView>>>(4)
 
     init {
         checkFolders()
