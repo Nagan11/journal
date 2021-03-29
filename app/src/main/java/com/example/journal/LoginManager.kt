@@ -3,13 +3,16 @@ package com.example.journal
 import java.io.DataOutputStream
 import java.io.File
 import java.io.FileWriter
-import java.net.*
+import java.net.HttpCookie
+import java.net.HttpURLConnection
+import java.net.URL
+import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 
 class LoginManager(rootDirectory: String) {
     private val USER_AGENT = "Mozilla/5.0"
     private val ROOT_DIRECTORY = rootDirectory
-    private val LOGIN_PRIMARY_DOMAIN = "https://schools.by/login"
+    private val PRIMARY_DOMAIN = "https://schools.by"
 
     var csrftoken: String? = null
         private set
@@ -24,53 +27,51 @@ class LoginManager(rootDirectory: String) {
 
         val postParameters = getEncodedPostParameters(username, password)
 
-        val connection = URL(LOGIN_PRIMARY_DOMAIN).openConnection() as HttpURLConnection
+        val con = URL("$PRIMARY_DOMAIN/login").openConnection() as HttpURLConnection
 
-        connection.connectTimeout = 1500
-        connection.readTimeout = 1500
+        con.connectTimeout = 1500
+        con.readTimeout = 1500
+        con.instanceFollowRedirects = false
+        con.useCaches = false
 
-        connection.instanceFollowRedirects = false
-        connection.useCaches = false
-        connection.requestMethod = "POST"
+        con.requestMethod = "POST"
+        con.setRequestProperty("accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+        con.setRequestProperty("accept-encoding", "gzip, deflate, br")
+        con.setRequestProperty("accept-language", "en-gb")
+        con.setRequestProperty("Connection", "keep-alive")
+        con.setRequestProperty("content-length", postParameters.length.toString())
+        con.setRequestProperty("content-type", "application/x-www-form-urlencoded")
+        con.setRequestProperty("cookie", "csrftoken=$csrftoken")
+        con.setRequestProperty("origin", PRIMARY_DOMAIN)
+        con.setRequestProperty("referer", "$PRIMARY_DOMAIN/login")
+        con.setRequestProperty("user-agent", USER_AGENT)
 
-        connection.setRequestProperty("accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
-        connection.setRequestProperty("accept-encoding", "gzip, deflate, br")
-        connection.setRequestProperty("accept-language", "en-gb")
-        connection.setRequestProperty("Connection", "keep-alive")
-        connection.setRequestProperty("content-length", Integer.toString(postParameters!!.length))
-        connection.setRequestProperty("content-type", "application/x-www-form-urlencoded")
-        connection.setRequestProperty("cookie", "csrftoken=$csrftoken;")
-        connection.setRequestProperty("origin", "https://schools.by")
-        connection.setRequestProperty("referer", "https://schools.by/login")
-        connection.setRequestProperty("user-agent", USER_AGENT)
+        con.doInput = true
+        con.doOutput = true
 
-        connection.doInput = true
-        connection.doOutput = true
-
-        val stream = DataOutputStream(connection.outputStream)
+        val stream = DataOutputStream(con.outputStream)
         stream.writeBytes(postParameters)
         stream.flush()
         stream.close()
 
-        connection.getContent()
+        con.getContent()
 
-        val responseCode = connection.responseCode
-        when (responseCode) {
+        when (con.responseCode) {
             302 -> {
                 println("success")
             }
             200 -> {
-                connection.disconnect()
+                con.disconnect()
                 return false
             }
             else -> {
-                connection.disconnect()
+                con.disconnect()
                 throw Exception("Unknown response code")
             }
         }
 
-        val headers = connection.headerFields
-        connection.disconnect()
+        val headers = con.headerFields
+        con.disconnect()
 
         for (entry in headers.entries) {
             try {
@@ -84,10 +85,10 @@ class LoginManager(rootDirectory: String) {
                         }
                     }
                     "Location" -> {
-                        pupilUrl = entry.value.get(0)
+                        pupilUrl = entry.value[0]
                     }
                 }
-            } catch (npe: NullPointerException) {continue}
+            } catch (npe: NullPointerException) { continue }
         }
 
         if (sessionid == null || pupilUrl == null) {
@@ -99,7 +100,7 @@ class LoginManager(rootDirectory: String) {
 
     @Throws(Exception::class)
     private fun newCsrftoken(): String {
-        val con = URL(LOGIN_PRIMARY_DOMAIN).openConnection() as HttpURLConnection
+        val con = URL("$PRIMARY_DOMAIN/login").openConnection() as HttpURLConnection
 
         con.connectTimeout = 1500
         con.readTimeout = 1500
@@ -120,7 +121,7 @@ class LoginManager(rootDirectory: String) {
                         }
                     }
                 }
-            } catch (npe: NullPointerException) {continue}
+            } catch (npe: NullPointerException) { continue }
         }
         throw Exception("csrftoken missing")
     }
@@ -146,10 +147,9 @@ class LoginManager(rootDirectory: String) {
         currentUserWriter.close()
     }
 
-    private fun getEncodedPostParameters(username: String, password: String) : String {
-        var pp = "csrfmiddlewaretoken=$csrftoken"
-        pp += "&username=${URLEncoder.encode(username, StandardCharsets.UTF_8.toString())}"
-        pp += "&password=${URLEncoder.encode(password, StandardCharsets.UTF_8.toString())}"
-        return pp
+    private fun getEncodedPostParameters(username: String, password: String): String {
+        return "csrfmiddlewaretoken=$csrftoken" +
+                "&username=${URLEncoder.encode(username, StandardCharsets.UTF_8.toString())}" +
+                "&password=${URLEncoder.encode(password, StandardCharsets.UTF_8.toString())}"
     }
 }

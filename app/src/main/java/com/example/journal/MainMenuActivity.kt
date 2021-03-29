@@ -24,7 +24,7 @@ class MainMenuActivity : AppCompatActivity() {
     private var userDataParams = HashMap<String, String>()
 
     private val weekManager: WeekManager by lazy { WeekManager(ROOT_DIRECTORY, userDataParams["pupilUrl"]!!) }
-    private val pageParser: PageParser by lazy { PageParser(ROOT_DIRECTORY) }
+    private val pageParser: PageParser by lazy { PageParser() }
     private val curQuarterWeek = CurrentQuarterWeek()
 
     override fun onCreate(savedInstanceState: Bundle?) {
