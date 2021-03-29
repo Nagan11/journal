@@ -21,10 +21,11 @@ class MainMenuActivity : AppCompatActivity() {
             readUser.readLines()[0]
         }
     }
-    private var params = HashMap<String, String>()
+    private var userDataParams = HashMap<String, String>()
 
-    private val weekManager: WeekManager by lazy { WeekManager(ROOT_DIRECTORY) }
+    private val weekManager: WeekManager by lazy { WeekManager(ROOT_DIRECTORY, userDataParams["pupilUrl"]!!) }
     private val pageParser: PageParser by lazy { PageParser(ROOT_DIRECTORY) }
+    private val curQuarterWeek = CurrentQuarterWeek()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,8 +33,12 @@ class MainMenuActivity : AppCompatActivity() {
 
         supportFragmentManager.beginTransaction().hide(journalFragment).commitNow()
 
-        if (currentUser == null) startActivity(Intent(CONTEXT, LoginActivity::class.java)) else readParams()
-        userNameTextView.text = params["realName"]
+        if (currentUser == null) startActivity(Intent(CONTEXT, LoginActivity::class.java)) else readUserDataParams()
+        userNameTextView.text = userDataParams["realName"]
+
+        for (str in weekManager.weekLinks) {
+            println(str)
+        }
     }
 
     override fun onBackPressed() {
@@ -59,8 +64,8 @@ class MainMenuActivity : AppCompatActivity() {
 
     }
 
-    fun readParams() {
-        params.clear()
+    fun readUserDataParams() {
+        userDataParams.clear()
         val paramsReader = FileReader("$ROOT_DIRECTORY/users/$currentUser.txt")
         val paramsList = paramsReader.readLines()
         for (str in paramsList) {
@@ -72,7 +77,7 @@ class MainMenuActivity : AppCompatActivity() {
             it += 2
             while (it < str.length) parameterValue += str[it++]
 
-            params.set(parameterName, parameterValue)
+            userDataParams.set(parameterName, parameterValue)
         }
     }
 }

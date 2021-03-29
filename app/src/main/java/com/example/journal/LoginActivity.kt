@@ -179,8 +179,9 @@ class LoginActivity : AppCompatActivity() {
             if (actionId == EditorInfo.IME_ACTION_DONE) {
                 if (logInButton.isEnabled) logInButtonOnClick(logInButton)
                 true
+            } else {
+                false
             }
-            false
         }
     }
 

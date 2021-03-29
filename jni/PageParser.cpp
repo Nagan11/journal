@@ -1,3 +1,6 @@
+#define CHECK_EOF if (file_input.eof()) return
+#define SET_NEXT_CHAR file_input.get(cur_ch)
+
 #include <jni.h>
 #include "include/com_example_journal_PageParser.h"
 
@@ -20,23 +23,16 @@ std::set<std::string> _unique_lessons;
 void parse_page()
 {
 	std::string tag = "", temp;
-	char current_char;
+	char cur_ch;
 	while (true)
 	{
-		file_input.get(current_char);
-		if (file_input.eof()) return;
+		SET_NEXT_CHAR;
+		CHECK_EOF;
 
-		if (current_char == '<')
+		if (cur_ch == '<')
 		{
-			// read tag
-			tag = "";
-			while (current_char != '>')
-			{
-				tag += current_char;
-				file_input.get(current_char);
-				if (file_input.eof()) return;
-			}
-			tag += current_char;
+			for (tag = ""; cur_ch != '>'; SET_NEXT_CHAR) tag += cur_ch;
+			tag += cur_ch;
 
 			if (tag == "<td class=\"lesson \">" || tag == "<td class=\"lesson lesson_secondary\">")
 			{
@@ -46,26 +42,26 @@ void parse_page()
 				bool open_bracket_is_seen = false;
 				while (true)
 				{
-					file_input.get(current_char);
-					if (file_input.eof()) return;
+					SET_NEXT_CHAR;
+					CHECK_EOF;
 
 					if (temp == "")
 					{
-						while (current_char == ' ' || current_char == '\n')
+						while (cur_ch == ' ' || cur_ch == '\n')
 						{
-							file_input.get(current_char);
-							if (file_input.eof()) return;
+							SET_NEXT_CHAR;
+							CHECK_EOF;
 						}
 					}
 
-					if (current_char == ' ')
+					if (cur_ch == ' ')
 					{
 						if (previous_is_space)
 						{
-							while (current_char == ' ' || current_char == '\n')
+							while (cur_ch == ' ' || cur_ch == '\n')
 							{
-								file_input.get(current_char);
-								if (file_input.eof()) return;
+								SET_NEXT_CHAR;
+								CHECK_EOF;
 							}
 							previous_is_space = false;
 						}
@@ -76,7 +72,7 @@ void parse_page()
 						}
 					}
 
-					if (current_char == '<')
+					if (cur_ch == '<')
 					{
 						if (open_bracket_is_seen)
 						{
@@ -87,20 +83,20 @@ void parse_page()
 						else
 						{
 							open_bracket_is_seen = true;
-							while (current_char != '>')
+							while (cur_ch != '>')
 							{
-								file_input.get(current_char);
-								if (file_input.eof()) return;
+								SET_NEXT_CHAR;
+								CHECK_EOF;
 							}
-							file_input.get(current_char);
-							if (file_input.eof()) return;
+							SET_NEXT_CHAR;
+							CHECK_EOF;
 						}
 					}
 
-					if (current_char != ' ')
+					if (cur_ch != ' ')
 					{
 						previous_is_space = false;
-						temp += current_char;
+						temp += cur_ch;
 					}
 				}
 				temp = "";
@@ -111,45 +107,38 @@ void parse_page()
 				temp = "";
 				while (true)
 				{
-					file_input.get(current_char);
-					if (file_input.eof()) return;
+					SET_NEXT_CHAR;
+					CHECK_EOF;
 
 					if (temp == "")
 					{
-						while (current_char == ' ')
+						while (cur_ch == ' ')
 						{
-							file_input.get(current_char);
-							if (file_input.eof()) return;
+							SET_NEXT_CHAR;
+							CHECK_EOF;
 						}
 					}
 
-					if (current_char == '<')
+					if (cur_ch == '<')
 					{
-						file_input.get(current_char);
-						if (file_input.eof()) return;
-						if (current_char == 's')
+						SET_NEXT_CHAR;
+						CHECK_EOF;
+						if (cur_ch == 's')
 						{
-							while (current_char != '>')
+							while (cur_ch != '>')
 							{
-								file_input.get(current_char);
-								if (file_input.eof()) return;
+								SET_NEXT_CHAR;
+								CHECK_EOF;
 							}
-							file_input.get(current_char);
-							if (file_input.eof()) return;
-							while (current_char != '<')
+							SET_NEXT_CHAR;
+							CHECK_EOF;
+							while (cur_ch != '<')
 							{
-								temp += current_char;
-								file_input.get(current_char);
-								if (file_input.eof()) return;
+								temp += cur_ch;
+								SET_NEXT_CHAR;
+								CHECK_EOF;
 							}
-							if (temp == "")
-							{
-								_marks.push_back("N/A");
-							}
-							else
-							{
-								_marks.push_back(temp);
-							}
+							_marks.push_back(temp == "" ? "N/A" : temp);
 							temp = "";
 							break;
 						}
@@ -166,45 +155,31 @@ void parse_page()
 			{
 				while (true)
 				{
-					file_input.get(current_char);
-					if (file_input.eof()) return;
-					if (current_char == '<')
+					SET_NEXT_CHAR;
+					CHECK_EOF;
+					if (cur_ch == '<')
 					{
-						// read tag
-						tag = "";
-						while (current_char != '>')
-						{
-							tag += current_char;
-							file_input.get(current_char);
-							if (file_input.eof()) return;
-						}
-						tag += current_char;
-						file_input.get(current_char);
-						if (file_input.eof()) return;
+						for (tag = ""; cur_ch != '>'; SET_NEXT_CHAR) tag += cur_ch;
+						tag += cur_ch;
+						SET_NEXT_CHAR;
+						CHECK_EOF;
 					}
 
 					if (tag == "<div class=\"ht-text\">")
 					{
-						while (current_char == ' ' || current_char == '\n')
+						while (cur_ch == ' ' || cur_ch == '\n')
 						{
-							file_input.get(current_char);
-							if (file_input.eof()) return;
+							SET_NEXT_CHAR;
+							CHECK_EOF;
 						}
 
 						std::string ht_text = "";
 						while (true)
 						{
-							if (current_char == '<')
+							if (cur_ch == '<')
 							{
-								// read tag
-								tag = "";
-								while (current_char != '>')
-								{
-									tag += current_char;
-									file_input.get(current_char);
-									if (file_input.eof()) return;
-								}
-								tag += current_char;
+								for (tag = ""; cur_ch != '>'; SET_NEXT_CHAR) tag += cur_ch;
+								tag += cur_ch;
 
 								if (tag == "</div>")
 								{
@@ -214,10 +189,10 @@ void parse_page()
 							}
 							else
 							{
-								ht_text += current_char;
+								ht_text += cur_ch;
 							}
-							file_input.get(current_char);
-							if (file_input.eof()) return;
+							SET_NEXT_CHAR;
+							CHECK_EOF;
 						}
 					}
 					else if (tag == "</td>")
@@ -240,20 +215,14 @@ void format_lessons()
 	std::string res;
 	for (int i = 0; i < _lessons.size(); i++)
 	{
-		if (_lessons[i] == "-")
-		{
-			continue;
-		}
+		if (_lessons[i] == "-") continue;
 		res = "";
 
 		int pos = 0;
 		bool previous_is_space = false;
 		bool previous_is_new_line = false;
 
-		while (_lessons[i][pos] != ' ')
-		{
-			pos++;
-		}
+		while (_lessons[i][pos] != ' ') pos++;
 		pos++;
 
 		while (pos < _lessons[i].size())
@@ -303,15 +272,12 @@ void fout_to_file()
 	{
 		for (int j = 0; j < max_lessons; j++)
 		{
-			int temp = i * max_lessons + j;
-			output += _lessons[temp];
+			int index = i * max_lessons + j;
+			output += _lessons[index];
 			output += ">";
-			output += _marks[temp];
+			output += _marks[index];
 			output += ">";
-			if (_hometasks.size() > 0)
-			{
-				output += _hometasks[temp];
-			}
+			if (_hometasks.size() > 0) output += _hometasks[index];
 			output += ">";
 		}
 	}
@@ -320,10 +286,7 @@ void fout_to_file()
 
 std::string jstring2string(JNIEnv *env, jstring jStr)
 {
-	if (!jStr)
-	{
-		return "";
-	}
+	if (!jStr) return "";
 
 	const jclass stringClass = env->GetObjectClass(jStr);
 	const jmethodID getBytes = env->GetMethodID(stringClass, "getBytes", "(Ljava/lang/String;)[B");
@@ -343,8 +306,6 @@ std::string jstring2string(JNIEnv *env, jstring jStr)
 JNIEXPORT void JNICALL
 Java_com_example_journal_PageParser_parsePage(JNIEnv *env, jobject thisObj, jstring page_path, jstring file_path)
 {
-	std::chrono::time_point<std::chrono::steady_clock> start = std::chrono::steady_clock::now();
-
 	_lessons.clear();
 	_marks.clear();
 	_hometasks.clear();
@@ -357,30 +318,8 @@ Java_com_example_journal_PageParser_parsePage(JNIEnv *env, jobject thisObj, jstr
 	format_lessons();
 	fout_to_file();
 
-	std::chrono::time_point<std::chrono::steady_clock> finish = std::chrono::steady_clock::now();
-	std::chrono::milliseconds elapsed_time = std::chrono::duration_cast<std::chrono::milliseconds>(finish - start);
-
-	file_output << "\n" << elapsed_time.count();
-
 	file_input.close();
 	file_output.close();
 
 	return;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
