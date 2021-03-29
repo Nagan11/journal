@@ -46,6 +46,69 @@ data class Color24(var r: Float, var g: Float, var b: Float) {
     operator fun div(f: Float): Color24         = Color24(r / f, g / f, b / f)
 }
 
+class AnimationPause(
+        duration: Int, functionQueue: ArrayDeque<FramerateSynchronizedFunction>
+) : FramerateSynchronizedFunction() {
+    override var durationInFrames = duration
+    override val function: (frameTimeNanos: Long) -> Unit = {}
+    override val onFunctionStop: () -> Unit = {
+        functionQueue.removeFirst()
+        if (functionQueue.size > 0) functionQueue.first.start()
+    }
+}
+
+class GradientButtonAnimation(
+        duration: Int, functionQueue: ArrayDeque<FramerateSynchronizedFunction>,
+        button: Button, enabledAtEnd: Boolean,
+        textColorEndInt: Int, bgColorEndInt: Int, newText: String
+) : FramerateSynchronizedFunction() {
+    override var durationInFrames = duration
+    private val middleOfAnimation = duration / 2
+
+    private lateinit var textColor: Color24
+    private lateinit var bgColor: Color24
+
+    private val textColorEnd = Color24(Integer.toHexString(textColorEndInt))
+    private val bgColorEnd = Color24(Integer.toHexString(bgColorEndInt))
+    private val middleColor by lazy { bgColor + ((bgColorEnd - bgColor) / 2f) }
+
+    private val bgDiff by lazy {
+        (bgColorEnd - bgColor) / duration.toFloat()
+    }
+    private val textEndMiddleDiff by lazy {
+        (textColorEnd - middleColor) / middleOfAnimation.toFloat()
+    }
+    private val middleTextStartDiff by lazy {
+        (middleColor - textColor) / middleOfAnimation.toFloat()
+    }
+
+    override val onFunctionStart: () -> Unit = {
+        textColor = Color24(Integer.toHexString(button.textColors.defaultColor))
+        bgColor = Color24(Integer.toHexString((button.background as ColorDrawable).color))
+    }
+    override val function: (frameTimeNanos: Long) -> Unit = {
+        when {
+            durationInFrames > middleOfAnimation -> textColor += middleTextStartDiff
+            durationInFrames < middleOfAnimation -> textColor += textEndMiddleDiff
+            else -> {
+                textColor = middleColor.copy()
+                button.text = newText
+            }
+        }
+        bgColor += bgDiff
+        button.setBackgroundColor(bgColor.toHexColor32().toLong(16).toInt())
+        button.setTextColor(textColor.toHexColor32().toLong(16).toInt())
+    }
+    override val onFunctionStop: () -> Unit = {
+        button.setBackgroundColor(bgColorEnd.toHexColor32().toLong(16).toInt())
+        button.setTextColor(textColorEnd.toHexColor32().toLong(16).toInt())
+        button.isEnabled = enabledAtEnd
+
+        functionQueue.removeFirst()
+        if (functionQueue.size > 0) functionQueue.first.start()
+    }
+}
+
 class LoginActivity : AppCompatActivity() {
     private val CONTEXT: Context = this
     private val ROOT_DIRECTORY: String by lazy { filesDir.toString() }
@@ -60,103 +123,11 @@ class LoginActivity : AppCompatActivity() {
     private val BUTTON_SUCCESS_BACKGROUND_COLOR by lazy { ContextCompat.getColor(CONTEXT, R.color.logInButtonSuccessBackground) }
 
     private val ANIMATION_DURATION_FRAMES: Int = 16
-    private val PAUSE_DURATION_FRAMES: Int     = 30
+    private val PAUSE_DURATION_FRAMES: Int     = 20
 
     private val loginManager by lazy { LoginManager(ROOT_DIRECTORY) }
 
     private var functionQueue = ArrayDeque<FramerateSynchronizedFunction>()
-
-    interface FramerateSynchronizedFunction {
-        var framesLeft: Int
-        val function: (frameTimeNanos: Long) -> Unit
-        val onFunctionStop: () -> Unit
-        val launchFunction: () -> Unit
-    }
-
-    class AnimationPause(
-            duration: Int, functionQueue: ArrayDeque<FramerateSynchronizedFunction>
-    ) : FramerateSynchronizedFunction {
-        override var framesLeft = duration
-
-        override val function: (frameTimeNanos: Long) -> Unit = {
-            framesLeft--
-        }
-
-        override val onFunctionStop: () -> Unit = {
-            functionQueue.removeFirst()
-            if (functionQueue.size > 0) functionQueue.first.launchFunction()
-        }
-
-        private var callback: (Long) -> Unit = {}
-        override val launchFunction: () -> Unit = {
-            callback = {
-                function(it)
-                framesLeft--
-                if (framesLeft > 0) Choreographer.getInstance().postFrameCallback(callback) else onFunctionStop()
-            }
-            Choreographer.getInstance().postFrameCallback(callback)
-        }
-    }
-    class GradientButtonAnimation(
-            duration: Int, functionQueue: ArrayDeque<FramerateSynchronizedFunction>,
-            button: Button, enabledAtEnd: Boolean,
-            textColorEndInt: Int, bgColorEndInt: Int, newText: String
-    ) : FramerateSynchronizedFunction {
-        override var framesLeft = duration
-        private val middleOfAnimation = duration / 2
-
-        private lateinit var textColor: Color24
-        private lateinit var bgColor: Color24
-
-        private val textColorEnd = Color24(Integer.toHexString(textColorEndInt))
-        private val bgColorEnd = Color24(Integer.toHexString(bgColorEndInt))
-        private val middleColor by lazy { bgColor + ((bgColorEnd - bgColor) / 2f) }
-
-        private val bgDiff by lazy {
-            (bgColorEnd - bgColor) / duration.toFloat()
-        }
-        private val textEndMiddleDiff by lazy {
-            (textColorEnd - middleColor) / middleOfAnimation.toFloat()
-        }
-        private val middleTextStartDiff by lazy {
-            (middleColor - textColor) / middleOfAnimation.toFloat()
-        }
-
-        override val function: (frameTimeNanos: Long) -> Unit = {
-            when {
-                framesLeft > middleOfAnimation -> textColor += middleTextStartDiff
-                framesLeft < middleOfAnimation -> textColor += textEndMiddleDiff
-                else -> {
-                    textColor = middleColor.copy()
-                    button.text = newText
-                }
-            }
-            bgColor += bgDiff
-            button.setBackgroundColor(bgColor.toHexColor32().toLong(16).toInt())
-            button.setTextColor(textColor.toHexColor32().toLong(16).toInt())
-        }
-
-        private var callback: (Long) -> Unit = {}
-        override val launchFunction: () -> Unit = {
-            textColor = Color24(Integer.toHexString(button.textColors.defaultColor))
-            bgColor = Color24(Integer.toHexString((button.background as ColorDrawable).color))
-            callback = {
-                function(it)
-                framesLeft--
-                if (framesLeft > 0) Choreographer.getInstance().postFrameCallback(callback) else onFunctionStop()
-            }
-            Choreographer.getInstance().postFrameCallback(callback)
-        }
-
-        override val onFunctionStop: () -> Unit = {
-            button.setBackgroundColor(bgColorEnd.toHexColor32().toLong(16).toInt())
-            button.setTextColor(textColorEnd.toHexColor32().toLong(16).toInt())
-            button.isEnabled = enabledAtEnd
-
-            functionQueue.removeFirst()
-            if (functionQueue.size > 0) functionQueue.first.launchFunction()
-        }
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -240,7 +211,7 @@ class LoginActivity : AppCompatActivity() {
                         BUTTON_LOADING_TEXT_COLOR, BUTTON_LOADING_BACKGROUND_COLOR, "Вход..."
                 )
         )
-        runOnUiThread { if (functionQueue.size == 1) functionQueue.first.launchFunction() }
+        runOnUiThread { if (functionQueue.size == 1) functionQueue.first.start() }
     }
     private fun setButtonStateWrongData() {
         functionQueue.addLast(
@@ -260,7 +231,7 @@ class LoginActivity : AppCompatActivity() {
                         BUTTON_NORMAL_TEXT_COLOR, BUTTON_NORMAL_BACKGROUND_COLOR, "Войти"
                 )
         )
-        runOnUiThread { if (functionQueue.size == 3) functionQueue.first.launchFunction() }
+        runOnUiThread { if (functionQueue.size == 3) functionQueue.first.start() }
     }
     private fun setButtonStateError() {
         functionQueue.addLast(
@@ -280,7 +251,7 @@ class LoginActivity : AppCompatActivity() {
                         BUTTON_NORMAL_TEXT_COLOR, BUTTON_NORMAL_BACKGROUND_COLOR, "Войти"
                 )
         )
-        runOnUiThread { if (functionQueue.size == 3) functionQueue.first.launchFunction() }
+        runOnUiThread { if (functionQueue.size == 3) functionQueue.first.start() }
     }
     private fun setButtonStateSuccess() {
         functionQueue.addLast(
@@ -293,6 +264,6 @@ class LoginActivity : AppCompatActivity() {
         functionQueue.addLast(
                 AnimationPause(PAUSE_DURATION_FRAMES, functionQueue)
         )
-        runOnUiThread { if (functionQueue.size == 2) functionQueue.first.launchFunction() }
+        runOnUiThread { if (functionQueue.size == 2) functionQueue.first.start() }
     }
 }
