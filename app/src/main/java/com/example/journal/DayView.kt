@@ -1,5 +1,6 @@
 package com.example.journal
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Color
 import android.view.Gravity
@@ -8,6 +9,7 @@ import android.view.ViewGroup
 import android.widget.TableLayout
 import android.widget.TextView
 
+@SuppressLint("RtlHardcoded")
 class DayView(
         context: Context,
         date: String,
@@ -69,8 +71,6 @@ class DayView(
                     lessons[lastIndex], marks[lastIndex], hometasks[lastIndex],
                     LessonView.LessonType.MIDDLE_LESSON, isLastDay
             ))
-        } else {
-
         }
     }
 }

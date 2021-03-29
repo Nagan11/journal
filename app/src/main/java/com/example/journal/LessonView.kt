@@ -1,5 +1,6 @@
 package com.example.journal
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Color
 import android.view.Gravity
@@ -10,6 +11,7 @@ import android.widget.TableLayout
 import android.widget.TextView
 import androidx.core.content.res.ResourcesCompat
 
+@SuppressLint("RtlHardcoded")
 class LessonView(
         context: Context,
         lessonName: String,

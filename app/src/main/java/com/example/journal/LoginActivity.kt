@@ -39,6 +39,11 @@ data class Color24(var r: Float, var g: Float, var b: Float) {
 
         return s
     }
+
+    operator fun plus(color: Color24): Color24  = Color24(r + color.r, g + color.g, b + color.b)
+    operator fun minus(color: Color24): Color24 = Color24(r - color.r, g - color.g, b - color.b)
+    operator fun times(f: Float): Color24       = Color24(r * f, g * f, b * f)
+    operator fun div(f: Float): Color24         = Color24(r / f, g / f, b / f)
 }
 
 class LoginActivity : AppCompatActivity() {
@@ -69,17 +74,17 @@ class LoginActivity : AppCompatActivity() {
     }
 
     class AnimationPause(
-            _duration: Int, _functionQueue: ArrayDeque<FramerateSynchronizedFunction>
+            duration: Int, functionQueue: ArrayDeque<FramerateSynchronizedFunction>
     ) : FramerateSynchronizedFunction {
-        override var framesLeft = _duration
+        override var framesLeft = duration
 
         override val function: (frameTimeNanos: Long) -> Unit = {
             framesLeft--
         }
 
         override val onFunctionStop: () -> Unit = {
-            _functionQueue.removeFirst()
-            if (_functionQueue.size > 0) _functionQueue.first.launchFunction()
+            functionQueue.removeFirst()
+            if (functionQueue.size > 0) functionQueue.first.launchFunction()
         }
 
         private var callback: (Long) -> Unit = {}
@@ -93,65 +98,48 @@ class LoginActivity : AppCompatActivity() {
         }
     }
     class GradientButtonAnimation(
-            _duration: Int, _functionQueue: ArrayDeque<FramerateSynchronizedFunction>,
-            _button: Button, _enabledAtEnd: Boolean,
-            _textColorEndInt: Int, _bgColorEndInt: Int, _newText: String
+            duration: Int, functionQueue: ArrayDeque<FramerateSynchronizedFunction>,
+            button: Button, enabledAtEnd: Boolean,
+            textColorEndInt: Int, bgColorEndInt: Int, newText: String
     ) : FramerateSynchronizedFunction {
-        override var framesLeft = _duration
-        val middleOfAnimation = _duration / 2
+        override var framesLeft = duration
+        private val middleOfAnimation = duration / 2
 
         private lateinit var textColor: Color24
         private lateinit var bgColor: Color24
-        private val textColorEnd = Color24(Integer.toHexString(_textColorEndInt))
-        private val bgColorEnd = Color24(Integer.toHexString(_bgColorEndInt))
-        private val middleColor by lazy {
-            Color24(
-                    bgColor.r + ((bgColorEnd.r - bgColor.r) / 2),
-                    bgColor.g + ((bgColorEnd.g - bgColor.g) / 2),
-                    bgColor.b + ((bgColorEnd.b - bgColor.b) / 2)
-            )
+
+        private val textColorEnd = Color24(Integer.toHexString(textColorEndInt))
+        private val bgColorEnd = Color24(Integer.toHexString(bgColorEndInt))
+        private val middleColor by lazy { bgColor + ((bgColorEnd - bgColor) / 2f) }
+
+        private val bgDiff by lazy {
+            (bgColorEnd - bgColor) / duration.toFloat()
+        }
+        private val textEndMiddleDiff by lazy {
+            (textColorEnd - middleColor) / middleOfAnimation.toFloat()
+        }
+        private val middleTextStartDiff by lazy {
+            (middleColor - textColor) / middleOfAnimation.toFloat()
         }
 
-        private val rBgDiff by lazy { (bgColorEnd.r - bgColor.r) / _duration }
-        private val gBgDiff by lazy { (bgColorEnd.g - bgColor.g) / _duration }
-        private val bBgDiff by lazy { (bgColorEnd.b - bgColor.b) / _duration }
-
-        private val rTextEndMiddleDiff by lazy { (textColorEnd.r - middleColor.r) / middleOfAnimation }
-        private val gTextEndMiddleDiff by lazy { (textColorEnd.g - middleColor.g) / middleOfAnimation }
-        private val bTextEndMiddleDiff by lazy { (textColorEnd.b - middleColor.b) / middleOfAnimation }
-
-        private val rMiddleTextStartDiff by lazy { (middleColor.r - textColor.r) / middleOfAnimation }
-        private val gMiddleTextStartDiff by lazy { (middleColor.g - textColor.g) / middleOfAnimation }
-        private val bMiddleTextStartDiff by lazy { (middleColor.b - textColor.b) / middleOfAnimation }
-
         override val function: (frameTimeNanos: Long) -> Unit = {
-            if (framesLeft > middleOfAnimation) {
-                textColor.r += rMiddleTextStartDiff
-                textColor.g += gMiddleTextStartDiff
-                textColor.b += bMiddleTextStartDiff
-                bgColor.r += rBgDiff
-                bgColor.g += gBgDiff
-                bgColor.b += bBgDiff
-            } else if (framesLeft == middleOfAnimation) {
-                textColor = middleColor.copy()
-                bgColor = middleColor.copy()
-                _button.text = _newText
-            } else if (framesLeft < middleOfAnimation) {
-                textColor.r += rTextEndMiddleDiff
-                textColor.g += gTextEndMiddleDiff
-                textColor.b += bTextEndMiddleDiff
-                bgColor.r += rBgDiff
-                bgColor.g += gBgDiff
-                bgColor.b += bBgDiff
+            when {
+                framesLeft > middleOfAnimation -> textColor += middleTextStartDiff
+                framesLeft < middleOfAnimation -> textColor += textEndMiddleDiff
+                else -> {
+                    textColor = middleColor.copy()
+                    button.text = newText
+                }
             }
-            _button.setBackgroundColor(bgColor.toHexColor32().toLong(16).toInt())
-            _button.setTextColor(textColor.toHexColor32().toLong(16).toInt())
+            bgColor += bgDiff
+            button.setBackgroundColor(bgColor.toHexColor32().toLong(16).toInt())
+            button.setTextColor(textColor.toHexColor32().toLong(16).toInt())
         }
 
         private var callback: (Long) -> Unit = {}
         override val launchFunction: () -> Unit = {
-            textColor = Color24(Integer.toHexString(_button.textColors.defaultColor))
-            bgColor = Color24(Integer.toHexString((_button.background as ColorDrawable).color))
+            textColor = Color24(Integer.toHexString(button.textColors.defaultColor))
+            bgColor = Color24(Integer.toHexString((button.background as ColorDrawable).color))
             callback = {
                 function(it)
                 framesLeft--
@@ -161,12 +149,12 @@ class LoginActivity : AppCompatActivity() {
         }
 
         override val onFunctionStop: () -> Unit = {
-            _button.setBackgroundColor(bgColorEnd.toHexColor32().toLong(16).toInt())
-            _button.setTextColor(textColorEnd.toHexColor32().toLong(16).toInt())
-            _button.isEnabled = _enabledAtEnd
+            button.setBackgroundColor(bgColorEnd.toHexColor32().toLong(16).toInt())
+            button.setTextColor(textColorEnd.toHexColor32().toLong(16).toInt())
+            button.isEnabled = enabledAtEnd
 
-            _functionQueue.removeFirst()
-            if (_functionQueue.size > 0) _functionQueue.first.launchFunction()
+            functionQueue.removeFirst()
+            if (functionQueue.size > 0) functionQueue.first.launchFunction()
         }
     }
 
