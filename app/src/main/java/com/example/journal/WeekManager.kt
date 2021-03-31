@@ -1,20 +1,12 @@
 package com.example.journal
 
+import android.content.Context
 import java.io.File
 import java.io.FileReader
 import kotlin.collections.ArrayList
 
 class WeekManager(private val ROOT_DIRECTORY: String, private val pupilUrl: String) {
-    private val lessonNames = ArrayList<ArrayList<ArrayList<String>>>()
-    private val marks = ArrayList<ArrayList<ArrayList<String>>>()
-    private val hometasks = ArrayList<ArrayList<ArrayList<String>>>()
     private val weekStates = ArrayList<ArrayList<PageLoadState>>()
-    private val maxLessons = arrayOf(
-            intArrayOf(YearData.AMOUNTS_OF_WEEKS[0]),
-            intArrayOf(YearData.AMOUNTS_OF_WEEKS[1]),
-            intArrayOf(YearData.AMOUNTS_OF_WEEKS[2]),
-            intArrayOf(YearData.AMOUNTS_OF_WEEKS[3])
-    )
 
     var weekLinks = ArrayList<ArrayList<String>>()
     var weeksLayouts = ArrayList<ArrayList<ArrayList<DayView>>>(4)
@@ -25,7 +17,12 @@ class WeekManager(private val ROOT_DIRECTORY: String, private val pupilUrl: Stri
         generateLinks()
     }
 
-    private fun readWeekData(weekPath: String, quarter: Int, week: Int) {
+    fun fillWeek(weekPath: String, quarter: Int, week: Int, context: Context) {
+        val lessonNames = ArrayList<String>()
+        val marks = ArrayList<String>()
+        val hometasks = ArrayList<String>()
+        val maxLessons: Int
+
         val text = FileReader(weekPath).readText()
         var dayCounter = 0
         var temp: String
@@ -33,22 +30,35 @@ class WeekManager(private val ROOT_DIRECTORY: String, private val pupilUrl: Stri
         while (index < text.length) {
             temp = ""
             while (text[index] != '>') temp += text[index++]
-            lessonNames[quarter][week].add(temp)
+            lessonNames.add(temp)
             index++
 
             temp = ""
             while (text[index] != '>') temp += text[index++]
-            marks[quarter][week].add(temp)
+            marks.add(temp)
             index++
 
             temp = ""
             while (text[index] != '>') temp += text[index++]
-            hometasks[quarter][week].add(temp)
+            hometasks.add(temp)
             index++
 
             dayCounter++
         }
-        maxLessons[quarter][week] = dayCounter / 6
+        maxLessons = dayCounter / 6
+
+        val ar = ArrayList<DayView>()
+        index = 0
+        repeat(6)
+        {
+            ar.add(DayView(
+                    context, DateGenerator.DATES[quarter][week][0],
+                    lessonNames, marks, hometasks,
+                    index, index + maxLessons - 1, false
+            ))
+            index += maxLessons
+        }
+        weeksLayouts[quarter][week] = ar.clone() as java.util.ArrayList<DayView>
     }
     fun generateLinks() {
         weekLinks.clear()
@@ -64,9 +74,6 @@ class WeekManager(private val ROOT_DIRECTORY: String, private val pupilUrl: Stri
 
                 weekLinks[i].add(currentLink)
 
-                println("week -> $week, currentDate -> ${currentDate[2]}-${currentDate[1]}-${currentDate[0]}")
-                println(YearData.DAYS_IN_MONTH[currentDate[1]])
-
                 currentDate[2] += 7
                 if (currentDate[2] > YearData.DAYS_IN_MONTH[currentDate[1]]) {
                     currentDate[2] -= YearData.DAYS_IN_MONTH[currentDate[1]++]
@@ -74,21 +81,13 @@ class WeekManager(private val ROOT_DIRECTORY: String, private val pupilUrl: Stri
             }
         }
 
-        var lp: String = "$pupilUrl/dnevnik/last-page"
-        weekLinks.add(ArrayList())
-        weekLinks[4].add(lp)
+        weekLinks.add(arrayListOf("$pupilUrl/dnevnik/last-page"))
     }
     private fun initializeArrayLists() {
         for (i in 0..3) {
-            lessonNames.add(ArrayList())
-            marks.add(ArrayList())
-            hometasks.add(ArrayList())
             weeksLayouts.add(ArrayList())
             weekStates.add(ArrayList())
             for (j in 0 until YearData.AMOUNTS_OF_WEEKS[i]) {
-                lessonNames[i].add(ArrayList())
-                marks[i].add(ArrayList())
-                hometasks[i].add(ArrayList())
                 weeksLayouts[i].add(ArrayList())
                 weekStates[i].add(PageLoadState.DOWNLOADING)
             }

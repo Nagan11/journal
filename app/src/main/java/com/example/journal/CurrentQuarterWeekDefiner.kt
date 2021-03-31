@@ -2,7 +2,7 @@ package com.example.journal
 
 import java.util.*
 
-class CurrentQuarterWeek {
+class CurrentQuarterWeekDefiner {
     var quarter: Int = -1
     var week: Int = -1
 

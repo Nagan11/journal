@@ -7,18 +7,24 @@ import java.net.HttpCookie
 import java.net.HttpURLConnection
 import java.net.URL
 
-class PageDownloader(private val ROOT_DIRECTORY: String, private val sessionid: String) {
+class PageDownloader(
+        private val ROOT_DIRECTORY: String,
+        private val sessionid: String,
+        private val quarter: Int,
+        private val week: Int,
+        private val link: String
+) {
     private val USER_AGENT = "Mozilla/5.0"
     private val PRIMARY_DOMAIN = "https://schools.by"
     private var csrftoken: String? = null
 
-    fun downloadPage(quarterNumber: Int, weekNumber: Int, link: String): Boolean { // 1
+    fun downloadPage(): Boolean { // 1
         var getCodeAttempts = 5
         while (getCodeAttempts-- > 0) {
             try {
                 if (csrftoken == null) csrftoken = newCsrftoken()
                 val pageCode: String = getPageCode(link)
-                val fout = FileWriter("$ROOT_DIRECTORY/pages/q${quarterNumber}w${weekNumber}.html")
+                val fout = FileWriter("$ROOT_DIRECTORY/pages/q${quarter}w${week}.html")
                 fout.write(pageCode)
                 fout.flush()
                 fout.close()

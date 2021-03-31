@@ -14,26 +14,17 @@ class YearData {
                 intArrayOf(2021, 4, 5)
         )
 
-        val MONTH_NAMES = arrayOf(
-                "января", "февраля", "марта", "апреля", "мая", "июня",
-                "июля", "августа", "сентября", "октября", "ноября", "декабря"
-        )
-        val WEEK_DAY_NAMES = arrayOf("Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб")
-
-        val DATES = ArrayList<ArrayList<ArrayList<String>>>()
-
         init {
             fillDaysInMonth()
-            fillDates()
         }
 
-        fun isLeap(year: Int): Boolean {
+        private fun isLeap(year: Int): Boolean {
             if (year % 400 == 0) return true
             if (year % 100 == 0) return false
             if (year % 4 == 0)   return true
             return false
         }
-        fun fillDaysInMonth() {
+        private fun fillDaysInMonth() {
             var secondYear = Calendar.getInstance()[Calendar.YEAR]
             if (Calendar.getInstance()[Calendar.MONTH] > 7) secondYear++
 
@@ -50,27 +41,6 @@ class YearData {
             DAYS_IN_MONTH[11] = 30
             DAYS_IN_MONTH[12] = 31
         }
-        fun fillDates() {
-            for (quarter in 0..3) {
-                val cal = GregorianCalendar(FIRST_MONDAYS[quarter][0], FIRST_MONDAYS[quarter][1] - 1, FIRST_MONDAYS[quarter][2])
-                cal.firstDayOfWeek = Calendar.MONDAY
-                DATES.add(ArrayList())
 
-                for (week in 0 until AMOUNTS_OF_WEEKS[quarter]) {
-                    DATES[quarter].add(ArrayList())
-                    for (k in 0..6) {
-                        var currentDate =
-                                "${cal[Calendar.DAY_OF_MONTH]} " +
-                                "${MONTH_NAMES[cal[Calendar.MONTH]]}, " +
-                                "${cal[Calendar.YEAR]} " +
-                                "(${WEEK_DAY_NAMES[cal[Calendar.DAY_OF_WEEK] - 1]})"
-
-                        DATES[quarter][week].add(currentDate)
-                        cal.roll(Calendar.DAY_OF_WEEK, true)
-                    }
-                    cal.roll(Calendar.WEEK_OF_YEAR, true)
-                }
-            }
-        }
     }
 }

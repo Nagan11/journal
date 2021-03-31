@@ -5,83 +5,11 @@
     android:id="@+id/journalFragmentRootLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/journalBackground"
     android:orientation="vertical"
-    tools:context=".JournalFragment">
+    tools:context=".JournalFragment" >
 
-    <ScrollView
-        android:id="@+id/journalScrollView"
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/journalRecyclerView"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_weight="1">
-
-        <LinearLayout
-            android:id="@+id/journalLayout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_margin="16dp"
-            android:orientation="vertical" />
-    </ScrollView>
-
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/journalControlPanel"
-        android:layout_width="match_parent"
-        android:layout_height="75dp"
-        android:layout_weight="0">
-
-        <ImageButton
-            android:id="@+id/journalLeftButton"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_marginStart="24dp"
-            android:layout_marginTop="6dp"
-            android:layout_marginBottom="6dp"
-            android:background="#00FFFFFF"
-            android:contentDescription="left arrow"
-            android:scaleType="fitStart"
-            android:src="@drawable/arrow_left"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintDimensionRatio="w,1.25:1"
-            app:layout_constraintEnd_toStartOf="@+id/journalUpdateButton"
-            app:layout_constraintHorizontal_bias="0.0"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:ignore="HardcodedText" />
-
-        <ImageButton
-            android:id="@+id/journalUpdateButton"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_marginTop="6dp"
-            android:layout_marginBottom="6dp"
-            android:background="#00FFFFFF"
-            android:contentDescription="update"
-            android:scaleType="fitCenter"
-            android:src="@drawable/update_icon"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintDimensionRatio="1:1"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:ignore="HardcodedText" />
-
-        <ImageButton
-            android:id="@+id/journalRightButton"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_marginTop="6dp"
-            android:layout_marginEnd="24dp"
-            android:layout_marginBottom="6dp"
-            android:background="#00FFFFFF"
-            android:contentDescription="right arrow"
-            android:scaleType="fitEnd"
-            android:src="@drawable/arrow_right"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintDimensionRatio="w,1.25:1"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="1.0"
-            app:layout_constraintStart_toEndOf="@+id/journalUpdateButton"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:ignore="HardcodedText" />
-    </androidx.constraintlayout.widget.ConstraintLayout>
+        android:layout_height="match_parent" />
 </LinearLayout>

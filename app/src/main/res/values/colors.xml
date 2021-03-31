@@ -6,11 +6,12 @@
     <color name="DarkYellow">#FDC500</color>
     <color name="Yellow">#FFD500</color>
 
-    <color name="colorPrimary">#00509D</color>
+    <color name="colorPrimary">#00296B</color>
     <color name="colorPrimaryDark">#00296B</color>
-    <color name="colorAccent">#00509D</color>
+    <color name="colorAccent">#00296B</color>
+    <color name="colorBackground">#FFFFFF</color>
 
-    <color name="logInButtonNormalText">#FDC500</color>
+    <color name="logInButtonNormalText">#FFFFFF</color>
     <color name="logInButtonNormalBackground">#00296B</color>
     <color name="logInButtonLoadingText">#00296B</color>
     <color name="logInButtonLoadingBackground">#FDC500</color>
