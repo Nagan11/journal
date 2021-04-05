@@ -18,14 +18,17 @@ import kotlinx.coroutines.launch
 import java.util.*
 import kotlin.math.roundToInt
 
-fun Color24(hexString32: String): Color24 {
-    return Color24(
-            Integer.parseInt("${hexString32[2]}${hexString32[3]}", 16).toFloat(),
-            Integer.parseInt("${hexString32[4]}${hexString32[5]}", 16).toFloat(),
-            Integer.parseInt("${hexString32[6]}${hexString32[7]}", 16).toFloat()
-    )
-}
 data class Color24(var r: Float, var g: Float, var b: Float) {
+    companion object {
+        fun fromHexString(hexString32: String): Color24 {
+            return Color24(
+                    Integer.parseInt("${hexString32[2]}${hexString32[3]}", 16).toFloat(),
+                    Integer.parseInt("${hexString32[4]}${hexString32[5]}", 16).toFloat(),
+                    Integer.parseInt("${hexString32[6]}${hexString32[7]}", 16).toFloat()
+            )
+        }
+    }
+
     fun toHexColor32(): String {
         var temp: String
         var s = "ff"
@@ -68,8 +71,8 @@ class GradientButtonAnimation(
     private lateinit var textColor: Color24
     private lateinit var bgColor: Color24
 
-    private val textColorEnd = Color24(Integer.toHexString(textColorEndInt))
-    private val bgColorEnd = Color24(Integer.toHexString(bgColorEndInt))
+    private val textColorEnd = Color24.fromHexString(Integer.toHexString(textColorEndInt))
+    private val bgColorEnd = Color24.fromHexString(Integer.toHexString(bgColorEndInt))
     private val middleColor by lazy { bgColor + ((bgColorEnd - bgColor) / 2f) }
 
     private val bgDiff by lazy {
@@ -83,8 +86,8 @@ class GradientButtonAnimation(
     }
 
     override val onFunctionStart: () -> Unit = {
-        textColor = Color24(Integer.toHexString(button.textColors.defaultColor))
-        bgColor = Color24(Integer.toHexString((button.background as ColorDrawable).color))
+        textColor = Color24.fromHexString(Integer.toHexString(button.textColors.defaultColor))
+        bgColor = Color24.fromHexString(Integer.toHexString((button.background as ColorDrawable).color))
     }
     override val function: (frameTimeNanos: Long) -> Unit = {
         when {

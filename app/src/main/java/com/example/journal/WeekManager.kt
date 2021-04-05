@@ -11,6 +11,12 @@ class WeekManager(private val ROOT_DIRECTORY: String, private val pupilUrl: Stri
     var weekLinks = ArrayList<ArrayList<String>>()
     var weeksLayouts = ArrayList<ArrayList<ArrayList<DayView>>>(4)
 
+    // lessonsData[quarter][week][day][lesson]
+    var lessonsData = ArrayList<ArrayList<ArrayList<ArrayList<StructLesson>>>>()
+
+    // datesData[quarter][week][day]
+    var datesData = ArrayList<ArrayList<ArrayList<StructDate>>>()
+
     init {
         checkFolders()
         initializeArrayLists()

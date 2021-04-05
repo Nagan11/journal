@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/rootLayout"
+    android:layout_width="match_parent"
+    android:layout_height="48dp">
+
+    <TextView
+        android:id="@+id/date"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:gravity="left|center_vertical"
+        android:paddingLeft="16dp"
+        android:text="1 Апреля"
+        android:textColor="#FF000000"
+        android:textSize="20sp" />
+
+    <TextView
+        android:id="@+id/weekDay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:gravity="right|center_vertical"
+        android:paddingRight="16dp"
+        android:text="Четверг"
+        android:textColor="@color/DarkBlue"
+        android:textSize="14sp" />
+</LinearLayout>
