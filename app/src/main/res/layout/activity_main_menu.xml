@@ -5,7 +5,7 @@
     android:id="@+id/mainRootLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainMenuActivity">
+    tools:context=".ActivityMainMenu">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/actionBar"
@@ -38,7 +38,7 @@
 
     <fragment
         android:id="@+id/journalFragment"
-        android:name="com.example.journal.JournalFragment"
+        android:name="com.example.journal.FragmentJournal"
         android:layout_width="0dp"
         android:layout_height="0dp"
         app:layout_constraintBottom_toTopOf="@+id/switcher"
@@ -48,7 +48,7 @@
 
     <fragment
         android:id="@+id/lpFragment"
-        android:name="com.example.journal.LastPageFragment"
+        android:name="com.example.journal.FragmentLastPage"
         android:layout_width="0dp"
         android:layout_height="0dp"
         app:layout_constraintBottom_toTopOf="@+id/switcher"
@@ -58,7 +58,7 @@
 
     <fragment
         android:id="@+id/settingsFragment"
-        android:name="com.example.journal.SettingsFragment"
+        android:name="com.example.journal.FragmentSettings"
         android:layout_width="0dp"
         android:layout_height="0dp"
         app:layout_constraintBottom_toTopOf="@+id/switcher"
@@ -86,21 +86,18 @@
             android:id="@+id/journalTab"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:onClick="journalButtonOnClick"
             android:text="Дневник" />
 
         <com.google.android.material.tabs.TabItem
             android:id="@+id/lpTab"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:onClick="lpButtonOnClick"
             android:text="Итоги" />
 
         <com.google.android.material.tabs.TabItem
             android:id="@+id/settingsTab"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:onClick="settingsButtonOnClick"
             android:text="Настройки" />
     </com.google.android.material.tabs.TabLayout>
 

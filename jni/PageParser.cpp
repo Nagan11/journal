@@ -304,7 +304,7 @@ std::string jstring2string(JNIEnv *env, jstring jStr)
 }
 
 JNIEXPORT void JNICALL
-Java_com_example_journal_PageParser_parsePage(JNIEnv *env, jobject thisObj, jstring page_path, jstring file_path)
+Java_com_example_journal_ParserPage_parsePage(JNIEnv *env, jobject thisObj, jstring page_path, jstring file_path)
 {
 	_lessons.clear();
 	_marks.clear();

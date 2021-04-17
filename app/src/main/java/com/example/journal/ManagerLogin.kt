@@ -9,7 +9,7 @@ import java.net.URL
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 
-class LoginManager(rootDirectory: String) {
+class ManagerLogin(rootDirectory: String) {
     private val USER_AGENT = "Mozilla/5.0"
     private val ROOT_DIRECTORY = rootDirectory
     private val PRIMARY_DOMAIN = "https://schools.by"

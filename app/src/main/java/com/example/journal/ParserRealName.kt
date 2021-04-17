@@ -3,7 +3,7 @@ package com.example.journal
 import java.net.HttpURLConnection
 import java.net.URL
 
-class RealNameParser(csrftoken: String, sessionid: String, pupilUrl: String) {
+class ParserRealName(csrftoken: String, sessionid: String, pupilUrl: String) {
     private val USER_AGENT = "Mozilla/5.0"
 
     private val CSRFTOKEN = csrftoken

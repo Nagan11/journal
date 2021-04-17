@@ -3,13 +3,11 @@ package com.example.journal
 import android.content.Context
 import java.io.File
 import java.io.FileReader
-import kotlin.collections.ArrayList
 
-class WeekManager(private val ROOT_DIRECTORY: String, private val pupilUrl: String) {
+class ManagerWeek(private val ROOT_DIRECTORY: String, private val pupilUrl: String) {
     private val weekStates = ArrayList<ArrayList<PageLoadState>>()
 
     var weekLinks = ArrayList<ArrayList<String>>()
-    var weeksLayouts = ArrayList<ArrayList<ArrayList<DayView>>>(4)
 
     // lessonsData[quarter][week][day][lesson]
     var lessonsData = ArrayList<ArrayList<ArrayList<ArrayList<StructLesson>>>>()
@@ -27,7 +25,6 @@ class WeekManager(private val ROOT_DIRECTORY: String, private val pupilUrl: Stri
         val lessonNames = ArrayList<String>()
         val marks = ArrayList<String>()
         val hometasks = ArrayList<String>()
-        val maxLessons: Int
 
         val text = FileReader(weekPath).readText()
         var dayCounter = 0
@@ -51,20 +48,8 @@ class WeekManager(private val ROOT_DIRECTORY: String, private val pupilUrl: Stri
 
             dayCounter++
         }
-        maxLessons = dayCounter / 6
 
-        val ar = ArrayList<DayView>()
-        index = 0
-        repeat(6)
-        {
-            ar.add(DayView(
-                    context, DateGenerator.DATES[quarter][week][0],
-                    lessonNames, marks, hometasks,
-                    index, index + maxLessons - 1, false
-            ))
-            index += maxLessons
-        }
-        weeksLayouts[quarter][week] = ar.clone() as java.util.ArrayList<DayView>
+        val maxLessons = dayCounter / 6
     }
     fun generateLinks() {
         weekLinks.clear()
@@ -91,10 +76,16 @@ class WeekManager(private val ROOT_DIRECTORY: String, private val pupilUrl: Stri
     }
     private fun initializeArrayLists() {
         for (i in 0..3) {
-            weeksLayouts.add(ArrayList())
             weekStates.add(ArrayList())
+            datesData.add(ArrayList())
+            lessonsData.add(ArrayList())
             for (j in 0 until YearData.AMOUNTS_OF_WEEKS[i]) {
-                weeksLayouts[i].add(ArrayList())
+                datesData[i].add(ArrayList())
+                lessonsData[i].add(ArrayList())
+                for (k in 0..5) {
+                    lessonsData[i][j].add(ArrayList())
+                    datesData[i][j].add(StructDate(null))
+                }
                 weekStates[i].add(PageLoadState.DOWNLOADING)
             }
         }

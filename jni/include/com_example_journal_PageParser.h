@@ -12,7 +12,7 @@ extern "C" {
  * Method:    parsePage
  * Signature: (Ljava/lang/String;Ljava/lang/String;)V
  */
-JNIEXPORT void JNICALL Java_com_example_journal_PageParser_parsePage
+JNIEXPORT void JNICALL Java_com_example_journal_ParserPage_parsePage
   (JNIEnv *, jobject, jstring, jstring);
 
 #ifdef __cplusplus

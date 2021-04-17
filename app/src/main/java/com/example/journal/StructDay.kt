@@ -7,22 +7,36 @@ data class StructDay(
         var week: Int,
         var weekDay: Int
 ) {
-    operator fun dec(): StructDay {
-        if (--weekDay < 0) {
-            weekDay = 5
-            if (--week < 0) week = YearData.AMOUNTS_OF_WEEKS[--quarter] - 1
-        }
-        return StructDay(quarter, week, weekDay)
-    }
-    operator fun inc(): StructDay {
-        if (++weekDay > 5) {
-            weekDay = 0
-            if (++week >= YearData.AMOUNTS_OF_WEEKS[quarter]) {
-                quarter++
-                week = 0
+    operator fun minus(amount: Int): StructDay { // positive amount only
+        weekDay -= amount;
+        while (weekDay < 0) {
+            weekDay += 6
+            if (--week < 0) {
+                if (quarter <= 0) {
+                    quarter--
+                    week = 0
+                    weekDay = 0
+                    return this
+                }
+                week = YearData.AMOUNTS_OF_WEEKS[--quarter] - 1
             }
         }
-        return StructDay(quarter, week, weekDay)
+        return this
+    }
+    operator fun plus(amount: Int): StructDay { // positive amount only
+        weekDay += amount
+        while (weekDay > 5) {
+            weekDay -= 6
+            if (++week >= YearData.AMOUNTS_OF_WEEKS[quarter]) {
+                week = 0
+                if (++quarter > 3) {
+                    week = 0
+                    weekDay = 0
+                    return this
+                }
+            }
+        }
+        return this
     }
 
     fun setCurrentDay() {
