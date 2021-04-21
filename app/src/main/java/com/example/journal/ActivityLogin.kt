@@ -1,6 +1,5 @@
 package com.example.journal
 
-import android.content.Context
 import android.content.Intent
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
@@ -112,17 +111,16 @@ class GradientButtonAnimation(
 }
 
 class LoginActivity : AppCompatActivity() {
-    private val CONTEXT: Context = this
     private val ROOT_DIRECTORY: String by lazy { filesDir.toString() }
 
-    private val BUTTON_NORMAL_TEXT_COLOR        by lazy { ContextCompat.getColor(CONTEXT, R.color.logInButtonNormalText) }
-    private val BUTTON_NORMAL_BACKGROUND_COLOR  by lazy { ContextCompat.getColor(CONTEXT, R.color.logInButtonNormalBackground) }
-    private val BUTTON_LOADING_TEXT_COLOR       by lazy { ContextCompat.getColor(CONTEXT, R.color.logInButtonLoadingText) }
-    private val BUTTON_LOADING_BACKGROUND_COLOR by lazy { ContextCompat.getColor(CONTEXT, R.color.logInButtonLoadingBackground) }
-    private val BUTTON_ERROR_TEXT_COLOR         by lazy { ContextCompat.getColor(CONTEXT, R.color.logInButtonErrorText) }
-    private val BUTTON_ERROR_BACKGROUND_COLOR   by lazy { ContextCompat.getColor(CONTEXT, R.color.logInButtonErrorBackground) }
-    private val BUTTON_SUCCESS_TEXT_COLOR       by lazy { ContextCompat.getColor(CONTEXT, R.color.logInButtonSuccessText) }
-    private val BUTTON_SUCCESS_BACKGROUND_COLOR by lazy { ContextCompat.getColor(CONTEXT, R.color.logInButtonSuccessBackground) }
+    private val BUTTON_NORMAL_TEXT_COLOR        by lazy { ContextCompat.getColor(this, R.color.logInButtonNormalText) }
+    private val BUTTON_NORMAL_BACKGROUND_COLOR  by lazy { ContextCompat.getColor(this, R.color.logInButtonNormalBackground) }
+    private val BUTTON_LOADING_TEXT_COLOR       by lazy { ContextCompat.getColor(this, R.color.logInButtonLoadingText) }
+    private val BUTTON_LOADING_BACKGROUND_COLOR by lazy { ContextCompat.getColor(this, R.color.logInButtonLoadingBackground) }
+    private val BUTTON_ERROR_TEXT_COLOR         by lazy { ContextCompat.getColor(this, R.color.logInButtonErrorText) }
+    private val BUTTON_ERROR_BACKGROUND_COLOR   by lazy { ContextCompat.getColor(this, R.color.logInButtonErrorBackground) }
+    private val BUTTON_SUCCESS_TEXT_COLOR       by lazy { ContextCompat.getColor(this, R.color.logInButtonSuccessText) }
+    private val BUTTON_SUCCESS_BACKGROUND_COLOR by lazy { ContextCompat.getColor(this, R.color.logInButtonSuccessBackground) }
 
     private val ANIMATION_DURATION_FRAMES: Int = 16
     private val PAUSE_DURATION_FRAMES: Int     = 20
@@ -190,7 +188,7 @@ class LoginActivity : AppCompatActivity() {
 
                 GlobalScope.launch {
                     while (functionQueue.size > 0) delay(50L)
-                    startActivity(Intent(CONTEXT, ActivityMainMenu::class.java))
+                    startActivity(Intent(this@LoginActivity, ActivityMainMenu::class.java))
                 }
             } else {
                 setButtonStateWrongData()

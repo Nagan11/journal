@@ -1,6 +1,5 @@
 package com.example.journal
 
-import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -9,6 +8,7 @@ import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.tabs.TabLayout
@@ -16,6 +16,8 @@ import com.google.android.material.tabs.TabLayout.OnTabSelectedListener
 import kotlinx.android.synthetic.main.activity_main_menu.*
 import kotlinx.android.synthetic.main.fragment_journal.*
 import kotlinx.android.synthetic.main.fragment_settings.*
+import kotlinx.android.synthetic.main.view_day.*
+import kotlinx.android.synthetic.main.view_lesson.*
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -24,7 +26,6 @@ import java.io.File
 import java.io.FileReader
 
 class ActivityMainMenu : AppCompatActivity() {
-    private val CONTEXT = this
     private val ROOT_DIRECTORY: String by lazy { filesDir.toString() }
 
     private val currentUser: String? by lazy {
@@ -36,28 +37,33 @@ class ActivityMainMenu : AppCompatActivity() {
             readUser.readLines()[0]
         }
     }
-    private var userDataParams = HashMap<String, String>()
+    private var userData = HashMap<String, String>()
 
-    private val managerWeek: ManagerWeek by lazy { ManagerWeek(ROOT_DIRECTORY, userDataParams["pupilUrl"]!!) }
+    private val managerWeek: ManagerWeek by lazy { ManagerWeek(ROOT_DIRECTORY, userData["pupilUrl"]!!) }
     private val parserPage: ParserPage by lazy { ParserPage() }
-    private val pageParserMutex = Mutex()
 
     private val firstDay = StructDay(0, 0, 0)
     private val dayToPos = HashMap<StructDay, Int>()
     private val posToDay = HashMap<Int, StructDay>()
 
-    inner class JournalRecyclerAdapter(context: Context) : RecyclerView.Adapter<JournalRecyclerAdapter.ViewHolder>() {
-        private val context: Context = context
+    private val pageParseMutex = Mutex()
+    private val pageUpdateMutexes = ArrayList<ArrayList<Mutex>>().apply {
+        for (i in 0..3) {
+            add(ArrayList())
+            for (j in 0 until YearData.AMOUNTS_OF_WEEKS[i]) get(i).add(Mutex())
+        }
+    }
 
+    inner class JournalRecyclerAdapter : RecyclerView.Adapter<JournalRecyclerAdapter.ViewHolder>() {
         inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-            val rootLayout: LinearLayout
             val dateView: TextView
             val weekDayNameView: TextView
+            val lessonContainer: LinearLayout
 
             init {
-                rootLayout = itemView.findViewById(R.id.dayRootLayout)
                 dateView = itemView.findViewById(R.id.date)
                 weekDayNameView = itemView.findViewById(R.id.weekDay)
+                lessonContainer = itemView.findViewById(R.id.lessonContainer)
             }
         }
 
@@ -69,33 +75,74 @@ class ActivityMainMenu : AppCompatActivity() {
         }
 
         override fun onBindViewHolder(holder: ViewHolder, pos: Int) {
-            println(pos)
+            holder.lessonContainer.removeAllViews()
             GlobalScope.launch {
                 if (posToDay[pos] == null) {
-                    val a = firstDay.copy()
+                    var day = firstDay.copy()
                     if (pos < Int.MAX_VALUE / 2) {
-                        a.minus(Int.MAX_VALUE / 2 - pos)
+                        day -= Int.MAX_VALUE / 2 - pos
                     } else {
-                        a.plus(pos - Int.MAX_VALUE / 2)
+                        day += pos - Int.MAX_VALUE / 2
                     }
-                    posToDay[pos] = a.copy()
+                    posToDay[pos] = day
+                    dayToPos[day] = pos
                 }
 
-                if (posToDay[pos]!!.quarter < 0 || posToDay[pos]!!.quarter > 3) {
+                val quarter = posToDay[pos]!!.quarter
+                val week = posToDay[pos]!!.week
+                val weekDay = posToDay[pos]!!.weekDay
+
+                if (quarter < 0 || quarter > 3) {
                     holder.dateView.text = ""
                     holder.weekDayNameView.text = ""
                     return@launch
                 }
-
-                if (
-                        managerWeek.datesData[posToDay[pos]!!.quarter]
-                                [posToDay[pos]!!.week][posToDay[pos]!!.weekDay].dateString == ""
-                ) {
-                    managerWeek.datesData[posToDay[pos]!!.quarter][posToDay[pos]!!.week][posToDay[pos]!!.weekDay].yearDay = posToDay[pos]
-                    managerWeek.datesData[posToDay[pos]!!.quarter][posToDay[pos]!!.week][posToDay[pos]!!.weekDay].generateStrings()
+                if (managerWeek.datesData[quarter][week][weekDay].dateString == "") {
+                    managerWeek.datesData[quarter][week][weekDay].yearDay = posToDay[pos]
+                    managerWeek.datesData[quarter][week][weekDay].generateStrings()
                 }
-                holder.dateView.text = managerWeek.datesData[posToDay[pos]!!.quarter][posToDay[pos]!!.week][posToDay[pos]!!.weekDay].dateString
-                holder.weekDayNameView.text = managerWeek.datesData[posToDay[pos]!!.quarter][posToDay[pos]!!.week][posToDay[pos]!!.weekDay].weekDayString
+                holder.dateView.text = managerWeek.datesData[quarter][week][weekDay].dateString
+                holder.weekDayNameView.text = managerWeek.datesData[quarter][week][weekDay].weekDayString
+
+                pageUpdateMutexes[quarter][week].withLock {
+                    if (managerWeek.weekStates[quarter][week] == WeekState.EMPTY) {
+                        managerWeek.weekStates[quarter][week] = WeekState.PROCESSING
+                        updatePage(quarter, week)
+                    }
+                }
+
+                val params = ConstraintLayout.LayoutParams(
+                        ConstraintLayout.LayoutParams.MATCH_PARENT,
+                        ConstraintLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    leftMargin = Calculation.dpToPx(8f, this@ActivityMainMenu)
+                    topMargin = Calculation.dpToPx(8f, this@ActivityMainMenu)
+                    rightMargin = Calculation.dpToPx(8f, this@ActivityMainMenu)
+                    bottomMargin = 0
+                }
+                val lastParams = ConstraintLayout.LayoutParams(
+                        ConstraintLayout.LayoutParams.MATCH_PARENT,
+                        ConstraintLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    leftMargin = Calculation.dpToPx(8f, this@ActivityMainMenu)
+                    topMargin = Calculation.dpToPx(8f, this@ActivityMainMenu)
+                    rightMargin = Calculation.dpToPx(8f, this@ActivityMainMenu)
+                    bottomMargin = Calculation.dpToPx(32f, this@ActivityMainMenu)
+                }
+                runOnUiThread {
+                    for (lessonNumber in 0 until managerWeek.lessonsViews[quarter][week][weekDay].size - 1) {
+                        if (managerWeek.lessonsViews[quarter][week][weekDay][lessonNumber].parent != null) {
+                            (managerWeek.lessonsViews[quarter][week][weekDay][lessonNumber].parent as LinearLayout).removeView(managerWeek.lessonsViews[quarter][week][weekDay][lessonNumber])
+                        }
+                        managerWeek.lessonsViews[quarter][week][weekDay][lessonNumber].layoutParams = params
+                        holder.lessonContainer.addView(managerWeek.lessonsViews[quarter][week][weekDay][lessonNumber])
+                    }
+                    if (managerWeek.lessonsViews[quarter][week][weekDay][managerWeek.lessonsViews[quarter][week][weekDay].size - 1].parent != null) {
+                        (managerWeek.lessonsViews[quarter][week][weekDay][managerWeek.lessonsViews[quarter][week][weekDay].size - 1].parent as LinearLayout).removeView(managerWeek.lessonsViews[quarter][week][weekDay][managerWeek.lessonsViews[quarter][week][weekDay].size - 1])
+                    }
+                    managerWeek.lessonsViews[quarter][week][weekDay][managerWeek.lessonsViews[quarter][week][weekDay].size - 1].layoutParams = lastParams
+                    holder.lessonContainer.addView(managerWeek.lessonsViews[quarter][week][weekDay][managerWeek.lessonsViews[quarter][week][weekDay].size - 1])
+                }
             }
         }
 
@@ -105,32 +152,32 @@ class ActivityMainMenu : AppCompatActivity() {
     suspend fun updatePage(quarter: Int, week: Int) {
         val downloader = PageDownloader(
                 ROOT_DIRECTORY,
-                userDataParams["sessionid"]!!,
+                userData["sessionid"]!!,
                 quarter, week,
                 managerWeek.weekLinks[quarter][week]
         )
         if (!downloader.downloadPage()) return
 
-        pageParserMutex.withLock {
+        pageParseMutex.withLock {
             parserPage.parsePage(
                     "$ROOT_DIRECTORY/pages/q${quarter}w${week}.html",
                     "$ROOT_DIRECTORY/data/q${quarter}w${week}.txt"
             )
         }
 
-        managerWeek.fillWeek("$ROOT_DIRECTORY/data/q${quarter}w${week}.txt", quarter, week, CONTEXT)
+        managerWeek.createLessonViews("$ROOT_DIRECTORY/data/q${quarter}w${week}.txt", quarter, week, layoutInflater)
+        managerWeek.weekStates[quarter][week] = WeekState.READY
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main_menu)
 
-        if (currentUser == null) startActivity(Intent(CONTEXT, LoginActivity::class.java)) else readUserDataParams()
-        userNameTextView.text = userDataParams["realName"]
+        if (currentUser == null) startActivity(Intent(this, LoginActivity::class.java)) else readUserDataParams()
+        userNameTextView.text = userData["realName"]
 
         firstDay.setCurrentDay()
         dayToPos[firstDay.copy()] = Int.MAX_VALUE / 2
-        println("quarter -> ${firstDay.quarter}, week -> ${firstDay.week}, weekDay -> ${firstDay.weekDay}")
 
         supportFragmentManager.beginTransaction()
                 .hide(lpFragment)
@@ -155,23 +202,27 @@ class ActivityMainMenu : AppCompatActivity() {
                 }
             }
 
-            override fun onTabReselected(tab: TabLayout.Tab) {}
+            override fun onTabReselected(tab: TabLayout.Tab) {
+                if (tab.position == 0) {
+                    journalRecyclerView.smoothScrollToPosition(Int.MAX_VALUE / 2)
+                }
+            }
         })
         logOutButton.setOnClickListener {
             File("$ROOT_DIRECTORY/users/$currentUser.txt").delete()
             File("$ROOT_DIRECTORY/current_user.txt").delete()
-            startActivity(Intent(CONTEXT, LoginActivity::class.java))
+            startActivity(Intent(this, LoginActivity::class.java))
         }
 
-        journalRecyclerView.layoutManager = LinearLayoutManager(CONTEXT)
-        journalRecyclerView.adapter = JournalRecyclerAdapter(CONTEXT)
+        journalRecyclerView.layoutManager = LinearLayoutManager(this)
+        journalRecyclerView.adapter = JournalRecyclerAdapter()
         journalRecyclerView.scrollToPosition(Int.MAX_VALUE / 2)
     }
 
     override fun onBackPressed() {}
 
     private fun readUserDataParams() {
-        userDataParams.clear()
+        userData.clear()
         val paramsReader = FileReader("$ROOT_DIRECTORY/users/$currentUser.txt")
         val paramsList = paramsReader.readLines()
         for (str in paramsList) {
@@ -183,7 +234,7 @@ class ActivityMainMenu : AppCompatActivity() {
             it += 2
             while (it < str.length) parameterValue += str[it++]
 
-            userDataParams[parameterName] = parameterValue
+            userData[parameterName] = parameterValue
         }
     }
 }

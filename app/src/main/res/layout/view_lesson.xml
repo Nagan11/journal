@@ -3,10 +3,10 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/lessonLayout"
-    android:layout_width="400dp"
+    android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@drawable/lesson_view_background"
-    android:elevation="5dp">
+    android:background="@drawable/view_lesson_background"
+    android:elevation="2dp">
 
     <TextView
         android:id="@+id/lesson"
@@ -15,7 +15,7 @@
         android:layout_marginStart="16dp"
         android:layout_marginTop="10dp"
         android:layout_marginEnd="8dp"
-        android:text="Математика"
+        android:text="lesson"
         android:textColor="#FF000000"
         android:textSize="16sp"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -31,7 +31,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
         android:layout_marginEnd="16dp"
-        android:text="10"
+        android:text="mark"
         android:textColor="#FF000000"
         android:textSize="16sp"
         app:layout_constraintBottom_toBottomOf="parent"

@@ -21,9 +21,5 @@
     <color name="logInButtonSuccessBackground">#00C800</color>
 
     <color name="journalBackground">#F5F5F5</color>
-    <color name="journalItemBackground">#FFFFFF</color>
-    <color name="journalLessonMarkBackground">#FCFCFC</color>
-    <color name="journalHometaskBackground">#F4F4F4</color>
-    <color name="journalTitleText">#252525</color>
-    <color name="journalMainText">#252525</color>
+    <color name="journalItemBackground">#FCFCFC</color>
 </resources>

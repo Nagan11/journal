@@ -1,19 +1,18 @@
 package com.example.journal
 
-import android.content.Context
+import android.view.LayoutInflater
+import android.widget.TextView
+import androidx.constraintlayout.widget.ConstraintLayout
 import java.io.File
 import java.io.FileReader
 
 class ManagerWeek(private val ROOT_DIRECTORY: String, private val pupilUrl: String) {
-    private val weekStates = ArrayList<ArrayList<PageLoadState>>()
+    val weekLinks = ArrayList<ArrayList<String>>()
 
-    var weekLinks = ArrayList<ArrayList<String>>()
+    val weekStates = ArrayList<ArrayList<WeekState>>()
 
-    // lessonsData[quarter][week][day][lesson]
-    var lessonsData = ArrayList<ArrayList<ArrayList<ArrayList<StructLesson>>>>()
-
-    // datesData[quarter][week][day]
-    var datesData = ArrayList<ArrayList<ArrayList<StructDate>>>()
+    val datesData = ArrayList<ArrayList<ArrayList<StructDate>>>()
+    val lessonsViews = ArrayList<ArrayList<ArrayList<ArrayList<ConstraintLayout>>>>()
 
     init {
         checkFolders()
@@ -21,13 +20,13 @@ class ManagerWeek(private val ROOT_DIRECTORY: String, private val pupilUrl: Stri
         generateLinks()
     }
 
-    fun fillWeek(weekPath: String, quarter: Int, week: Int, context: Context) {
+    fun createLessonViews(weekPath: String, quarter: Int, week: Int, inflater: LayoutInflater) {
         val lessonNames = ArrayList<String>()
         val marks = ArrayList<String>()
         val hometasks = ArrayList<String>()
 
         val text = FileReader(weekPath).readText()
-        var dayCounter = 0
+        var lessonCounter = 0
         var temp: String
         var index = 0
         while (index < text.length) {
@@ -46,16 +45,27 @@ class ManagerWeek(private val ROOT_DIRECTORY: String, private val pupilUrl: Stri
             hometasks.add(temp)
             index++
 
-            dayCounter++
+            lessonCounter++
         }
 
-        val maxLessons = dayCounter / 6
+        var indexShift = 0
+        val maxLessons = lessonCounter / 6
+        for (weekDay in 0..5) {
+            for (i in 0 until maxLessons) {
+//                if (lessonNames[i] == "" || lessonNames[i] == "-") continue
+                lessonsViews[quarter][week][weekDay].add(inflater.inflate(R.layout.view_lesson, null) as ConstraintLayout)
+                lessonsViews[quarter][week][weekDay][i].findViewById<TextView>(R.id.lesson).text = lessonNames[i + indexShift]
+                lessonsViews[quarter][week][weekDay][i].findViewById<TextView>(R.id.mark).text = if (marks[i + indexShift] == "N/A") "" else marks[i + indexShift]
+                lessonsViews[quarter][week][weekDay][i].findViewById<TextView>(R.id.hometask).text = if (hometasks[i + indexShift] == "") "-" else hometasks[i + indexShift]
+            }
+            indexShift += maxLessons
+        }
     }
-    fun generateLinks() {
+    private fun generateLinks() {
         weekLinks.clear()
         repeat(4) { weekLinks.add(ArrayList()) }
         for (i in 0..3) {
-            var currentDate = YearData.FIRST_MONDAYS[i].clone()
+            val currentDate = YearData.FIRST_MONDAYS[i].clone()
             for (week in 0 until YearData.AMOUNTS_OF_WEEKS[i]) {
                 var currentLink = "$pupilUrl/dnevnik/" +
                         "quarter/${YearData.QUARTER_IDS[i]}/" +
@@ -78,15 +88,15 @@ class ManagerWeek(private val ROOT_DIRECTORY: String, private val pupilUrl: Stri
         for (i in 0..3) {
             weekStates.add(ArrayList())
             datesData.add(ArrayList())
-            lessonsData.add(ArrayList())
+            lessonsViews.add(ArrayList())
             for (j in 0 until YearData.AMOUNTS_OF_WEEKS[i]) {
                 datesData[i].add(ArrayList())
-                lessonsData[i].add(ArrayList())
+                lessonsViews[i].add(ArrayList())
                 for (k in 0..5) {
-                    lessonsData[i][j].add(ArrayList())
+                    lessonsViews[i][j].add(ArrayList())
                     datesData[i][j].add(StructDate(null))
                 }
-                weekStates[i].add(PageLoadState.DOWNLOADING)
+                weekStates[i].add(WeekState.EMPTY)
             }
         }
     }
