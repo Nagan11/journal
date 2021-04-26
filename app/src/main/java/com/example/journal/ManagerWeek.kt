@@ -52,11 +52,20 @@ class ManagerWeek(private val ROOT_DIRECTORY: String, private val pupilUrl: Stri
         val maxLessons = lessonCounter / 6
         for (weekDay in 0..5) {
             for (i in 0 until maxLessons) {
-//                if (lessonNames[i] == "" || lessonNames[i] == "-") continue
-                lessonsViews[quarter][week][weekDay].add(inflater.inflate(R.layout.view_lesson, null) as ConstraintLayout)
-                lessonsViews[quarter][week][weekDay][i].findViewById<TextView>(R.id.lesson).text = lessonNames[i + indexShift]
-                lessonsViews[quarter][week][weekDay][i].findViewById<TextView>(R.id.mark).text = if (marks[i + indexShift] == "N/A") "" else marks[i + indexShift]
-                lessonsViews[quarter][week][weekDay][i].findViewById<TextView>(R.id.hometask).text = if (hometasks[i + indexShift] == "") "-" else hometasks[i + indexShift]
+//                if (lessonNames[i + indexShift] == "" || lessonNames[i + indexShift] == "-") {
+//                    println("empty lesson found")
+//                    continue
+//                }
+                lessonsViews[quarter][week][weekDay].let {
+                    it.add(inflater.inflate(R.layout.view_lesson, null) as ConstraintLayout)
+                    it[i].findViewById<TextView>(R.id.lesson).text = lessonNames[i + indexShift]
+                    it[i].findViewById<TextView>(R.id.mark).text =
+                            if (marks[i + indexShift] == "N/A") ""
+                            else marks[i + indexShift]
+                    it[i].findViewById<TextView>(R.id.hometask).text =
+                            if (hometasks[i + indexShift] == "") "-"
+                            else hometasks[i + indexShift]
+                }
             }
             indexShift += maxLessons
         }

@@ -18,9 +18,8 @@ class PageDownloader(
     private val PRIMARY_DOMAIN = "https://schools.by"
     private var csrftoken: String? = null
 
-    fun downloadPage(): Boolean { // 1
-        var getCodeAttempts = 5
-        while (getCodeAttempts-- > 0) {
+    fun downloadPage(): Boolean {
+        while (true) {
             try {
                 if (csrftoken == null) csrftoken = newCsrftoken()
                 val pageCode: String = getPageCode(link)
@@ -33,7 +32,6 @@ class PageDownloader(
                 println("Exception -> $e")
             }
         }
-        return false
     }
 
     @Throws(java.lang.Exception::class)

@@ -16,8 +16,6 @@ import com.google.android.material.tabs.TabLayout.OnTabSelectedListener
 import kotlinx.android.synthetic.main.activity_main_menu.*
 import kotlinx.android.synthetic.main.fragment_journal.*
 import kotlinx.android.synthetic.main.fragment_settings.*
-import kotlinx.android.synthetic.main.view_day.*
-import kotlinx.android.synthetic.main.view_lesson.*
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -55,6 +53,8 @@ class ActivityMainMenu : AppCompatActivity() {
     }
 
     inner class JournalRecyclerAdapter : RecyclerView.Adapter<JournalRecyclerAdapter.ViewHolder>() {
+        val activePostitons = HashSet<Int>()
+
         inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
             val dateView: TextView
             val weekDayNameView: TextView
@@ -68,42 +68,43 @@ class ActivityMainMenu : AppCompatActivity() {
         }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-            val view = LayoutInflater.from(parent.context).inflate(
+            return ViewHolder(LayoutInflater.from(parent.context).inflate(
                     R.layout.view_day, parent, false
-            )
-            return ViewHolder(view)
+            ))
         }
 
         override fun onBindViewHolder(holder: ViewHolder, pos: Int) {
-            holder.lessonContainer.removeAllViews()
+            println("position -> ${pos - Int.MAX_VALUE / 2}")
+            activePostitons.add(pos)
+            if (posToDay[pos] == null) {
+                var day = firstDay.copy()
+                if (pos < Int.MAX_VALUE / 2) {
+                    day -= Int.MAX_VALUE / 2 - pos
+                } else {
+                    day += pos - Int.MAX_VALUE / 2
+                }
+                posToDay[pos] = day
+                dayToPos[day] = pos
+            }
+
+            val quarter = posToDay[pos]!!.quarter
+            val week = posToDay[pos]!!.week
+            val weekDay = posToDay[pos]!!.weekDay
+
+            if (quarter < 0 || quarter > 3) {
+                holder.dateView.text = ""
+                holder.weekDayNameView.text = ""
+                return
+            }
+
+            if (managerWeek.datesData[quarter][week][weekDay].dateString == "") {
+                managerWeek.datesData[quarter][week][weekDay].yearDay = posToDay[pos]
+                managerWeek.datesData[quarter][week][weekDay].generateStrings()
+            }
+            holder.dateView.text = managerWeek.datesData[quarter][week][weekDay].dateString
+            holder.weekDayNameView.text = managerWeek.datesData[quarter][week][weekDay].weekDayString
+
             GlobalScope.launch {
-                if (posToDay[pos] == null) {
-                    var day = firstDay.copy()
-                    if (pos < Int.MAX_VALUE / 2) {
-                        day -= Int.MAX_VALUE / 2 - pos
-                    } else {
-                        day += pos - Int.MAX_VALUE / 2
-                    }
-                    posToDay[pos] = day
-                    dayToPos[day] = pos
-                }
-
-                val quarter = posToDay[pos]!!.quarter
-                val week = posToDay[pos]!!.week
-                val weekDay = posToDay[pos]!!.weekDay
-
-                if (quarter < 0 || quarter > 3) {
-                    holder.dateView.text = ""
-                    holder.weekDayNameView.text = ""
-                    return@launch
-                }
-                if (managerWeek.datesData[quarter][week][weekDay].dateString == "") {
-                    managerWeek.datesData[quarter][week][weekDay].yearDay = posToDay[pos]
-                    managerWeek.datesData[quarter][week][weekDay].generateStrings()
-                }
-                holder.dateView.text = managerWeek.datesData[quarter][week][weekDay].dateString
-                holder.weekDayNameView.text = managerWeek.datesData[quarter][week][weekDay].weekDayString
-
                 pageUpdateMutexes[quarter][week].withLock {
                     if (managerWeek.weekStates[quarter][week] == WeekState.EMPTY) {
                         managerWeek.weekStates[quarter][week] = WeekState.PROCESSING
@@ -120,30 +121,32 @@ class ActivityMainMenu : AppCompatActivity() {
                     rightMargin = Calculation.dpToPx(8f, this@ActivityMainMenu)
                     bottomMargin = 0
                 }
-                val lastParams = ConstraintLayout.LayoutParams(
-                        ConstraintLayout.LayoutParams.MATCH_PARENT,
-                        ConstraintLayout.LayoutParams.WRAP_CONTENT
-                ).apply {
-                    leftMargin = Calculation.dpToPx(8f, this@ActivityMainMenu)
-                    topMargin = Calculation.dpToPx(8f, this@ActivityMainMenu)
-                    rightMargin = Calculation.dpToPx(8f, this@ActivityMainMenu)
-                    bottomMargin = Calculation.dpToPx(32f, this@ActivityMainMenu)
-                }
-                runOnUiThread {
-                    for (lessonNumber in 0 until managerWeek.lessonsViews[quarter][week][weekDay].size - 1) {
-                        if (managerWeek.lessonsViews[quarter][week][weekDay][lessonNumber].parent != null) {
-                            (managerWeek.lessonsViews[quarter][week][weekDay][lessonNumber].parent as LinearLayout).removeView(managerWeek.lessonsViews[quarter][week][weekDay][lessonNumber])
+
+                if (activePostitons.contains(pos)) {
+                    runOnUiThread {
+                        holder.lessonContainer.removeAllViews()
+                        for (view in managerWeek.lessonsViews[quarter][week][weekDay]) {
+                            if (view.parent != null) (view.parent as LinearLayout).removeView(view)
+                            view.layoutParams = params
+                            holder.lessonContainer.addView(view)
                         }
-                        managerWeek.lessonsViews[quarter][week][weekDay][lessonNumber].layoutParams = params
-                        holder.lessonContainer.addView(managerWeek.lessonsViews[quarter][week][weekDay][lessonNumber])
+                        if (managerWeek.lessonsViews[quarter][week][weekDay].size > 0) {
+                            managerWeek.lessonsViews[quarter][week][weekDay][managerWeek.lessonsViews[quarter][week][weekDay].size - 1].let {
+                                if (it.parent != null) (it.parent as LinearLayout).removeView(it)
+                                it.layoutParams = params.apply { bottomMargin = Calculation.dpToPx(32f, this@ActivityMainMenu) }
+                                holder.lessonContainer.addView(it)
+                            }
+                        }
                     }
-                    if (managerWeek.lessonsViews[quarter][week][weekDay][managerWeek.lessonsViews[quarter][week][weekDay].size - 1].parent != null) {
-                        (managerWeek.lessonsViews[quarter][week][weekDay][managerWeek.lessonsViews[quarter][week][weekDay].size - 1].parent as LinearLayout).removeView(managerWeek.lessonsViews[quarter][week][weekDay][managerWeek.lessonsViews[quarter][week][weekDay].size - 1])
-                    }
-                    managerWeek.lessonsViews[quarter][week][weekDay][managerWeek.lessonsViews[quarter][week][weekDay].size - 1].layoutParams = lastParams
-                    holder.lessonContainer.addView(managerWeek.lessonsViews[quarter][week][weekDay][managerWeek.lessonsViews[quarter][week][weekDay].size - 1])
                 }
             }
+        }
+
+        override fun onViewRecycled(holder: ViewHolder) {
+            super.onViewRecycled(holder)
+            holder.lessonContainer.removeAllViews()
+            println("layout removed from ${holder.adapterPosition}")
+            activePostitons.remove(holder.adapterPosition)
         }
 
         override fun getItemCount(): Int = Int.MAX_VALUE
@@ -204,7 +207,7 @@ class ActivityMainMenu : AppCompatActivity() {
 
             override fun onTabReselected(tab: TabLayout.Tab) {
                 if (tab.position == 0) {
-                    journalRecyclerView.smoothScrollToPosition(Int.MAX_VALUE / 2)
+                    journalRecyclerView.scrollToPosition(Int.MAX_VALUE / 2)
                 }
             }
         })

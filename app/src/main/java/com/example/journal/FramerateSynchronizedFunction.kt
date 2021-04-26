@@ -14,7 +14,8 @@ abstract class FramerateSynchronizedFunction {
         callback = {
             function(it)
             durationInFrames--
-            if (durationInFrames > 0) Choreographer.getInstance().postFrameCallback(callback) else onFunctionStop()
+            if (durationInFrames > 0) Choreographer.getInstance().postFrameCallback(callback)
+            else onFunctionStop()
         }
         Choreographer.getInstance().postFrameCallback(callback)
     }
