@@ -9,7 +9,24 @@ data class StructDay(
         var week: Int,
         var weekDay: Int
 ) {
+    operator fun plus(amount: Int): StructDay { // positive amount only
+        if (amount < 0) return this.minus(-amount)
+        weekDay += amount
+        while (weekDay > 5) {
+            weekDay -= 6
+            if (++week >= AMOUNTS_OF_WEEKS[quarter]) {
+                week = 0
+                if (++quarter > 3) {
+                    week = 0
+                    weekDay = 0
+                    return this
+                }
+            }
+        }
+        return this
+    }
     operator fun minus(amount: Int): StructDay { // positive amount only
+        if (amount < 0) return this.plus(-amount)
         weekDay -= amount;
         while (weekDay < 0) {
             weekDay += 6
@@ -21,21 +38,6 @@ data class StructDay(
                     return this
                 }
                 week = AMOUNTS_OF_WEEKS[--quarter] - 1
-            }
-        }
-        return this
-    }
-    operator fun plus(amount: Int): StructDay { // positive amount only
-        weekDay += amount
-        while (weekDay > 5) {
-            weekDay -= 6
-            if (++week >= AMOUNTS_OF_WEEKS[quarter]) {
-                week = 0
-                if (++quarter > 3) {
-                    week = 0
-                    weekDay = 0
-                    return this
-                }
             }
         }
         return this

@@ -76,12 +76,7 @@ class ActivityMainMenu : AppCompatActivity() {
             println("position -> ${pos - Int.MAX_VALUE / 2}")
             activePostitons.add(pos)
             if (posToDay[pos] == null) {
-                var day = firstDay.copy()
-                if (pos < Int.MAX_VALUE / 2) {
-                    day -= Int.MAX_VALUE / 2 - pos
-                } else {
-                    day += pos - Int.MAX_VALUE / 2
-                }
+                val day = firstDay.copy().apply { plus(pos - Int.MAX_VALUE / 2) }
                 posToDay[pos] = day
                 dayToPos[day] = pos
             }
@@ -189,7 +184,9 @@ class ActivityMainMenu : AppCompatActivity() {
 
             override fun onTabReselected(tab: TabLayout.Tab) {
                 if (tab.position == 0) {
-                    journalRecyclerView.scrollToPosition(Int.MAX_VALUE / 2)
+                    journalRecyclerView.stopScroll()
+                    (journalRecyclerView.layoutManager as LinearLayoutManager?)
+                            ?.scrollToPositionWithOffset(Int.MAX_VALUE / 2, 0)
                 }
             }
         })
