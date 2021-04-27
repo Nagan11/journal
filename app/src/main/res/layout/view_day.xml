@@ -20,6 +20,7 @@
         android:layout_marginLeft="0dp"
         android:layout_marginTop="0dp"
         android:layout_marginRight="0dp"
+        android:layout_marginBottom="4dp"
         android:background="@color/journalItemBackground"
         android:elevation="4dp">
 
@@ -30,6 +31,7 @@
             android:layout_weight="1"
             android:gravity="left|center_vertical"
             android:paddingLeft="16dp"
+            android:paddingRight="0dp"
             android:textColor="#FF000000"
             android:textSize="20sp" />
 
@@ -39,17 +41,11 @@
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:gravity="right|center_vertical"
+            android:paddingLeft="0dp"
             android:paddingRight="16dp"
             android:textColor="@color/DarkBlue"
             android:textSize="14sp" />
 
     </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/lessonContainer"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@color/journalBackground"
-        android:orientation="vertical"></LinearLayout>
 
 </LinearLayout>

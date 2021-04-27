@@ -8,7 +8,6 @@ import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.tabs.TabLayout
@@ -37,7 +36,7 @@ class ActivityMainMenu : AppCompatActivity() {
     }
     private var userData = HashMap<String, String>()
 
-    private val managerWeek: ManagerWeek by lazy { ManagerWeek(ROOT_DIRECTORY, userData["pupilUrl"]!!) }
+    private val managerWeek: ManagerWeek by lazy { ManagerWeek(ROOT_DIRECTORY, userData["pupilUrl"]!!, this) }
     private val parserPage: ParserPage by lazy { ParserPage() }
 
     private val firstDay = StructDay(0, 0, 0)
@@ -58,12 +57,12 @@ class ActivityMainMenu : AppCompatActivity() {
         inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
             val dateView: TextView
             val weekDayNameView: TextView
-            val lessonContainer: LinearLayout
+            val dayRootLayout: LinearLayout
 
             init {
                 dateView = itemView.findViewById(R.id.date)
                 weekDayNameView = itemView.findViewById(R.id.weekDay)
-                lessonContainer = itemView.findViewById(R.id.lessonContainer)
+                dayRootLayout = itemView.findViewById(R.id.dayRootLayout)
             }
         }
 
@@ -112,29 +111,13 @@ class ActivityMainMenu : AppCompatActivity() {
                     }
                 }
 
-                val params = ConstraintLayout.LayoutParams(
-                        ConstraintLayout.LayoutParams.MATCH_PARENT,
-                        ConstraintLayout.LayoutParams.WRAP_CONTENT
-                ).apply {
-                    leftMargin = Calculation.dpToPx(8f, this@ActivityMainMenu)
-                    topMargin = Calculation.dpToPx(8f, this@ActivityMainMenu)
-                    rightMargin = Calculation.dpToPx(8f, this@ActivityMainMenu)
-                    bottomMargin = 0
-                }
-
                 if (activePostitons.contains(pos)) {
                     runOnUiThread {
-                        holder.lessonContainer.removeAllViews()
-                        for (view in managerWeek.lessonsViews[quarter][week][weekDay]) {
-                            if (view.parent != null) (view.parent as LinearLayout).removeView(view)
-                            view.layoutParams = params
-                            holder.lessonContainer.addView(view)
-                        }
-                        if (managerWeek.lessonsViews[quarter][week][weekDay].size > 0) {
-                            managerWeek.lessonsViews[quarter][week][weekDay][managerWeek.lessonsViews[quarter][week][weekDay].size - 1].let {
+                        while (holder.dayRootLayout.childCount > 1) holder.dayRootLayout.removeViewAt(holder.dayRootLayout.childCount - 1)
+                        for (i in 0 until managerWeek.lessonsViews[quarter][week][weekDay].size) {
+                            managerWeek.lessonsViews[quarter][week][weekDay][i].let {
                                 if (it.parent != null) (it.parent as LinearLayout).removeView(it)
-                                it.layoutParams = params.apply { bottomMargin = Calculation.dpToPx(32f, this@ActivityMainMenu) }
-                                holder.lessonContainer.addView(it)
+                                holder.dayRootLayout.addView(it)
                             }
                         }
                     }
@@ -144,8 +127,7 @@ class ActivityMainMenu : AppCompatActivity() {
 
         override fun onViewRecycled(holder: ViewHolder) {
             super.onViewRecycled(holder)
-            holder.lessonContainer.removeAllViews()
-            println("layout removed from ${holder.adapterPosition}")
+            while (holder.dayRootLayout.childCount > 1) holder.dayRootLayout.removeViewAt(holder.dayRootLayout.childCount - 1)
             activePostitons.remove(holder.adapterPosition)
         }
 
