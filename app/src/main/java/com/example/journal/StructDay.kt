@@ -9,7 +9,7 @@ data class StructDay(
         var week: Int,
         var weekDay: Int
 ) {
-    operator fun plus(amount: Int): StructDay { // positive amount only
+    operator fun plus(amount: Int): StructDay {
         if (amount < 0) return this.minus(-amount)
         weekDay += amount
         while (weekDay > 5) {
@@ -25,7 +25,7 @@ data class StructDay(
         }
         return this
     }
-    operator fun minus(amount: Int): StructDay { // positive amount only
+    operator fun minus(amount: Int): StructDay {
         if (amount < 0) return this.plus(-amount)
         weekDay -= amount;
         while (weekDay < 0) {
@@ -42,9 +42,34 @@ data class StructDay(
         }
         return this
     }
+    operator fun inc(): StructDay {
+        return this.plus(1)
+    }
+    operator fun dec(): StructDay {
+        return this.minus(1)
+    }
+    operator fun compareTo(day: StructDay): Int {
+        return when {
+            this.quarter > day.quarter -> 1
+            this.quarter < day.quarter -> -1
+            else -> {
+                when {
+                    this.week > day.week -> 1
+                    this.week < day.week -> -1
+                    else -> {
+                        when {
+                            this.weekDay > day.weekDay -> 1
+                            this.weekDay < day.weekDay -> -1
+                            else -> 0
+                        }
+                    }
+                }
+            }
+        }
+    }
 
-    fun setCurrentDay() {
-        val currentCalendar = GregorianCalendar()
+    fun setCurrentDay() { setDayWithCalendar(GregorianCalendar()) }
+    fun setDayWithCalendar(currentCalendar: GregorianCalendar) {
         currentCalendar.firstDayOfWeek = Calendar.MONDAY
         this.weekDay =
                 if (currentCalendar[Calendar.DAY_OF_WEEK] == Calendar.SUNDAY) 0
@@ -73,9 +98,9 @@ data class StructDay(
         if (currentCalendar[Calendar.YEAR] == FIRST_MONDAYS[0][0]) {
             if (
                     currentCalendar[Calendar.MONTH] < FIRST_MONDAYS[0][1] - 1 || (
-                           currentCalendar[Calendar.MONTH] == FIRST_MONDAYS[0][1] - 1 &&
-                           currentCalendar[Calendar.DAY_OF_MONTH] <= FIRST_MONDAYS[0][2]
-                    )
+                            currentCalendar[Calendar.MONTH] == FIRST_MONDAYS[0][1] - 1 &&
+                                    currentCalendar[Calendar.DAY_OF_MONTH] <= FIRST_MONDAYS[0][2]
+                            )
             ) {
                 this.quarter = 0
                 this.week    = 0
@@ -119,24 +144,12 @@ data class StructDay(
             if (
                     currentCalendar[Calendar.MONTH] < FIRST_MONDAYS[2][1] - 1 || (
                             currentCalendar[Calendar.MONTH] == FIRST_MONDAYS[2][1] - 1 &&
-                            currentCalendar[Calendar.DAY_OF_MONTH] <= FIRST_MONDAYS[2][2]
-                    )
+                                    currentCalendar[Calendar.DAY_OF_MONTH] <= FIRST_MONDAYS[2][2]
+                            )
             ) {
                 this.quarter = 2
                 this.week = 0
                 this.weekDay = 0
-                return
-            }
-
-            if (
-                    currentCalendar[Calendar.MONTH] > FIRST_MONDAYS[3][1] - 1 || (
-                            currentCalendar[Calendar.MONTH] == FIRST_MONDAYS[3][1] - 1 &&
-                            currentCalendar[Calendar.DAY_OF_MONTH] <= FIRST_MONDAYS[3][2]
-                    )
-            ) {
-                this.quarter = 3
-                this.week    = AMOUNTS_OF_WEEKS[3] - 1
-                this.weekDay = 5
                 return
             }
 
