@@ -15,6 +15,7 @@ import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayout.OnTabSelectedListener
 import kotlinx.android.synthetic.main.activity_main_menu.*
 import kotlinx.android.synthetic.main.fragment_journal.*
+import kotlinx.android.synthetic.main.fragment_last_page.*
 import kotlinx.android.synthetic.main.fragment_settings.*
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -164,6 +165,7 @@ class ActivityMainMenu : AppCompatActivity() {
 
         override fun onViewRecycled(holder: ViewHolder) {
             super.onViewRecycled(holder)
+            println("${holder.adapterPosition - Int.MAX_VALUE / 2} recycled")
             while (holder.dayRootLayout.childCount > 1) holder.dayRootLayout.removeViewAt(holder.dayRootLayout.childCount - 1)
             activePostitons.remove(holder.adapterPosition)
         }
@@ -178,8 +180,8 @@ class ActivityMainMenu : AppCompatActivity() {
                 quarter, week,
                 managerWeek.weekLinks[quarter][week]
         )
-        if (!downloader.downloadPage()) return
 
+        if (!downloader.downloadPage()) return
         pageParseMutex.withLock {
             parserPage.parsePage(
                     "$ROOT_DIRECTORY/pages/q${quarter}w${week}.html",
@@ -189,6 +191,45 @@ class ActivityMainMenu : AppCompatActivity() {
 
         managerWeek.createLessonViews("$ROOT_DIRECTORY/data/q${quarter}w${week}.txt", quarter, week, layoutInflater)
         managerWeek.weekStates[quarter][week] = WeekState.READY
+    }
+
+    private fun updateLastPage() {
+        val downloader = PageDownloader(
+                ROOT_DIRECTORY,
+                userData["sessionid"]!!,
+                4, 0,
+                managerWeek.weekLinks[4][0]
+        )
+        val lpParser = ParserLastPage()
+
+        if (!downloader.downloadPage()) return
+        lpParser.parsePage(
+                "$ROOT_DIRECTORY/pages/q4w0.html",
+                "$ROOT_DIRECTORY/data/lp.txt"
+        )
+
+        var index = 0
+        var temp: LessonYearMarks
+        val text = FileReader("$ROOT_DIRECTORY/data/lp.txt").readText()
+        while (index < text.length) {
+            temp = LessonYearMarks("", "", "", "", "", "")
+            try {
+                while (text[index] != '>') temp.lesson += text[index++]
+                index++
+                while (text[index] != '>') temp.mark1Q += text[index++]
+                index++
+                while (text[index] != '>') temp.mark2Q += text[index++]
+                index++
+                while (text[index] != '>') temp.mark3Q += text[index++]
+                index++
+                while (text[index] != '>') temp.mark4Q += text[index++]
+                index++
+                while (text[index] != '>') temp.markYear += text[index++]
+                index++
+            } catch (e: Exception) { break }
+            (lastPageRecyclerView.adapter as AdapterLastPage).data.add(temp)
+        }
+        runOnUiThread { lastPageRecyclerView.adapter?.notifyDataSetChanged() }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -254,6 +295,10 @@ class ActivityMainMenu : AppCompatActivity() {
         journalRecyclerView.layoutManager = LinearLayoutManager(this)
         journalRecyclerView.adapter = JournalRecyclerAdapter()
         journalRecyclerView.scrollToPosition(Int.MAX_VALUE / 2)
+
+        lastPageRecyclerView.layoutManager = LinearLayoutManager(this)
+        lastPageRecyclerView.adapter = AdapterLastPage()
+        GlobalScope.launch { updateLastPage() }
     }
 
     override fun onBackPressed() {}

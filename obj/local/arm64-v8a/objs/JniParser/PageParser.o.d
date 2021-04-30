@@ -1,6 +1,6 @@
 /Users/nagan11/AndroidStudioProjects/Journal/obj/local/arm64-v8a/objs/JniParser/PageParser.o: \
   /Users/nagan11/AndroidStudioProjects/Journal/jni/PageParser.cpp \
-  /Users/nagan11/AndroidStudioProjects/Journal/jni/include/com_example_journal_PageParser.h \
+  /Users/nagan11/AndroidStudioProjects/Journal/jni/include/com_example_journal_ParserPage.h \
   /Users/nagan11/Library/Android/sdk/ndk/22.0.7026061/sources/cxx-stl/llvm-libc++/include/fstream \
   /Users/nagan11/Library/Android/sdk/ndk/22.0.7026061/sources/cxx-stl/llvm-libc++/include/__config \
   /Users/nagan11/Library/Android/sdk/ndk/22.0.7026061/sources/cxx-stl/llvm-libc++/include/ostream \
@@ -76,7 +76,7 @@
   /Users/nagan11/Library/Android/sdk/ndk/22.0.7026061/sources/cxx-stl/llvm-libc++/include/optional \
   /Users/nagan11/Library/Android/sdk/ndk/22.0.7026061/sources/cxx-stl/llvm-libc++/include/vector
 
-/Users/nagan11/AndroidStudioProjects/Journal/jni/include/com_example_journal_PageParser.h:
+/Users/nagan11/AndroidStudioProjects/Journal/jni/include/com_example_journal_ParserPage.h:
 
 /Users/nagan11/Library/Android/sdk/ndk/22.0.7026061/sources/cxx-stl/llvm-libc++/include/fstream:
 
