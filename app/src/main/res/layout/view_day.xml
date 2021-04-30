@@ -11,7 +11,7 @@
     android:layout_marginBottom="0dp"
     android:background="@color/journalBackground"
     android:orientation="vertical"
-    android:paddingBottom="48dp">
+    android:paddingTop="48dp">
 
     <LinearLayout
         android:id="@+id/dayDateLayout"

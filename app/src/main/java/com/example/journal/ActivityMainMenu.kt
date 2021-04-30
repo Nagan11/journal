@@ -24,7 +24,6 @@ import kotlinx.coroutines.sync.withLock
 import java.io.File
 import java.io.FileReader
 import java.util.*
-import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 import kotlin.collections.HashSet
 
@@ -48,12 +47,6 @@ class ActivityMainMenu : AppCompatActivity() {
     private val posToDay = HashMap<Int, StructDay>()
 
     private val pageParseMutex = Mutex()
-    private val pageUpdateMutexes = ArrayList<ArrayList<Mutex>>().apply {
-        for (i in 0..3) {
-            add(ArrayList())
-            for (j in 0 until YearData.AMOUNTS_OF_WEEKS[i]) get(i).add(Mutex())
-        }
-    }
 
     private val datePickerDialog by lazy {
         val cal = Calendar.getInstance()
@@ -72,8 +65,9 @@ class ActivityMainMenu : AppCompatActivity() {
                         chosenDay--
                         pos++
                     }
+                    journalRecyclerView.stopScroll()
                     (journalRecyclerView.layoutManager as LinearLayoutManager?)
-                            ?.scrollToPositionWithOffset(pos, 0)
+                            ?.scrollToPositionWithOffset(pos, Calculation.dpToPx(-48f, this))
                 },
                 cal[Calendar.YEAR], cal[Calendar.MONTH], cal[Calendar.DAY_OF_MONTH]
         ).apply {
@@ -141,22 +135,22 @@ class ActivityMainMenu : AppCompatActivity() {
             holder.dateView.text = managerWeek.datesData[quarter][week][weekDay].dateString
             holder.weekDayNameView.text = managerWeek.datesData[quarter][week][weekDay].weekDayString
 
-            GlobalScope.launch {
-                pageUpdateMutexes[quarter][week].withLock {
-                    if (managerWeek.weekStates[quarter][week] == WeekState.EMPTY) {
-                        managerWeek.weekStates[quarter][week] = WeekState.PROCESSING
+            when (managerWeek.weekStates[quarter][week]) {
+                WeekState.EMPTY -> {
+                    managerWeek.weekStates[quarter][week] = WeekState.PROCESSING
+                    GlobalScope.launch {
                         updatePage(quarter, week)
+                        managerWeek.weekStates[quarter][week] = WeekState.READY
+                        runOnUiThread { journalRecyclerView.adapter?.notifyDataSetChanged() }
                     }
                 }
-
-                if (activePostitons.contains(pos)) {
-                    runOnUiThread {
-                        while (holder.dayRootLayout.childCount > 1) holder.dayRootLayout.removeViewAt(holder.dayRootLayout.childCount - 1)
-                        for (i in 0 until managerWeek.lessonsViews[quarter][week][weekDay].size) {
-                            managerWeek.lessonsViews[quarter][week][weekDay][i].let {
-                                if (it.parent != null) (it.parent as LinearLayout).removeView(it)
-                                holder.dayRootLayout.addView(it)
-                            }
+                WeekState.PROCESSING -> {}
+                WeekState.READY -> {
+                    while (holder.dayRootLayout.childCount > 1) holder.dayRootLayout.removeViewAt(holder.dayRootLayout.childCount - 1)
+                    for (i in 0 until managerWeek.lessonsViews[quarter][week][weekDay].size) {
+                        managerWeek.lessonsViews[quarter][week][weekDay][i].let {
+                            if (it.parent != null) (it.parent as LinearLayout).removeView(it)
+                            holder.dayRootLayout.addView(it)
                         }
                     }
                 }
@@ -188,9 +182,7 @@ class ActivityMainMenu : AppCompatActivity() {
                     "$ROOT_DIRECTORY/data/q${quarter}w${week}.txt"
             )
         }
-
         managerWeek.createLessonViews("$ROOT_DIRECTORY/data/q${quarter}w${week}.txt", quarter, week, layoutInflater)
-        managerWeek.weekStates[quarter][week] = WeekState.READY
     }
 
     private fun updateLastPage() {
@@ -269,7 +261,7 @@ class ActivityMainMenu : AppCompatActivity() {
                 if (tab.position == 0) {
                     journalRecyclerView.stopScroll()
                     (journalRecyclerView.layoutManager as LinearLayoutManager?)
-                            ?.scrollToPositionWithOffset(Int.MAX_VALUE / 2, 0)
+                            ?.scrollToPositionWithOffset(Int.MAX_VALUE / 2, Calculation.dpToPx(-48f, this@ActivityMainMenu))
                 }
             }
         })
@@ -294,7 +286,8 @@ class ActivityMainMenu : AppCompatActivity() {
 
         journalRecyclerView.layoutManager = LinearLayoutManager(this)
         journalRecyclerView.adapter = JournalRecyclerAdapter()
-        journalRecyclerView.scrollToPosition(Int.MAX_VALUE / 2)
+        (journalRecyclerView.layoutManager as LinearLayoutManager?)
+                ?.scrollToPositionWithOffset(Int.MAX_VALUE / 2, Calculation.dpToPx(-48f, this))
 
         lastPageRecyclerView.layoutManager = LinearLayoutManager(this)
         lastPageRecyclerView.adapter = AdapterLastPage()
