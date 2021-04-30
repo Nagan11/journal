@@ -23,6 +23,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.io.File
 import java.io.FileReader
+import java.text.DecimalFormat
 import java.util.*
 import kotlin.collections.HashMap
 import kotlin.collections.HashSet
@@ -201,25 +202,58 @@ class ActivityMainMenu : AppCompatActivity() {
         )
 
         var index = 0
-        var temp: LessonYearMarks
+        var lesson: LessonYearMarks
         val text = FileReader("$ROOT_DIRECTORY/data/lp.txt").readText()
         while (index < text.length) {
-            temp = LessonYearMarks("", "", "", "", "", "")
+            lesson = LessonYearMarks("", "", "", "", "", "")
             try {
-                while (text[index] != '>') temp.lesson += text[index++]
+                while (text[index] != '>') lesson.lesson += text[index++]
                 index++
-                while (text[index] != '>') temp.mark1Q += text[index++]
+                while (text[index] != '>') lesson.mark1Q += text[index++]
                 index++
-                while (text[index] != '>') temp.mark2Q += text[index++]
+                while (text[index] != '>') lesson.mark2Q += text[index++]
                 index++
-                while (text[index] != '>') temp.mark3Q += text[index++]
+                while (text[index] != '>') lesson.mark3Q += text[index++]
                 index++
-                while (text[index] != '>') temp.mark4Q += text[index++]
+                while (text[index] != '>') lesson.mark4Q += text[index++]
                 index++
-                while (text[index] != '>') temp.markYear += text[index++]
+                while (text[index] != '>') lesson.markYear += text[index++]
                 index++
             } catch (e: Exception) { break }
-            (lastPageRecyclerView.adapter as AdapterLastPage).data.add(temp)
+            if (
+                    lesson.lesson != " " && lesson.lesson != "" && (
+                            lesson.mark1Q != "-" ||
+                            lesson.mark2Q != "-" ||
+                            lesson.mark3Q != "-" ||
+                            lesson.mark4Q != "-"
+                    )
+            ) {
+                if (lesson.markYear == "-") {
+                    var amountOfMarks = 0
+                    val marks = arrayListOf(0f, 0f, 0f, 0f)
+                    try {
+                        marks[0] = lesson.mark1Q.toFloat()
+                        amountOfMarks++
+                    } catch (e: NumberFormatException) {}
+                    try {
+                        marks[1] = lesson.mark2Q.toFloat()
+                        amountOfMarks++
+                    } catch (e: NumberFormatException) {}
+                    try {
+                        marks[2] = lesson.mark3Q.toFloat()
+                        amountOfMarks++
+                    } catch (e: NumberFormatException) {}
+                    try {
+                        marks[3] = lesson.mark4Q.toFloat()
+                        amountOfMarks++
+                    } catch (e: NumberFormatException) {}
+
+                    lesson.markYear = "~" + with(DecimalFormat("#.##")) {
+                        format(marks.sum() / amountOfMarks).toString()
+                    }
+                }
+                (lastPageRecyclerView.adapter as AdapterLastPage).data.add(lesson)
+            }
         }
         runOnUiThread { lastPageRecyclerView.adapter?.notifyDataSetChanged() }
     }
