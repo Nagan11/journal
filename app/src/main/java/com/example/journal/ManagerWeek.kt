@@ -11,7 +11,7 @@ import java.io.FileReader
 class ManagerWeek(private val ROOT_DIRECTORY: String, private val pupilUrl: String, private val context: Context) {
     val weekLinks = ArrayList<ArrayList<String>>()
 
-    val weekStates = ArrayList<ArrayList<WeekState>>()
+    val weekStates = ArrayList<ArrayList<PageState>>()
 
     val datesData = ArrayList<ArrayList<ArrayList<StructDate>>>()
     val lessonsViews = ArrayList<ArrayList<ArrayList<ArrayList<ConstraintLayout>>>>()
@@ -122,7 +122,7 @@ class ManagerWeek(private val ROOT_DIRECTORY: String, private val pupilUrl: Stri
                     lessonsViews[i][j].add(ArrayList())
                     datesData[i][j].add(StructDate(null))
                 }
-                weekStates[i].add(WeekState.EMPTY)
+                weekStates[i].add(PageState.EMPTY)
             }
         }
     }

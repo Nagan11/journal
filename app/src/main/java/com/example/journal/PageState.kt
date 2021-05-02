@@ -1,6 +1,6 @@
 package com.example.journal
 
-enum class WeekState {
+enum class PageState {
     EMPTY,
     PROCESSING,
     READY

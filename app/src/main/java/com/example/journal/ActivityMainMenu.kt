@@ -26,7 +26,6 @@ import java.io.FileReader
 import java.text.DecimalFormat
 import java.util.*
 import kotlin.collections.HashMap
-import kotlin.collections.HashSet
 
 class ActivityMainMenu : AppCompatActivity() {
     private val ROOT_DIRECTORY: String by lazy { filesDir.toString() }
@@ -44,7 +43,6 @@ class ActivityMainMenu : AppCompatActivity() {
     private val parserPage: ParserPage by lazy { ParserPage() }
 
     private val firstDay = StructDay(0, 0, 0).apply { setCurrentDay() }
-    private val dayToPos = HashMap<StructDay, Int>()
     private val posToDay = HashMap<Int, StructDay>()
 
     private val pageParseMutex = Mutex()
@@ -89,9 +87,9 @@ class ActivityMainMenu : AppCompatActivity() {
         }
     }
 
-    inner class JournalRecyclerAdapter : RecyclerView.Adapter<JournalRecyclerAdapter.ViewHolder>() {
-        val activePostitons = HashSet<Int>()
+    var lpReadyOrProcessing = false
 
+    inner class JournalRecyclerAdapter : RecyclerView.Adapter<JournalRecyclerAdapter.ViewHolder>() {
         inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
             val dateView: TextView
             val weekDayNameView: TextView
@@ -111,12 +109,9 @@ class ActivityMainMenu : AppCompatActivity() {
         }
 
         override fun onBindViewHolder(holder: ViewHolder, pos: Int) {
-            println("position -> ${pos - Int.MAX_VALUE / 2}")
-            activePostitons.add(pos)
             if (posToDay[pos] == null) {
                 val day = firstDay.copy().apply { plus(pos - Int.MAX_VALUE / 2) }
                 posToDay[pos] = day
-                dayToPos[day] = pos
             }
 
             val quarter = posToDay[pos]!!.quarter
@@ -137,16 +132,41 @@ class ActivityMainMenu : AppCompatActivity() {
             holder.weekDayNameView.text = managerWeek.datesData[quarter][week][weekDay].weekDayString
 
             when (managerWeek.weekStates[quarter][week]) {
-                WeekState.EMPTY -> {
-                    managerWeek.weekStates[quarter][week] = WeekState.PROCESSING
+                PageState.EMPTY -> {
+                    managerWeek.weekStates[quarter][week] = PageState.PROCESSING
                     GlobalScope.launch {
                         updatePage(quarter, week)
-                        managerWeek.weekStates[quarter][week] = WeekState.READY
-                        runOnUiThread { journalRecyclerView.adapter?.notifyDataSetChanged() }
+                        managerWeek.weekStates[quarter][week] = PageState.READY
+                        var day = firstDay.copy()
+                        var position = Int.MAX_VALUE / 2
+                        while (day.quarter < quarter) {
+                            day++
+                            position++
+                        }
+                        while (day.quarter > quarter) {
+                            day--
+                            position--
+                        }
+                        while (day.week < week) {
+                            day++
+                            position++
+                        }
+                        while (day.week > week) {
+                            day--
+                            position--
+                        }
+                        while (day.weekDay > 0) {
+                            day--
+                            position--
+                        }
+
+                        runOnUiThread {
+                            repeat(6) { journalRecyclerView.adapter?.notifyItemChanged(position++) }
+                        }
                     }
                 }
-                WeekState.PROCESSING -> {}
-                WeekState.READY -> {
+                PageState.PROCESSING -> {}
+                PageState.READY -> {
                     while (holder.dayRootLayout.childCount > 1) holder.dayRootLayout.removeViewAt(holder.dayRootLayout.childCount - 1)
                     for (i in 0 until managerWeek.lessonsViews[quarter][week][weekDay].size) {
                         managerWeek.lessonsViews[quarter][week][weekDay][i].let {
@@ -160,9 +180,7 @@ class ActivityMainMenu : AppCompatActivity() {
 
         override fun onViewRecycled(holder: ViewHolder) {
             super.onViewRecycled(holder)
-            println("${holder.adapterPosition - Int.MAX_VALUE / 2} recycled")
             while (holder.dayRootLayout.childCount > 1) holder.dayRootLayout.removeViewAt(holder.dayRootLayout.childCount - 1)
-            activePostitons.remove(holder.adapterPosition)
         }
 
         override fun getItemCount(): Int = Int.MAX_VALUE
@@ -187,6 +205,7 @@ class ActivityMainMenu : AppCompatActivity() {
     }
 
     private fun updateLastPage() {
+        lpReadyOrProcessing = true
         val downloader = PageDownloader(
                 ROOT_DIRECTORY,
                 userData["sessionid"]!!,
@@ -272,22 +291,25 @@ class ActivityMainMenu : AppCompatActivity() {
             override fun onTabSelected(tab: TabLayout.Tab) {
                 when (tab.position) {
                     0 -> {
-                        supportFragmentManager.beginTransaction().show(journalFragment).commitNow()
+                        supportFragmentManager.beginTransaction().show(journalFragment).commit()
                         datePickButton.show()
                     }
-                    1 -> supportFragmentManager.beginTransaction().show(lpFragment).commitNow()
-                    2 -> supportFragmentManager.beginTransaction().show(settingsFragment).commitNow()
+                    1 -> {
+                        supportFragmentManager.beginTransaction().show(lpFragment).commit()
+                        GlobalScope.launch { updateLastPage() }
+                    }
+                    2 -> supportFragmentManager.beginTransaction().show(settingsFragment).commit()
                 }
             }
 
             override fun onTabUnselected(tab: TabLayout.Tab) {
                 when (tab.position) {
                     0 -> {
-                        supportFragmentManager.beginTransaction().hide(journalFragment).commitNow()
+                        supportFragmentManager.beginTransaction().hide(journalFragment).commit()
                         datePickButton.hide()
                     }
-                    1 -> supportFragmentManager.beginTransaction().hide(lpFragment).commitNow()
-                    2 -> supportFragmentManager.beginTransaction().hide(settingsFragment).commitNow()
+                    1 -> supportFragmentManager.beginTransaction().hide(lpFragment).commit()
+                    2 -> supportFragmentManager.beginTransaction().hide(settingsFragment).commit()
                 }
             }
 
@@ -310,13 +332,11 @@ class ActivityMainMenu : AppCompatActivity() {
 
         userNameTextView.text = userData["realName"]
 
-        dayToPos[firstDay.copy()] = Int.MAX_VALUE / 2
-
         supportFragmentManager.beginTransaction()
                 .hide(lpFragment)
                 .hide(settingsFragment)
                 .show(journalFragment)
-                .commitNow()
+                .commit()
 
         journalRecyclerView.layoutManager = LinearLayoutManager(this)
         journalRecyclerView.adapter = JournalRecyclerAdapter()
@@ -325,7 +345,6 @@ class ActivityMainMenu : AppCompatActivity() {
 
         lastPageRecyclerView.layoutManager = LinearLayoutManager(this)
         lastPageRecyclerView.adapter = AdapterLastPage()
-        GlobalScope.launch { updateLastPage() }
     }
 
     override fun onBackPressed() {}
