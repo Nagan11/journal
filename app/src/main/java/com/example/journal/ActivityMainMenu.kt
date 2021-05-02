@@ -3,6 +3,7 @@ package com.example.journal
 import android.app.DatePickerDialog
 import android.content.Intent
 import android.os.Bundle
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -133,6 +134,12 @@ class ActivityMainMenu : AppCompatActivity() {
 
             when (managerWeek.weekStates[quarter][week]) {
                 PageState.EMPTY -> {
+                    runOnUiThread {
+                        holder.dayRootLayout.addView(TextView(this@ActivityMainMenu).apply {
+                            text = "Загрузка..."
+                            gravity = Gravity.CENTER
+                        })
+                    }
                     managerWeek.weekStates[quarter][week] = PageState.PROCESSING
                     GlobalScope.launch {
                         updatePage(quarter, week)
@@ -165,7 +172,14 @@ class ActivityMainMenu : AppCompatActivity() {
                         }
                     }
                 }
-                PageState.PROCESSING -> {}
+                PageState.PROCESSING -> {
+                    runOnUiThread {
+                        holder.dayRootLayout.addView(TextView(this@ActivityMainMenu).apply {
+                            text = "Загрузка..."
+                            gravity = Gravity.CENTER
+                        })
+                    }
+                }
                 PageState.READY -> {
                     while (holder.dayRootLayout.childCount > 1) holder.dayRootLayout.removeViewAt(holder.dayRootLayout.childCount - 1)
                     for (i in 0 until managerWeek.lessonsViews[quarter][week][weekDay].size) {
@@ -274,7 +288,10 @@ class ActivityMainMenu : AppCompatActivity() {
                 (lastPageRecyclerView.adapter as AdapterLastPage).data.add(lesson)
             }
         }
-        runOnUiThread { lastPageRecyclerView.adapter?.notifyDataSetChanged() }
+        runOnUiThread {
+            (lastPageLoadingText.parent as ViewGroup?)?.removeView(lastPageLoadingText)
+            lastPageRecyclerView.adapter?.notifyDataSetChanged()
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -296,7 +313,7 @@ class ActivityMainMenu : AppCompatActivity() {
                     }
                     1 -> {
                         supportFragmentManager.beginTransaction().show(lpFragment).commit()
-                        GlobalScope.launch { updateLastPage() }
+                        if (!lpReadyOrProcessing) GlobalScope.launch { updateLastPage() }
                     }
                     2 -> supportFragmentManager.beginTransaction().show(settingsFragment).commit()
                 }

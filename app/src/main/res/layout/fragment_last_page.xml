@@ -10,4 +10,13 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="@color/journalBackground" />
+
+    <TextView
+        android:id="@+id/lastPageLoadingText"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:text="Загрузка..."
+        android:textColor="@color/colorPrimary"
+        android:textSize="20sp" />
 </FrameLayout>
