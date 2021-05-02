@@ -27,7 +27,7 @@
             android:layout_marginBottom="16dp"
             android:text="user_name"
             android:textColor="#FFFFFFFF"
-            android:textSize="24sp"
+            android:textSize="20sp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.0"
@@ -86,19 +86,19 @@
             android:id="@+id/journalTab"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Дневник" />
+            android:text="На сегодня..." />
 
         <com.google.android.material.tabs.TabItem
             android:id="@+id/lpTab"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Итоги" />
+            android:text="Четвертные" />
 
         <com.google.android.material.tabs.TabItem
             android:id="@+id/settingsTab"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Настройки" />
+            android:text="Опции" />
     </com.google.android.material.tabs.TabLayout>
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton

@@ -281,9 +281,11 @@ class ActivityMainMenu : AppCompatActivity() {
                         amountOfMarks++
                     } catch (e: NumberFormatException) {}
 
-                    lesson.markYear = "~" + with(DecimalFormat("#.##")) {
-                        format(marks.sum() / amountOfMarks).toString()
-                    }
+                    lesson.markYear =
+                            (if (amountOfMarks == 0) "-"
+                            else "~" + with(DecimalFormat("#.##")) {
+                                format(marks.sum() / amountOfMarks).toString()
+                            })
                 }
                 (lastPageRecyclerView.adapter as AdapterLastPage).data.add(lesson)
             }
@@ -309,7 +311,9 @@ class ActivityMainMenu : AppCompatActivity() {
                 when (tab.position) {
                     0 -> {
                         supportFragmentManager.beginTransaction().show(journalFragment).commit()
+                        datePickButton.isClickable = true
                         datePickButton.show()
+                        switcher.getTabAt(0)?.text = "На сегодня..."
                     }
                     1 -> {
                         supportFragmentManager.beginTransaction().show(lpFragment).commit()
@@ -323,7 +327,10 @@ class ActivityMainMenu : AppCompatActivity() {
                 when (tab.position) {
                     0 -> {
                         supportFragmentManager.beginTransaction().hide(journalFragment).commit()
+                        datePickButton.isClickable = false
                         datePickButton.hide()
+                        switcher.getTabAt(0)?.text = "Дневник"
+                        journalRecyclerView.stopScroll()
                     }
                     1 -> supportFragmentManager.beginTransaction().hide(lpFragment).commit()
                     2 -> supportFragmentManager.beginTransaction().hide(settingsFragment).commit()
