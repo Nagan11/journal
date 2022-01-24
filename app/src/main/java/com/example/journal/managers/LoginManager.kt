@@ -1,4 +1,4 @@
-package com.example.journal
+package com.example.journal.managers
 
 import java.io.DataOutputStream
 import java.io.File
@@ -9,7 +9,7 @@ import java.net.URL
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 
-class ManagerLogin(rootDirectory: String) {
+class LoginManager(rootDirectory: String) {
     private val USER_AGENT = "Mozilla/5.0"
     private val ROOT_DIRECTORY = rootDirectory
     private val PRIMARY_DOMAIN = "https://schools.by"
@@ -76,7 +76,7 @@ class ManagerLogin(rootDirectory: String) {
         for (entry in headers.entries) {
             try {
                 when (entry.key) {
-                    "Set-Cookie" -> {
+                    "set-cookie" -> {
                         for (str in entry.value) {
                             val cookies = HttpCookie.parse(str)
                             for (cookie in cookies) {
@@ -84,7 +84,7 @@ class ManagerLogin(rootDirectory: String) {
                             }
                         }
                     }
-                    "Location" -> {
+                    "location" -> {
                         pupilUrl = entry.value[0]
                     }
                 }
@@ -113,7 +113,7 @@ class ManagerLogin(rootDirectory: String) {
 
         for (entry in hf) {
             try {
-                if (entry.key == "Set-Cookie") {
+                if (entry.key == "set-cookie") {
                     for (str in entry.value) {
                         val cookies = HttpCookie.parse(str)
                         for (cookie in cookies) {

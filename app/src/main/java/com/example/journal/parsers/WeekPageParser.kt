@@ -1,6 +1,6 @@
-package com.example.journal
+package com.example.journal.parsers
 
-class ParserPage {
+class WeekPageParser {
     init { System.loadLibrary("JniParserPage") }
     external fun parsePage(pagePath: String, dataPath: String)
 }

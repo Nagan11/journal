@@ -4,14 +4,14 @@ import java.util.*
 
 class YearData {
     companion object {
-        val QUARTER_IDS = intArrayOf(40, 42, 43, 44)
-        val AMOUNTS_OF_WEEKS = intArrayOf(9, 7, 11, 9)
+        val QUARTER_IDS = intArrayOf(47, 55, 56, 57)
+        val AMOUNTS_OF_WEEKS = intArrayOf(10, 7, 11, 9)
         val DAYS_IN_MONTH = IntArray(13)
         val FIRST_MONDAYS = arrayOf(
-                intArrayOf(2020, 8, 31),
-                intArrayOf(2020, 11, 9),
-                intArrayOf(2021, 1, 11),
-                intArrayOf(2021, 4, 5)
+                intArrayOf(2021, 8, 31),
+                intArrayOf(2021, 11, 8),
+                intArrayOf(2022, 1, 10),
+                intArrayOf(2022, 4, 4)
         )
 
         val NAME_OF_DAY = arrayOf(

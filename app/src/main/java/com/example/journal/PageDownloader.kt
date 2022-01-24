@@ -75,8 +75,9 @@ class PageDownloader(
         con.disconnect()
 
         for ((key, value) in hf) {
+
             try {
-                if (key == "Set-Cookie") {
+                if (key == "set-cookie") {
                     val cookies = HttpCookie.parse(value[0])
                     for (cookie in cookies) {
                         if (cookie.name == "csrftoken") return cookie.value

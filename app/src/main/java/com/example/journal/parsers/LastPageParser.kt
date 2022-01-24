@@ -1,6 +1,6 @@
-package com.example.journal
+package com.example.journal.parsers
 
-class ParserLastPage {
+class LastPageParser {
     init { System.loadLibrary("JniParserLastPage") }
     external fun parsePage(pagePath: String, dataPath: String)
 }

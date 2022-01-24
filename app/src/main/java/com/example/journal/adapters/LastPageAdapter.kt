@@ -1,12 +1,14 @@
-package com.example.journal
+package com.example.journal.adapters
 
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.example.journal.LessonYearMarks
+import com.example.journal.R
 
-class AdapterLastPage : RecyclerView.Adapter<AdapterLastPage.ViewHolder>() {
+class LastPageAdapter : RecyclerView.Adapter<LastPageAdapter.ViewHolder>() {
     var data = ArrayList<LessonYearMarks>()
 
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {

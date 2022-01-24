@@ -1,4 +1,4 @@
-package com.example.journal
+package com.example.journal.activities
 
 import android.content.Intent
 import android.graphics.drawable.ColorDrawable
@@ -9,6 +9,10 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import com.example.journal.FramerateSynchronizedFunction
+import com.example.journal.managers.LoginManager
+import com.example.journal.parsers.RealNameParser
+import com.example.journal.R
 import kotlinx.android.synthetic.main.activity_login.*
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
@@ -16,10 +20,10 @@ import kotlinx.coroutines.launch
 import java.util.*
 import kotlin.math.roundToInt
 
-data class Color24(var r: Float, var g: Float, var b: Float) {
+data class FloatColor(var r: Float, var g: Float, var b: Float) {
     companion object {
-        fun fromHexString(hexString32: String): Color24 {
-            return Color24(
+        fun fromHexString(hexString32: String): FloatColor {
+            return FloatColor(
                     Integer.parseInt("${hexString32[2]}${hexString32[3]}", 16).toFloat(),
                     Integer.parseInt("${hexString32[4]}${hexString32[5]}", 16).toFloat(),
                     Integer.parseInt("${hexString32[6]}${hexString32[7]}", 16).toFloat()
@@ -41,10 +45,10 @@ data class Color24(var r: Float, var g: Float, var b: Float) {
         return s
     }
 
-    operator fun plus(color: Color24): Color24  = Color24(r + color.r, g + color.g, b + color.b)
-    operator fun minus(color: Color24): Color24 = Color24(r - color.r, g - color.g, b - color.b)
-    operator fun times(f: Float): Color24       = Color24(r * f, g * f, b * f)
-    operator fun div(f: Float): Color24         = Color24(r / f, g / f, b / f)
+    operator fun plus(color: FloatColor): FloatColor = FloatColor(r + color.r, g + color.g, b + color.b)
+    operator fun minus(color: FloatColor): FloatColor = FloatColor(r - color.r, g - color.g, b - color.b)
+    operator fun times(f: Float): FloatColor = FloatColor(r * f, g * f, b * f)
+    operator fun div(f: Float): FloatColor = FloatColor(r / f, g / f, b / f)
 }
 
 class AnimationPause(
@@ -66,11 +70,11 @@ class GradientButtonAnimation(
     override var durationInFrames = duration
     private val middleOfAnimation = duration / 2
 
-    private lateinit var textColor: Color24
-    private lateinit var bgColor: Color24
+    private lateinit var textColor: FloatColor
+    private lateinit var bgColor: FloatColor
 
-    private val textColorEnd = Color24.fromHexString(Integer.toHexString(textColorEndInt))
-    private val bgColorEnd = Color24.fromHexString(Integer.toHexString(bgColorEndInt))
+    private val textColorEnd = FloatColor.fromHexString(Integer.toHexString(textColorEndInt))
+    private val bgColorEnd = FloatColor.fromHexString(Integer.toHexString(bgColorEndInt))
     private val middleColor by lazy { bgColor + ((bgColorEnd - bgColor) / 2f) }
 
     private val bgDiff by lazy {
@@ -84,8 +88,8 @@ class GradientButtonAnimation(
     }
 
     override val onFunctionStart: () -> Unit = {
-        textColor = Color24.fromHexString(Integer.toHexString(button.textColors.defaultColor))
-        bgColor = Color24.fromHexString(Integer.toHexString((button.background as ColorDrawable).color))
+        textColor = FloatColor.fromHexString(Integer.toHexString(button.textColors.defaultColor))
+        bgColor = FloatColor.fromHexString(Integer.toHexString((button.background as ColorDrawable).color))
     }
     override val function: (frameTimeNanos: Long) -> Unit = {
         when {
@@ -125,7 +129,7 @@ class LoginActivity : AppCompatActivity() {
     private val ANIMATION_DURATION_FRAMES: Int = 16
     private val PAUSE_DURATION_FRAMES: Int     = 20
 
-    private val loginManager by lazy { ManagerLogin(ROOT_DIRECTORY) }
+    private val loginManager by lazy { LoginManager(ROOT_DIRECTORY) }
 
     private var functionQueue = ArrayDeque<FramerateSynchronizedFunction>()
 
@@ -176,7 +180,7 @@ class LoginActivity : AppCompatActivity() {
                     imm.hideSoftInputFromWindow(view.windowToken, 0)
                 }
 
-                val nameParser = ParserRealName(loginManager.csrftoken!!, loginManager.sessionid!!, loginManager.pupilUrl!!)
+                val nameParser = RealNameParser(loginManager.csrftoken!!, loginManager.sessionid!!, loginManager.pupilUrl!!)
                 var realName: String? = null
                 for (i in 1..3) {
                     try {
@@ -188,7 +192,7 @@ class LoginActivity : AppCompatActivity() {
 
                 GlobalScope.launch {
                     while (functionQueue.size > 0) delay(50L)
-                    startActivity(Intent(this@LoginActivity, ActivityMainMenu::class.java))
+                    startActivity(Intent(this@LoginActivity, MainMenuActivity::class.java))
                 }
             } else {
                 setButtonStateWrongData()

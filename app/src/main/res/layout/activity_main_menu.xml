@@ -5,7 +5,7 @@
     android:id="@+id/mainRootLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ActivityMainMenu">
+    tools:context=".activities.MainMenuActivity">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/actionBar"
@@ -38,7 +38,7 @@
 
     <fragment
         android:id="@+id/journalFragment"
-        android:name="com.example.journal.FragmentJournal"
+        android:name="com.example.journal.fragments.JournalFragment"
         android:layout_width="0dp"
         android:layout_height="0dp"
         app:layout_constraintBottom_toTopOf="@+id/switcher"
@@ -48,7 +48,7 @@
 
     <fragment
         android:id="@+id/lpFragment"
-        android:name="com.example.journal.FragmentLastPage"
+        android:name="com.example.journal.fragments.LastPageFragment"
         android:layout_width="0dp"
         android:layout_height="0dp"
         app:layout_constraintBottom_toTopOf="@+id/switcher"
@@ -58,7 +58,7 @@
 
     <fragment
         android:id="@+id/settingsFragment"
-        android:name="com.example.journal.FragmentSettings"
+        android:name="com.example.journal.fragments.SettingsFragment"
         android:layout_width="0dp"
         android:layout_height="0dp"
         app:layout_constraintBottom_toTopOf="@+id/switcher"

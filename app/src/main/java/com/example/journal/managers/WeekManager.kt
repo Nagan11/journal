@@ -1,14 +1,15 @@
-package com.example.journal
+package com.example.journal.managers
 
 import android.annotation.SuppressLint
 import android.content.Context
 import android.view.LayoutInflater
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
+import com.example.journal.*
 import java.io.File
 import java.io.FileReader
 
-class ManagerWeek(private val ROOT_DIRECTORY: String, private val pupilUrl: String, private val context: Context) {
+class WeekManager(private val ROOT_DIRECTORY: String, private val pupilUrl: String, private val context: Context) {
     val weekLinks = ArrayList<ArrayList<String>>()
 
     val weekStates = ArrayList<ArrayList<PageState>>()
@@ -65,10 +66,10 @@ class ManagerWeek(private val ROOT_DIRECTORY: String, private val pupilUrl: Stri
                     ConstraintLayout.LayoutParams.MATCH_PARENT,
                     ConstraintLayout.LayoutParams.WRAP_CONTENT
             ).apply {
-                leftMargin = Calculation.dpToPx(8f, context)
-                topMargin = Calculation.dpToPx(4f, context)
-                rightMargin = Calculation.dpToPx(8f, context)
-                bottomMargin = Calculation.dpToPx(4f, context)
+                leftMargin = Conversion.dpToPx(8f, context)
+                topMargin = Conversion.dpToPx(4f, context)
+                rightMargin = Conversion.dpToPx(8f, context)
+                bottomMargin = Conversion.dpToPx(4f, context)
             }
 
             for (i in 0..lastLesson) {

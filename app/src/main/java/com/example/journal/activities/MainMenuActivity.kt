@@ -1,4 +1,4 @@
-package com.example.journal
+package com.example.journal.activities
 
 import android.app.DatePickerDialog
 import android.content.Intent
@@ -12,6 +12,11 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.journal.*
+import com.example.journal.adapters.LastPageAdapter
+import com.example.journal.managers.WeekManager
+import com.example.journal.parsers.LastPageParser
+import com.example.journal.parsers.WeekPageParser
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayout.OnTabSelectedListener
 import kotlinx.android.synthetic.main.activity_main_menu.*
@@ -28,7 +33,7 @@ import java.text.DecimalFormat
 import java.util.*
 import kotlin.collections.HashMap
 
-class ActivityMainMenu : AppCompatActivity() {
+class MainMenuActivity : AppCompatActivity() {
     private val ROOT_DIRECTORY: String by lazy { filesDir.toString() }
 
     private val currentUser: String? by lazy {
@@ -37,11 +42,11 @@ class ActivityMainMenu : AppCompatActivity() {
     }
     private var userData = HashMap<String, String>()
 
-    private val managerWeek: ManagerWeek by lazy {
+    private val weekManager: WeekManager by lazy {
         if (userData["pupilUrl"] == null) startActivity(Intent(this, LoginActivity::class.java))
-        ManagerWeek(ROOT_DIRECTORY, userData["pupilUrl"]!!, this)
+        WeekManager(ROOT_DIRECTORY, userData["pupilUrl"]!!, this)
     }
-    private val parserPage: ParserPage by lazy { ParserPage() }
+    private val weekPageParser: WeekPageParser by lazy { WeekPageParser() }
 
     private val firstDay = StructDay(0, 0, 0).apply { setCurrentDay() }
     private val posToDay = HashMap<Int, StructDay>()
@@ -67,7 +72,7 @@ class ActivityMainMenu : AppCompatActivity() {
                     }
                     journalRecyclerView.stopScroll()
                     (journalRecyclerView.layoutManager as LinearLayoutManager?)
-                            ?.scrollToPositionWithOffset(pos, Calculation.dpToPx(-48f, this))
+                            ?.scrollToPositionWithOffset(pos, Conversion.dpToPx(-48f, this))
                 },
                 cal[Calendar.YEAR], cal[Calendar.MONTH], cal[Calendar.DAY_OF_MONTH]
         ).apply {
@@ -125,25 +130,25 @@ class ActivityMainMenu : AppCompatActivity() {
                 return
             }
 
-            if (managerWeek.datesData[quarter][week][weekDay].dateString == "") {
-                managerWeek.datesData[quarter][week][weekDay].yearDay = posToDay[pos]
-                managerWeek.datesData[quarter][week][weekDay].generateStrings()
+            if (weekManager.datesData[quarter][week][weekDay].dateString == "") {
+                weekManager.datesData[quarter][week][weekDay].yearDay = posToDay[pos]
+                weekManager.datesData[quarter][week][weekDay].generateStrings()
             }
-            holder.dateView.text = managerWeek.datesData[quarter][week][weekDay].dateString
-            holder.weekDayNameView.text = managerWeek.datesData[quarter][week][weekDay].weekDayString
+            holder.dateView.text = weekManager.datesData[quarter][week][weekDay].dateString
+            holder.weekDayNameView.text = weekManager.datesData[quarter][week][weekDay].weekDayString
 
-            when (managerWeek.weekStates[quarter][week]) {
+            when (weekManager.weekStates[quarter][week]) {
                 PageState.EMPTY -> {
                     runOnUiThread {
-                        holder.dayRootLayout.addView(TextView(this@ActivityMainMenu).apply {
+                        holder.dayRootLayout.addView(TextView(this@MainMenuActivity).apply {
                             text = "Загрузка..."
                             gravity = Gravity.CENTER
                         })
                     }
-                    managerWeek.weekStates[quarter][week] = PageState.PROCESSING
+                    weekManager.weekStates[quarter][week] = PageState.PROCESSING
                     GlobalScope.launch {
                         updatePage(quarter, week)
-                        managerWeek.weekStates[quarter][week] = PageState.READY
+                        weekManager.weekStates[quarter][week] = PageState.READY
                         var day = firstDay.copy()
                         var position = Int.MAX_VALUE / 2
                         while (day.quarter < quarter) {
@@ -174,7 +179,7 @@ class ActivityMainMenu : AppCompatActivity() {
                 }
                 PageState.PROCESSING -> {
                     runOnUiThread {
-                        holder.dayRootLayout.addView(TextView(this@ActivityMainMenu).apply {
+                        holder.dayRootLayout.addView(TextView(this@MainMenuActivity).apply {
                             text = "Загрузка..."
                             gravity = Gravity.CENTER
                         })
@@ -182,8 +187,8 @@ class ActivityMainMenu : AppCompatActivity() {
                 }
                 PageState.READY -> {
                     while (holder.dayRootLayout.childCount > 1) holder.dayRootLayout.removeViewAt(holder.dayRootLayout.childCount - 1)
-                    for (i in 0 until managerWeek.lessonsViews[quarter][week][weekDay].size) {
-                        managerWeek.lessonsViews[quarter][week][weekDay][i].let {
+                    for (i in 0 until weekManager.lessonsViews[quarter][week][weekDay].size) {
+                        weekManager.lessonsViews[quarter][week][weekDay][i].let {
                             if (it.parent != null) (it.parent as LinearLayout).removeView(it)
                             holder.dayRootLayout.addView(it)
                         }
@@ -205,17 +210,17 @@ class ActivityMainMenu : AppCompatActivity() {
                 ROOT_DIRECTORY,
                 userData["sessionid"]!!,
                 quarter, week,
-                managerWeek.weekLinks[quarter][week]
+                weekManager.weekLinks[quarter][week]
         )
 
         if (!downloader.downloadPage()) return
         pageParseMutex.withLock {
-            parserPage.parsePage(
+            weekPageParser.parsePage(
                     "$ROOT_DIRECTORY/pages/q${quarter}w${week}.html",
                     "$ROOT_DIRECTORY/data/q${quarter}w${week}.txt"
             )
         }
-        managerWeek.createLessonViews("$ROOT_DIRECTORY/data/q${quarter}w${week}.txt", quarter, week, layoutInflater)
+        weekManager.createLessonViews("$ROOT_DIRECTORY/data/q${quarter}w${week}.txt", quarter, week, layoutInflater)
     }
 
     private fun updateLastPage() {
@@ -224,9 +229,9 @@ class ActivityMainMenu : AppCompatActivity() {
                 ROOT_DIRECTORY,
                 userData["sessionid"]!!,
                 4, 0,
-                managerWeek.weekLinks[4][0]
+                weekManager.weekLinks[4][0]
         )
-        val lpParser = ParserLastPage()
+        val lpParser = LastPageParser()
 
         if (!downloader.downloadPage()) return
         lpParser.parsePage(
@@ -287,7 +292,7 @@ class ActivityMainMenu : AppCompatActivity() {
                                 format(marks.sum() / amountOfMarks).toString()
                             })
                 }
-                (lastPageRecyclerView.adapter as AdapterLastPage).data.add(lesson)
+                (lastPageRecyclerView.adapter as LastPageAdapter).data.add(lesson)
             }
         }
         runOnUiThread {
@@ -341,7 +346,7 @@ class ActivityMainMenu : AppCompatActivity() {
                 if (tab.position == 0) {
                     journalRecyclerView.stopScroll()
                     (journalRecyclerView.layoutManager as LinearLayoutManager?)
-                            ?.scrollToPositionWithOffset(Int.MAX_VALUE / 2, Calculation.dpToPx(-48f, this@ActivityMainMenu))
+                            ?.scrollToPositionWithOffset(Int.MAX_VALUE / 2, Conversion.dpToPx(-48f, this@MainMenuActivity))
                 }
             }
         })
@@ -365,10 +370,10 @@ class ActivityMainMenu : AppCompatActivity() {
         journalRecyclerView.layoutManager = LinearLayoutManager(this)
         journalRecyclerView.adapter = JournalRecyclerAdapter()
         (journalRecyclerView.layoutManager as LinearLayoutManager?)
-                ?.scrollToPositionWithOffset(Int.MAX_VALUE / 2, Calculation.dpToPx(-48f, this))
+                ?.scrollToPositionWithOffset(Int.MAX_VALUE / 2, Conversion.dpToPx(-48f, this))
 
         lastPageRecyclerView.layoutManager = LinearLayoutManager(this)
-        lastPageRecyclerView.adapter = AdapterLastPage()
+        lastPageRecyclerView.adapter = LastPageAdapter()
     }
 
     override fun onBackPressed() {}
